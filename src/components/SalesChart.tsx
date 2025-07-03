@@ -13,19 +13,30 @@ const data = [
 
 export const SalesChart = () => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Évolution des ventes</h3>
-      <div className="h-64">
+      <div className="h-48 lg:h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="name" stroke="#666" />
-            <YAxis stroke="#666" />
+            <XAxis 
+              dataKey="name" 
+              stroke="#666" 
+              fontSize={12}
+              tickLine={false}
+            />
+            <YAxis 
+              stroke="#666" 
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'white', 
                 border: '1px solid #e5e7eb',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                fontSize: '12px'
               }}
             />
             <Line 
@@ -34,6 +45,7 @@ export const SalesChart = () => {
               stroke="#1e40af" 
               strokeWidth={3}
               dot={{ fill: '#1e40af', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>

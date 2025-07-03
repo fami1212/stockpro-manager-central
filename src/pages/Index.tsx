@@ -39,13 +39,18 @@ const Index = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">StockPro Manager</h1>
-            <p className="text-gray-600 mt-2">Votre solution complète de gestion d'entreprise</p>
+      
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-0 min-w-0">
+        <div className="p-4 lg:p-6">
+          <header className="mb-6 lg:mb-8 pt-12 lg:pt-0">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">StockPro Manager</h1>
+            <p className="text-gray-600 mt-2 text-sm lg:text-base">Votre solution complète de gestion d'entreprise</p>
           </header>
-          {renderActiveModule()}
+          
+          <div className="w-full overflow-x-hidden">
+            {renderActiveModule()}
+          </div>
         </div>
       </main>
     </div>
