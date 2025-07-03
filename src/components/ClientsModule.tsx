@@ -1,11 +1,14 @@
-
 import { useState } from 'react';
-import { Plus, Search, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Mail, Phone, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ClientModal } from '@/components/ClientModal';
+import { PaymentModal } from '@/components/PaymentModal';
 
 export const ClientsModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const clients = [
     { 
@@ -55,10 +58,16 @@ export const ClientsModule = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Gestion des Clients</h2>
-        <Button className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau client
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => setShowPaymentModal(true)} variant="outline">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Paiement
+          </Button>
+          <Button onClick={() => setShowClientModal(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Nouveau client
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -135,6 +144,17 @@ export const ClientsModule = () => {
           ))}
         </div>
       </div>
+
+      {showClientModal && (
+        <ClientModal onClose={() => setShowClientModal(false)} />
+      )}
+
+      {showPaymentModal && (
+        <PaymentModal 
+          onClose={() => setShowPaymentModal(false)} 
+          type="client"
+        />
+      )}
     </div>
   );
 };

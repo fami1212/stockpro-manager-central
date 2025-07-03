@@ -1,12 +1,16 @@
-
 import { useState } from 'react';
 import { Plus, Search, Calendar, Package, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PurchaseOrderModal } from '@/components/PurchaseOrderModal';
+import { ReceptionModal } from '@/components/ReceptionModal';
 
 export const PurchasesModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('orders');
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showReceptionModal, setShowReceptionModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>();
 
   const orders = [
     { 
@@ -43,11 +47,16 @@ export const PurchasesModule = () => {
     { id: 'R-002', date: '2024-01-14', order: 'A-001', items: 5, received: 3, status: 'Partielle' },
   ];
 
+  const handleReceiveOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setShowReceptionModal(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Gestion des Achats</h2>
-        <Button className="bg-orange-600 hover:bg-orange-700">
+        <Button onClick={() => setShowOrderModal(true)} className="bg-orange-600 hover:bg-orange-700">
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle commande
         </Button>
@@ -154,7 +163,13 @@ export const PurchasesModule = () => {
                       <td className="py-3 px-4">
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm">Voir</Button>
-                          <Button variant="outline" size="sm">Recevoir</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleReceiveOrder(order.id)}
+                          >
+                            Recevoir
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -209,6 +224,20 @@ export const PurchasesModule = () => {
           )}
         </div>
       </div>
+
+      {showOrderModal && (
+        <PurchaseOrderModal onClose={() => setShowOrderModal(false)} />
+      )}
+
+      {showReceptionModal && (
+        <ReceptionModal 
+          onClose={() => {
+            setShowReceptionModal(false);
+            setSelectedOrderId(undefined);
+          }} 
+          orderId={selectedOrderId}
+        />
+      )}
     </div>
   );
 };

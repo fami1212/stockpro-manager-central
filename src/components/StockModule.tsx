@@ -4,15 +4,17 @@ import { Plus, Search, Filter, Package, TrendingUp, TrendingDown, AlertTriangle,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ProductModal } from '@/components/ProductModal';
+import { ProductFormModal } from '@/components/ProductFormModal';
 import { StockMovementModal } from '@/components/StockMovementModal';
 import { CategoryModal } from '@/components/CategoryModal';
+import { UnitModal } from '@/components/UnitModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const StockModule = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showMovement, setShowMovement] = useState(false);
   const [showCategory, setShowCategory] = useState(false);
+  const [showUnit, setShowUnit] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('products');
@@ -359,7 +361,7 @@ export const StockModule = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Unités de mesure</h3>
-              <Button className="bg-orange-600 hover:bg-orange-700">
+              <Button onClick={() => setShowUnit(true)} className="bg-orange-600 hover:bg-orange-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Nouvelle unité
               </Button>
@@ -386,7 +388,7 @@ export const StockModule = () => {
       </Tabs>
 
       {showAddProduct && (
-        <ProductModal onClose={() => setShowAddProduct(false)} />
+        <ProductFormModal onClose={() => setShowAddProduct(false)} />
       )}
 
       {showMovement && (
@@ -395,6 +397,10 @@ export const StockModule = () => {
 
       {showCategory && (
         <CategoryModal onClose={() => setShowCategory(false)} />
+      )}
+
+      {showUnit && (
+        <UnitModal onClose={() => setShowUnit(false)} />
       )}
     </div>
   );
