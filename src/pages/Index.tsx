@@ -5,6 +5,10 @@ import { Dashboard } from '@/components/Dashboard';
 import { StockModule } from '@/components/StockModule';
 import { SalesModule } from '@/components/SalesModule';
 import { ClientsModule } from '@/components/ClientsModule';
+import { PurchasesModule } from '@/components/PurchasesModule';
+import { SuppliersModule } from '@/components/SuppliersModule';
+import { ReportsModule } from '@/components/ReportsModule';
+import { SettingsModule } from '@/components/SettingsModule';
 
 const Index = () => {
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -17,8 +21,16 @@ const Index = () => {
         return <StockModule />;
       case 'sales':
         return <SalesModule />;
+      case 'purchases':
+        return <PurchasesModule />;
       case 'clients':
         return <ClientsModule />;
+      case 'suppliers':
+        return <SuppliersModule />;
+      case 'reports':
+        return <ReportsModule />;
+      case 'settings':
+        return <SettingsModule />;
       default:
         return <Dashboard />;
     }

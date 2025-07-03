@@ -6,7 +6,9 @@ import {
   Users, 
   ShoppingCartIcon as Cart,
   Settings,
-  FileText
+  FileText,
+  ShoppingBag,
+  Truck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,7 +21,9 @@ export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
     { id: 'dashboard', label: 'Tableau de bord', icon: BarChart },
     { id: 'stock', label: 'Stock', icon: Box },
     { id: 'sales', label: 'Ventes', icon: Cart },
+    { id: 'purchases', label: 'Achats', icon: ShoppingBag },
     { id: 'clients', label: 'Clients', icon: Users },
+    { id: 'suppliers', label: 'Fournisseurs', icon: Truck },
     { id: 'reports', label: 'Rapports', icon: FileText },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
