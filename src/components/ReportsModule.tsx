@@ -31,35 +31,35 @@ export const ReportsModule = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Rapports & Analyses</h2>
-        <div className="flex space-x-3">
-          <Button variant="outline">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Rapports & Analyses</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Calendar className="w-4 h-4 mr-2" />
             Programmer
           </Button>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Exporter
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {quickStats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">{stat.title}</h3>
-            <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+          <div key={index} className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-xs lg:text-sm font-medium text-gray-600 mb-2">{stat.title}</h3>
+            <p className={`text-2xl lg:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-xs text-gray-500 mt-1">{stat.period}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Générateur de rapports</h3>
+      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-6">Générateur de rapports</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Type de rapport</label>
             <Select value={selectedReport} onValueChange={setSelectedReport}>
@@ -93,76 +93,76 @@ export const ReportsModule = () => {
           </div>
         </div>
 
-        <div className="flex space-x-3">
-          <Button>Générer le rapport</Button>
-          <Button variant="outline">Aperçu</Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button size="sm" className="w-full sm:w-auto">Générer le rapport</Button>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">Aperçu</Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Rapports récents</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-4">Rapports récents</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-gray-900">Ventes - Janvier 2024</p>
-                  <p className="text-sm text-gray-500">Généré le 15/01/2024</p>
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <TrendingUp className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">Ventes - Janvier 2024</p>
+                  <p className="text-xs text-gray-500">Généré le 15/01/2024</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
                 <Download className="w-4 h-4" />
               </Button>
             </div>
             
             <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-                <div>
-                  <p className="font-medium text-gray-900">Stock - Janvier 2024</p>
-                  <p className="text-sm text-gray-500">Généré le 14/01/2024</p>
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <BarChart3 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">Stock - Janvier 2024</p>
+                  <p className="text-xs text-gray-500">Généré le 14/01/2024</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
                 <Download className="w-4 h-4" />
               </Button>
             </div>
             
             <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <FileText className="w-5 h-5 text-purple-600" />
-                <div>
-                  <p className="font-medium text-gray-900">Clients - Décembre 2023</p>
-                  <p className="text-sm text-gray-500">Généré le 31/12/2023</p>
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <FileText className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">Clients - Décembre 2023</p>
+                  <p className="text-xs text-gray-500">Généré le 31/12/2023</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
                 <Download className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Analyses automatiques</h3>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-4">Analyses automatiques</h3>
           <div className="space-y-4">
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-2">📈 Croissance des ventes</h4>
+              <h4 className="font-medium text-green-800 mb-2 text-sm">📈 Croissance des ventes</h4>
               <p className="text-sm text-green-700">
                 Vos ventes ont augmenté de 12% ce mois-ci par rapport au mois dernier.
               </p>
             </div>
             
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-medium text-yellow-800 mb-2">⚠️ Stock faible</h4>
+              <h4 className="font-medium text-yellow-800 mb-2 text-sm">⚠️ Stock faible</h4>
               <p className="text-sm text-yellow-700">
                 4 produits nécessitent un réapprovisionnement urgent.
               </p>
             </div>
             
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">👥 Nouveaux clients</h4>
+              <h4 className="font-medium text-blue-800 mb-2 text-sm">👥 Nouveaux clients</h4>
               <p className="text-sm text-blue-700">
                 15 nouveaux clients ont été ajoutés cette semaine.
               </p>
