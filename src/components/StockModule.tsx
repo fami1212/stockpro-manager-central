@@ -1,85 +1,51 @@
-
 import { useState } from 'react';
 import { Plus, Search, Filter, Package, TrendingUp, TrendingDown, AlertTriangle, Edit, Trash2, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ProductFormModal } from '@/components/ProductFormModal';
+import { ProductForm } from '@/components/ProductForm';
 import { StockMovementModal } from '@/components/StockMovementModal';
 import { CategoryModal } from '@/components/CategoryModal';
 import { UnitModal } from '@/components/UnitModal';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PaginationControls } from '@/components/PaginationControls';
+import { EmptyState } from '@/components/EmptyState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useApp } from '@/contexts/AppContext';
+import { usePagination } from '@/hooks/usePagination';
 
 export const StockModule = () => {
+  const { state, deleteProduct, deleteCategory, deleteUnit } = useApp();
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showMovement, setShowMovement] = useState(false);
   const [showCategory, setShowCategory] = useState(false);
   const [showUnit, setShowUnit] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('products');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ 
+    open: boolean; 
+    type?: 'product' | 'category' | 'unit';
+    id?: number; 
+    name?: string 
+  }>({ open: false });
 
-  const categories = [
-    { id: 1, name: 'Électronique', color: 'blue', products: 15 },
-    { id: 2, name: 'Alimentaire', color: 'green', products: 8 },
-    { id: 3, name: 'Fournitures', color: 'purple', products: 12 },
-    { id: 4, name: 'Vêtements', color: 'orange', products: 6 },
-  ];
-
-  const units = [
-    { id: 1, name: 'Pièce', symbol: 'pcs', type: 'Unité' },
-    { id: 2, name: 'Kilogramme', symbol: 'kg', type: 'Poids' },
-    { id: 3, name: 'Litre', symbol: 'L', type: 'Volume' },
-    { id: 4, name: 'Pack', symbol: 'pack', type: 'Groupé' },
-  ];
-
-  const products = [
-    { 
-      id: 1, 
-      name: 'iPhone 15 Pro', 
-      reference: 'IPH15P-128', 
-      category: 'Électronique', 
-      stock: 25, 
-      alertThreshold: 5,
-      buyPrice: 850, 
-      sellPrice: 999, 
-      unit: 'pcs',
-      barcode: '1234567890123',
-      status: 'En stock',
-      variants: [
-        { color: 'Noir', size: '128GB', stock: 15 },
-        { color: 'Blanc', size: '128GB', stock: 10 }
-      ]
-    },
-    { 
-      id: 2, 
-      name: 'Samsung Galaxy S24', 
-      reference: 'SGS24-256', 
-      category: 'Électronique', 
-      stock: 2, 
-      alertThreshold: 5,
-      buyPrice: 650, 
-      sellPrice: 799, 
-      unit: 'pcs',
-      barcode: '2345678901234',
-      status: 'Stock bas',
-      variants: []
-    },
-    { 
-      id: 3, 
-      name: 'MacBook Air M2', 
-      reference: 'MBA-M2-13', 
-      category: 'Électronique', 
-      stock: 15, 
-      alertThreshold: 3,
-      buyPrice: 999, 
-      sellPrice: 1199, 
-      unit: 'pcs',
-      barcode: '3456789012345',
-      status: 'En stock',
-      variants: []
-    },
-  ];
+  const {
+    currentData: paginatedProducts,
+    currentPage,
+    totalPages,
+    totalItems,
+    hasNextPage,
+    hasPreviousPage,
+    goToPage
+  } = usePagination({
+    data: state.products,
+    itemsPerPage: 10,
+    searchTerm,
+    searchFields: ['name', 'reference'],
+    filters: { category: selectedCategory }
+  });
 
   const movements = [
     { 
@@ -103,28 +69,46 @@ export const StockModule = () => {
       reason: 'Vente',
       user: 'Vendeur 1',
       reference: 'V-002'
-    },
-    { 
-      id: 3, 
-      date: '2024-01-14', 
-      time: '10:15',
-      product: 'MacBook Air M2', 
-      type: 'Sortie', 
-      quantity: 1, 
-      reason: 'Perte/Casse',
-      user: 'Magasinier',
-      reference: 'PERTE-001'
-    },
+    }
   ];
 
-  const lowStockProducts = products.filter(p => p.stock <= p.alertThreshold);
+  const lowStockProducts = state.products.filter(p => p.stock <= p.alertThreshold);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.reference.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    setShowAddProduct(true);
+  };
+
+  const handleDelete = (type: 'product' | 'category' | 'unit', id: number, name: string) => {
+    setDeleteConfirm({
+      open: true,
+      type,
+      id,
+      name
+    });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id && deleteConfirm.type) {
+      switch (deleteConfirm.type) {
+        case 'product':
+          deleteProduct(deleteConfirm.id);
+          break;
+        case 'category':
+          deleteCategory(deleteConfirm.id);
+          break;
+        case 'unit':
+          deleteUnit(deleteConfirm.id);
+          break;
+      }
+    }
+    setDeleteConfirm({ open: false });
+  };
+
+  const handleCloseProductModal = () => {
+    setShowAddProduct(false);
+    setEditingProduct(null);
+  };
 
   return (
     <div className="space-y-4 lg:space-y-6 p-4 lg:p-0">
@@ -146,12 +130,12 @@ export const StockModule = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Total produits</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{products.length}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{state.products.length}</p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Références actives</p>
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Valeur stock</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-green-600">€{products.reduce((acc, p) => acc + (p.stock * p.buyPrice), 0).toLocaleString()}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-green-600">€{state.products.reduce((acc, p) => acc + (p.stock * p.buyPrice), 0).toLocaleString()}</p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Prix d'achat</p>
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
@@ -161,7 +145,7 @@ export const StockModule = () => {
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Catégories</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-purple-600">{categories.length}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-purple-600">{state.categories.length}</p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Actives</p>
         </div>
       </div>
@@ -192,7 +176,7 @@ export const StockModule = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes catégories</SelectItem>
-                  {categories.map((cat) => (
+                  {state.categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -203,43 +187,103 @@ export const StockModule = () => {
               </Button>
             </div>
 
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Produit</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Référence</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Catégorie</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Stock</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Prix Achat</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Prix Vente</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Statut</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-gray-900">{product.name}</div>
-                        {product.variants.length > 0 && (
-                          <div className="text-xs text-gray-500">{product.variants.length} variante(s)</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">{product.reference}</td>
-                      <td className="py-3 px-4 text-gray-600">{product.category}</td>
-                      <td className="py-3 px-4">
-                        <span className={`font-medium ${product.stock <= product.alertThreshold ? 'text-red-600' : 'text-gray-900'}`}>
-                          {product.stock} {product.unit}
-                        </span>
-                        {product.stock <= product.alertThreshold && (
-                          <AlertTriangle className="w-4 h-4 text-red-500 inline ml-1" />
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-gray-900">€{product.buyPrice}</td>
-                      <td className="py-3 px-4 text-gray-900">€{product.sellPrice}</td>
-                      <td className="py-3 px-4">
+            {state.products.length === 0 ? (
+              <EmptyState
+                icon={Package}
+                title="Aucun produit en stock"
+                description="Commencez par ajouter votre premier produit au catalogue."
+                actionText="Ajouter un produit"
+                onAction={() => setShowAddProduct(true)}
+              />
+            ) : paginatedProducts.length === 0 ? (
+              <EmptyState
+                icon={Search}
+                title="Aucun résultat"
+                description="Aucun produit ne correspond à vos critères de recherche."
+              />
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Produit</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Référence</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Catégorie</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Stock</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Prix Achat</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Prix Vente</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Statut</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedProducts.map((product) => (
+                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">{product.name}</div>
+                            {product.variants.length > 0 && (
+                              <div className="text-xs text-gray-500">{product.variants.length} variante(s)</div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-gray-600">{product.reference}</td>
+                          <td className="py-3 px-4 text-gray-600">{product.category}</td>
+                          <td className="py-3 px-4">
+                            <span className={`font-medium ${product.stock <= product.alertThreshold ? 'text-red-600' : 'text-gray-900'}`}>
+                              {product.stock} {product.unit}
+                            </span>
+                            {product.stock <= product.alertThreshold && (
+                              <AlertTriangle className="w-4 h-4 text-red-500 inline ml-1" />
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-gray-900">€{product.buyPrice}</td>
+                          <td className="py-3 px-4 text-gray-900">€{product.sellPrice}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              product.status === 'En stock' 
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}>
+                              {product.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <Package className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete('product', product.id, product.name)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-4">
+                  {paginatedProducts.map((product) => (
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-gray-900 text-sm">{product.name}</h3>
+                          <p className="text-xs text-gray-500">{product.reference}</p>
+                          {product.variants.length > 0 && (
+                            <p className="text-xs text-gray-500">{product.variants.length} variante(s)</p>
+                          )}
+                        </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           product.status === 'En stock' 
                             ? 'bg-green-100 text-green-700'
@@ -247,92 +291,75 @@ export const StockModule = () => {
                         }`}>
                           {product.status}
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-4 h-4" />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-gray-500">Catégorie:</span>
+                          <p className="font-medium">{product.category}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Stock:</span>
+                          <p className={`font-medium ${product.stock <= product.alertThreshold ? 'text-red-600' : 'text-gray-900'}`}>
+                            {product.stock} {product.unit}
+                            {product.stock <= product.alertThreshold && (
+                              <AlertTriangle className="w-3 h-3 text-red-500 inline ml-1" />
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Prix Achat:</span>
+                          <p className="font-medium">€{product.buyPrice}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Prix Vente:</span>
+                          <p className="font-medium">€{product.sellPrice}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 pt-2 border-t">
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEdit(product)}>
+                            <Edit className="w-3 h-3 mr-1" />
+                            Modifier
                           </Button>
-                          <Button variant="outline" size="sm">
-                            <Package className="w-4 h-4" />
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <Package className="w-3 h-3 mr-1" />
+                            Stock
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700 text-xs"
+                            onClick={() => handleDelete('product', product.id, product.name)}
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Supprimer
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden space-y-4">
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm">{product.name}</h3>
-                      <p className="text-xs text-gray-500">{product.reference}</p>
-                      {product.variants.length > 0 && (
-                        <p className="text-xs text-gray-500">{product.variants.length} variante(s)</p>
-                      )}
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'En stock' 
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {product.status}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-gray-500">Catégorie:</span>
-                      <p className="font-medium">{product.category}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Stock:</span>
-                      <p className={`font-medium ${product.stock <= product.alertThreshold ? 'text-red-600' : 'text-gray-900'}`}>
-                        {product.stock} {product.unit}
-                        {product.stock <= product.alertThreshold && (
-                          <AlertTriangle className="w-3 h-3 text-red-500 inline ml-1" />
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Prix Achat:</span>
-                      <p className="font-medium">€{product.buyPrice}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Prix Vente:</span>
-                      <p className="font-medium">€{product.sellPrice}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 pt-2 border-t">
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" size="sm" className="text-xs">
-                        <Edit className="w-3 h-3 mr-1" />
-                        Modifier
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        <Package className="w-3 h-3 mr-1" />
-                        Stock
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 text-xs">
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        Supprimer
-                      </Button>
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Pagination */}
+                <div className="mt-6">
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    itemsPerPage={10}
+                    onPageChange={goToPage}
+                    hasNextPage={hasNextPage}
+                    hasPreviousPage={hasPreviousPage}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </TabsContent>
+
+        
 
         <TabsContent value="movements" className="space-y-4">
           <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
@@ -444,7 +471,7 @@ export const StockModule = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((category) => (
+              {state.categories.map((category) => (
                 <div key={category.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center min-w-0 flex-1">
@@ -455,7 +482,12 @@ export const StockModule = () => {
                       <Button variant="outline" size="sm">
                         <Edit className="w-3 h-3" />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete('category', category.id, category.name)}
+                      >
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
@@ -478,11 +510,15 @@ export const StockModule = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {units.map((unit) => (
+              {state.units.map((unit) => (
                 <div key={unit.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm">{unit.name}</h4>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDelete('unit', unit.id, unit.name)}
+                    >
                       <Edit className="w-3 h-3" />
                     </Button>
                   </div>
@@ -496,7 +532,10 @@ export const StockModule = () => {
       </Tabs>
 
       {showAddProduct && (
-        <ProductFormModal onClose={() => setShowAddProduct(false)} />
+        <ProductForm 
+          product={editingProduct} 
+          onClose={handleCloseProductModal} 
+        />
       )}
 
       {showMovement && (
@@ -510,6 +549,16 @@ export const StockModule = () => {
       {showUnit && (
         <UnitModal onClose={() => setShowUnit(false)} />
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open })}
+        title={`Supprimer ${deleteConfirm.type === 'product' ? 'le produit' : deleteConfirm.type === 'category' ? 'la catégorie' : 'l\'unité'}`}
+        description={`Êtes-vous sûr de vouloir supprimer ${deleteConfirm.name} ? Cette action est irréversible.`}
+        onConfirm={confirmDelete}
+        confirmText="Supprimer"
+        variant="destructive"
+      />
     </div>
   );
 };
