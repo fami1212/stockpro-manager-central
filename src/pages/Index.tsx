@@ -9,6 +9,7 @@ import { PurchasesModule } from '@/components/PurchasesModule';
 import { SuppliersModule } from '@/components/SuppliersModule';
 import { ReportsModule } from '@/components/ReportsModule';
 import { SettingsModule } from '@/components/SettingsModule';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -36,19 +37,45 @@ const Index = () => {
     }
   };
 
+  const getModuleTitle = () => {
+    const titles = {
+      dashboard: 'Tableau de Bord',
+      stock: 'Gestion de Stock',
+      sales: 'Gestion des Ventes',
+      purchases: 'Gestion des Achats',
+      clients: 'Gestion des Clients',
+      suppliers: 'Gestion des Fournisseurs',
+      reports: 'Rapports & Analyses',
+      settings: 'Paramètres'
+    };
+    return titles[activeModule as keyof typeof titles] || 'StockPro Manager';
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
       
       {/* Main Content */}
-      <main className="flex-1 lg:ml-0 min-w-0">
-        <div className="p-4 lg:p-6">
-          <header className="mb-6 lg:mb-8 pt-12 lg:pt-0">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">StockPro Manager</h1>
-            <p className="text-gray-600 mt-2 text-sm lg:text-base">Votre solution complète de gestion d'entreprise</p>
+      <main className={cn(
+        "transition-all duration-300",
+        // Desktop: account for sidebar
+        "lg:pl-72",
+        // Mobile: account for top header and bottom nav
+        "pt-14 pb-20 lg:pt-0 lg:pb-0"
+      )}>
+        <div className="px-4 py-6 lg:px-8">
+          {/* Page Header */}
+          <header className="mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+              {getModuleTitle()}
+            </h1>
+            <p className="text-gray-600 mt-2 text-sm lg:text-base">
+              Votre solution complète de gestion d'entreprise
+            </p>
           </header>
           
-          <div className="w-full overflow-x-hidden">
+          {/* Module Content */}
+          <div className="w-full">
             {renderActiveModule()}
           </div>
         </div>
