@@ -127,15 +127,15 @@ export const StockModule = () => {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion du Stock</h2>
-        <div className="flex space-x-2">
-          <Button onClick={() => setShowMovement(true)} variant="outline">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Gestion du Stock</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+          <Button onClick={() => setShowMovement(true)} variant="outline" className="w-full sm:w-auto" size="sm">
             <BarChart3 className="w-4 h-4 mr-2" />
             Mouvement
           </Button>
-          <Button onClick={() => setShowAddProduct(true)} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => setShowAddProduct(true)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Nouveau produit
           </Button>
@@ -143,42 +143,42 @@ export const StockModule = () => {
       </div>
 
       {/* Indicateurs clés */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total produits</h3>
-          <p className="text-3xl font-bold text-blue-600">{products.length}</p>
-          <p className="text-sm text-gray-500 mt-1">Références actives</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Total produits</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{products.length}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">Références actives</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Valeur stock</h3>
-          <p className="text-3xl font-bold text-green-600">€{products.reduce((acc, p) => acc + (p.stock * p.buyPrice), 0).toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-1">Prix d'achat</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Valeur stock</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-green-600">€{products.reduce((acc, p) => acc + (p.stock * p.buyPrice), 0).toLocaleString()}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">Prix d'achat</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Alertes stock</h3>
-          <p className="text-3xl font-bold text-red-600">{lowStockProducts.length}</p>
-          <p className="text-sm text-gray-500 mt-1">Produits en rupture</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Alertes stock</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-red-600">{lowStockProducts.length}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">Produits en rupture</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Catégories</h3>
-          <p className="text-3xl font-bold text-purple-600">{categories.length}</p>
-          <p className="text-sm text-gray-500 mt-1">Actives</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Catégories</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-purple-600">{categories.length}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">Actives</p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="products">Produits</TabsTrigger>
-          <TabsTrigger value="movements">Mouvements</TabsTrigger>
-          <TabsTrigger value="categories">Catégories</TabsTrigger>
-          <TabsTrigger value="units">Unités</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="products" className="text-xs sm:text-sm">Produits</TabsTrigger>
+          <TabsTrigger value="movements" className="text-xs sm:text-sm">Mouvements</TabsTrigger>
+          <TabsTrigger value="categories" className="text-xs sm:text-sm">Catégories</TabsTrigger>
+          <TabsTrigger value="units" className="text-xs sm:text-sm">Unités</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex space-x-4 mb-6">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 lg:space-x-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Rechercher un produit..."
                   value={searchTerm}
@@ -187,7 +187,7 @@ export const StockModule = () => {
                 />
               </div>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue placeholder="Toutes catégories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,13 +197,14 @@ export const StockModule = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full lg:w-auto" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
                 Filtrer
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -265,20 +266,86 @@ export const StockModule = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-gray-900 text-sm">{product.name}</h3>
+                      <p className="text-xs text-gray-500">{product.reference}</p>
+                      {product.variants.length > 0 && (
+                        <p className="text-xs text-gray-500">{product.variants.length} variante(s)</p>
+                      )}
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      product.status === 'En stock' 
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {product.status}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-500">Catégorie:</span>
+                      <p className="font-medium">{product.category}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Stock:</span>
+                      <p className={`font-medium ${product.stock <= product.alertThreshold ? 'text-red-600' : 'text-gray-900'}`}>
+                        {product.stock} {product.unit}
+                        {product.stock <= product.alertThreshold && (
+                          <AlertTriangle className="w-3 h-3 text-red-500 inline ml-1" />
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Prix Achat:</span>
+                      <p className="font-medium">€{product.buyPrice}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Prix Vente:</span>
+                      <p className="font-medium">€{product.sellPrice}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Edit className="w-3 h-3 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Package className="w-3 h-3 mr-1" />
+                        Stock
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 text-xs">
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Historique des mouvements</h3>
-              <Button onClick={() => setShowMovement(true)} className="bg-blue-600 hover:bg-blue-700">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Historique des mouvements</h3>
+              <Button onClick={() => setShowMovement(true)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Nouveau mouvement
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -320,37 +387,80 @@ export const StockModule = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {movements.map((movement) => (
+                <div key={movement.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-gray-900 text-sm">{movement.product}</h3>
+                      <p className="text-xs text-gray-500">{movement.date} - {movement.time}</p>
+                    </div>
+                    <div className="flex items-center">
+                      {movement.type === 'Entrée' ? (
+                        <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-red-600 mr-1" />
+                      )}
+                      <span className={`text-sm font-medium ${movement.type === 'Entrée' ? 'text-green-600' : 'text-red-600'}`}>
+                        {movement.type}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-500">Quantité:</span>
+                      <p className="font-medium">{movement.quantity}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Motif:</span>
+                      <p className="font-medium">{movement.reason}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Utilisateur:</span>
+                      <p className="font-medium">{movement.user}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Référence:</span>
+                      <p className="font-medium">{movement.reference}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Gestion des catégories</h3>
-              <Button onClick={() => setShowCategory(true)} className="bg-purple-600 hover:bg-purple-700">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Gestion des catégories</h3>
+              <Button onClick={() => setShowCategory(true)} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Nouvelle catégorie
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((category) => (
                 <div key={category.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full bg-${category.color}-500 mr-3`}></div>
-                      <h4 className="font-semibold text-gray-900">{category.name}</h4>
+                    <div className="flex items-center min-w-0 flex-1">
+                      <div className={`w-4 h-4 rounded-full bg-${category.color}-500 mr-3 flex-shrink-0`}></div>
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{category.name}</h4>
                     </div>
-                    <div className="flex space-x-1">
+                    <div className="flex gap-1 ml-2">
                       <Button variant="outline" size="sm">
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3 h-3" />
                       </Button>
                       <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">{category.products} produit(s)</p>
+                  <p className="text-xs text-gray-600">{category.products} produit(s)</p>
                 </div>
               ))}
             </div>
@@ -358,27 +468,25 @@ export const StockModule = () => {
         </TabsContent>
 
         <TabsContent value="units" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Unités de mesure</h3>
-              <Button onClick={() => setShowUnit(true)} className="bg-orange-600 hover:bg-orange-700">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900">Unités de mesure</h3>
+              <Button onClick={() => setShowUnit(true)} className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Nouvelle unité
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {units.map((unit) => (
                 <div key={unit.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900">{unit.name}</h4>
-                    <div className="flex space-x-1">
-                      <Button variant="outline" size="sm">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <h4 className="font-semibold text-gray-900 text-sm">{unit.name}</h4>
+                    <Button variant="outline" size="sm">
+                      <Edit className="w-3 h-3" />
+                    </Button>
                   </div>
-                  <p className="text-sm text-gray-600">Symbole: {unit.symbol}</p>
+                  <p className="text-xs text-gray-600">Symbole: {unit.symbol}</p>
                   <p className="text-xs text-gray-500">{unit.type}</p>
                 </div>
               ))}

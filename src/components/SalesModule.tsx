@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Plus, Search, Calendar, FileText, CreditCard, Receipt, Eye, Printer, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -103,15 +104,15 @@ export const SalesModule = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Ventes</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Gestion des Ventes</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+          <Button variant="outline" className="w-full sm:w-auto" size="sm">
             <FileText className="w-4 h-4 mr-2" />
             Nouveau devis
           </Button>
-          <Button onClick={() => setShowNewSale(true)} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => setShowNewSale(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Nouvelle vente
           </Button>
@@ -119,42 +120,42 @@ export const SalesModule = () => {
       </div>
 
       {/* Indicateurs clés */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">CA Total</h3>
-          <p className="text-3xl font-bold text-green-600">€{getTotalSales().toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-1">{invoices.length} factures</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">CA Total</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-green-600">€{getTotalSales().toLocaleString()}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">{invoices.length} factures</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Encaissé</h3>
-          <p className="text-3xl font-bold text-blue-600">€{getTotalPaid().toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-1">Paiements reçus</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Encaissé</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-blue-600">€{getTotalPaid().toLocaleString()}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">Paiements reçus</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">En attente</h3>
-          <p className="text-3xl font-bold text-orange-600">€{getTotalPending().toLocaleString()}</p>
-          <p className="text-sm text-gray-500 mt-1">{pendingPayments.length} impayées</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">En attente</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-orange-600">€{getTotalPending().toLocaleString()}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">{pendingPayments.length} impayées</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Devis en cours</h3>
-          <p className="text-3xl font-bold text-purple-600">{quotes.length}</p>
-          <p className="text-sm text-gray-500 mt-1">À convertir</p>
+        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Devis en cours</h3>
+          <p className="text-2xl lg:text-3xl font-bold text-purple-600">{quotes.length}</p>
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">À convertir</p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sales">Toutes les ventes</TabsTrigger>
-          <TabsTrigger value="invoices">Factures</TabsTrigger>
-          <TabsTrigger value="quotes">Devis</TabsTrigger>
-          <TabsTrigger value="payments">Paiements</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="sales" className="text-xs sm:text-sm">Toutes</TabsTrigger>
+          <TabsTrigger value="invoices" className="text-xs sm:text-sm">Factures</TabsTrigger>
+          <TabsTrigger value="quotes" className="text-xs sm:text-sm">Devis</TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs sm:text-sm">Paiements</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex space-x-4 mb-6">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 lg:space-x-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Rechercher une vente..."
                   value={searchTerm}
@@ -163,7 +164,7 @@ export const SalesModule = () => {
                 />
               </div>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,13 +175,14 @@ export const SalesModule = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full lg:w-auto" size="sm">
                 <Calendar className="w-4 h-4 mr-2" />
                 Filtrer par date
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -239,14 +241,82 @@ export const SalesModule = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {sales.map((sale) => (
+                <div key={sale.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-blue-600 text-sm">{sale.id}</h3>
+                      <p className="text-xs text-gray-500">{sale.type}</p>
+                      <p className="text-xs text-gray-500">{sale.date} - {sale.time}</p>
+                    </div>
+                    <Badge className={getStatusColor(sale.status)}>
+                      {sale.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Client:</span>
+                      <span className="font-medium">{sale.client}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Articles:</span>
+                      <span className="font-medium">{sale.items} article(s)</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total HT:</span>
+                      <span className="font-medium">€{(sale.total - sale.tax).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Payé:</span>
+                      <span className="font-medium text-green-600">€{sale.paid.toFixed(2)}</span>
+                    </div>
+                    {sale.remaining > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Restant:</span>
+                        <span className="font-medium text-orange-600">€{sale.remaining.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Eye className="w-3 h-3 mr-1" />
+                        Voir
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Printer className="w-3 h-3 mr-1" />
+                        Imprimer
+                      </Button>
+                    </div>
+                    {sale.remaining > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <CreditCard className="w-3 h-3 mr-1" />
+                          Payer
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600 text-xs">
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Annuler
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex space-x-4 mb-6">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 lg:space-x-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Rechercher une facture..."
                   value={searchTerm}
@@ -255,7 +325,7 @@ export const SalesModule = () => {
                 />
               </div>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,13 +336,14 @@ export const SalesModule = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full lg:w-auto" size="sm">
                 <Calendar className="w-4 h-4 mr-2" />
                 Filtrer par date
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -330,14 +401,81 @@ export const SalesModule = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {invoices.map((sale) => (
+                <div key={sale.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-blue-600 text-sm">{sale.id}</h3>
+                      <p className="text-xs text-gray-500">{sale.date} - {sale.time}</p>
+                    </div>
+                    <Badge className={getStatusColor(sale.status)}>
+                      {sale.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Client:</span>
+                      <span className="font-medium">{sale.client}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Articles:</span>
+                      <span className="font-medium">{sale.items} article(s)</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total HT:</span>
+                      <span className="font-medium">€{(sale.total - sale.tax).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Payé:</span>
+                      <span className="font-medium text-green-600">€{sale.paid.toFixed(2)}</span>
+                    </div>
+                    {sale.remaining > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Restant:</span>
+                        <span className="font-medium text-orange-600">€{sale.remaining.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Eye className="w-3 h-3 mr-1" />
+                        Voir
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Printer className="w-3 h-3 mr-1" />
+                        Imprimer
+                      </Button>
+                    </div>
+                    {sale.remaining > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <CreditCard className="w-3 h-3 mr-1" />
+                          Payer
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600 text-xs">
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Annuler
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="quotes" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex space-x-4 mb-6">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 lg:space-x-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Rechercher un devis..."
                   value={searchTerm}
@@ -346,7 +484,7 @@ export const SalesModule = () => {
                 />
               </div>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,13 +495,14 @@ export const SalesModule = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full lg:w-auto" size="sm">
                 <Calendar className="w-4 h-4 mr-2" />
                 Filtrer par date
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -412,14 +551,63 @@ export const SalesModule = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {quotes.map((sale) => (
+                <div key={sale.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-blue-600 text-sm">{sale.id}</h3>
+                      <p className="text-xs text-gray-500">{sale.date} - {sale.time}</p>
+                    </div>
+                    <Badge className={getStatusColor(sale.status)}>
+                      {sale.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Client:</span>
+                      <span className="font-medium">{sale.client}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Articles:</span>
+                      <span className="font-medium">{sale.items} article(s)</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total HT:</span>
+                      <span className="font-medium">€{(sale.total - sale.tax).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Eye className="w-3 h-3 mr-1" />
+                        Voir
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Printer className="w-3 h-3 mr-1" />
+                        Imprimer
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <FileText className="w-3 h-3 mr-1" />
+                        Convertir
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="payments" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex space-x-4 mb-6">
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-3 lg:space-x-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Rechercher un paiement..."
                   value={searchTerm}
@@ -428,7 +616,7 @@ export const SalesModule = () => {
                 />
               </div>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,13 +627,14 @@ export const SalesModule = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full lg:w-auto" size="sm">
                 <Calendar className="w-4 h-4 mr-2" />
                 Filtrer par date
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -484,6 +673,45 @@ export const SalesModule = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {sales.filter(s => s.paid > 0).map((sale) => (
+                <div key={sale.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-blue-600 text-sm">{sale.id}</h3>
+                      <p className="text-xs text-gray-500">{sale.date} - {sale.time}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-green-600 text-sm">€{sale.paid.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Client:</span>
+                      <span className="font-medium">{sale.client}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Méthode:</span>
+                      <span className="font-medium">{sale.paymentMethod}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button variant="outline" size="sm" className="flex-1 text-xs">
+                      <Eye className="w-3 h-3 mr-1" />
+                      Voir
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs">
+                      <Printer className="w-3 h-3 mr-1" />
+                      Imprimer
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </TabsContent>
