@@ -91,6 +91,10 @@ export default function Register() {
     }));
   };
 
+  const handleTermsChange = (checked: boolean | "indeterminate") => {
+    setAcceptedTerms(checked === true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-2xl">
@@ -239,7 +243,7 @@ export default function Register() {
               <Checkbox
                 id="terms"
                 checked={acceptedTerms}
-                onCheckedChange={setAcceptedTerms}
+                onCheckedChange={handleTermsChange}
               />
               <Label htmlFor="terms" className="text-sm">
                 J'accepte les{' '}
