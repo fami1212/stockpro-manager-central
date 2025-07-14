@@ -19,30 +19,43 @@ interface AIInsight {
 }
 
 export const AIAssistant = () => {
-  const { state } = useApp();
+  const { products, clients, sales, categories, loading } = useApp();
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Système de prédiction de stock intelligent
+  // Système de prédiction de stock intelligent avec vraies données
   const predictStockNeeds = () => {
     const predictions: AIInsight[] = [];
     
-    state.products.forEach(product => {
-      // Simulation d'algorithme de prédiction basé sur les tendances
-      const averageSales = Math.random() * 20 + 5; // Simulation de données historiques
-      const predictedStock = Math.floor(averageSales * 1.5);
-      const daysUntilStockout = Math.floor(product.stock / (averageSales / 30));
+    if (products.length === 0) return predictions;
+    
+    products.forEach(product => {
+      // Calcul basé sur les vraies données de vente
+      const productSales = sales.filter(sale => 
+        sale.items.some(item => item.product === product.name)
+      );
       
-      if (daysUntilStockout < 7) {
+      const totalSold = productSales.reduce((acc, sale) => {
+        const item = sale.items.find(item => item.product === product.name);
+        return acc + (item ? item.quantity : 0);
+      }, 0);
+      
+      const averageSales = productSales.length > 0 ? totalSold / Math.max(productSales.length, 1) : 5;
+      const predictedStock = Math.max(Math.floor(averageSales * 2), 10);
+      const daysUntilStockout = product.stock > 0 ? Math.floor(product.stock / Math.max(averageSales / 30, 0.5)) : 0;
+      
+      if (product.stock <= product.alertThreshold || daysUntilStockout < 7) {
         predictions.push({
           id: `stock-${product.id}`,
           type: 'prediction',
-          title: `Stock critique prévu pour ${product.name}`,
-          description: `Rupture de stock prévue dans ${daysUntilStockout} jours. Commandez ${predictedStock} unités maintenant.`,
+          title: `Stock critique pour ${product.name}`,
+          description: product.stock === 0 
+            ? `Rupture de stock détectée. Commandez ${predictedStock} unités immédiatement.`
+            : `Stock faible (${product.stock} restant). Rupture prévue dans ${daysUntilStockout} jours. Commandez ${predictedStock} unités.`,
           confidence: 0.85,
-          impact: 'high',
+          impact: product.stock === 0 ? 'high' : 'medium',
           actionable: true,
-          data: { productId: product.id, recommendedOrder: predictedStock }
+          data: { productId: product.id, recommendedOrder: predictedStock, currentStock: product.stock }
         });
       }
     });
@@ -50,12 +63,15 @@ export const AIAssistant = () => {
     return predictions;
   };
 
-  // Analyseur de tendances et recommandations
+  // Analyseur de tendances avec vraies données
   const analyzeTrends = () => {
     const trends: AIInsight[] = [];
     
-    // Analyse des marges
-    const lowMarginProducts = state.products.filter(p => {
+    if (products.length === 0) return trends;
+    
+    // Analyse des marges réelles
+    const lowMarginProducts = products.filter(p => {
+      if (p.sellPrice === 0 || p.buyPrice === 0) return false;
       const margin = ((p.sellPrice - p.buyPrice) / p.sellPrice) * 100;
       return margin < 20;
     });
@@ -65,74 +81,103 @@ export const AIAssistant = () => {
         id: 'margin-optimization',
         type: 'optimization',
         title: 'Optimisation des marges détectée',
-        description: `${lowMarginProducts.length} produits ont des marges faibles (<20%). Augmentation recommandée de 5-10%.`,
+        description: `${lowMarginProducts.length} produits ont des marges faibles (<20%). Révision des prix recommandée.`,
         confidence: 0.92,
         impact: 'high',
         actionable: true,
-        data: { products: lowMarginProducts }
+        data: { products: lowMarginProducts.map(p => p.name) }
       });
     }
 
-    // Détection d'anomalies dans les prix
-    const priceAnomalies = state.products.filter(p => {
-      const expectedPrice = p.buyPrice * 1.4; // Marge standard de 40%
-      const priceDifference = Math.abs(p.sellPrice - expectedPrice) / expectedPrice;
-      return priceDifference > 0.3; // Plus de 30% de différence
-    });
-
-    if (priceAnomalies.length > 0) {
-      trends.push({
-        id: 'price-anomaly',
-        type: 'alert',
-        title: 'Anomalies de prix détectées',
-        description: `${priceAnomalies.length} produits ont des prix suspects. Vérification recommandée.`,
-        confidence: 0.78,
-        impact: 'medium',
-        actionable: true,
-        data: { products: priceAnomalies }
-      });
+    // Analyse des ventes
+    if (sales.length > 0) {
+      const totalRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+      const averageOrderValue = totalRevenue / sales.length;
+      
+      if (averageOrderValue < 50) {
+        trends.push({
+          id: 'order-value',
+          type: 'recommendation',
+          title: 'Valeur moyenne des commandes faible',
+          description: `Panier moyen de €${averageOrderValue.toFixed(2)}. Opportunité d'augmentation par vente croisée.`,
+          confidence: 0.78,
+          impact: 'medium',
+          actionable: true,
+          data: { currentAOV: averageOrderValue }
+        });
+      }
     }
 
     return trends;
   };
 
-  // Recommandations intelligentes
+  // Recommandations intelligentes avec vraies données
   const generateRecommendations = () => {
     const recommendations: AIInsight[] = [];
     
-    // Recommandation de diversification
-    const categoryCount = state.categories.length;
-    const avgProductsPerCategory = state.products.length / categoryCount;
-    
-    if (avgProductsPerCategory > 10) {
+    // Analyse de diversification
+    if (categories.length > 0 && products.length > 0) {
+      const avgProductsPerCategory = products.length / categories.length;
+      
+      if (avgProductsPerCategory > 10) {
+        recommendations.push({
+          id: 'diversification',
+          type: 'recommendation',
+          title: 'Diversification du catalogue',
+          description: `${Math.round(avgProductsPerCategory)} produits par catégorie en moyenne. Considérez ajouter de nouvelles catégories.`,
+          confidence: 0.71,
+          impact: 'medium',
+          actionable: true,
+          data: { currentCategories: categories.length, totalProducts: products.length }
+        });
+      }
+    }
+
+    // Analyse des clients inactifs
+    if (clients.length > 0) {
+      const inactiveClients = clients.filter(c => {
+        if (!c.lastOrder) return true;
+        const lastOrderDate = new Date(c.lastOrder);
+        const daysSinceOrder = (Date.now() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24);
+        return daysSinceOrder > 60;
+      });
+
+      if (inactiveClients.length > 0) {
+        recommendations.push({
+          id: 'client-reactivation',
+          type: 'recommendation',
+          title: 'Clients à réactiver',
+          description: `${inactiveClients.length} clients inactifs depuis plus de 60 jours. Campagne de relance recommandée.`,
+          confidence: 0.88,
+          impact: 'high',
+          actionable: true,
+          data: { inactiveCount: inactiveClients.length, totalClients: clients.length }
+        });
+      }
+    }
+
+    // Recommandation si pas de données
+    if (products.length === 0) {
       recommendations.push({
-        id: 'diversification',
+        id: 'setup-products',
         type: 'recommendation',
-        title: 'Diversification du catalogue recommandée',
-        description: 'Votre catalogue est concentré sur peu de catégories. Considérez ajouter 2-3 nouvelles catégories.',
-        confidence: 0.71,
-        impact: 'medium',
+        title: 'Configurez vos premiers produits',
+        description: 'Ajoutez vos produits pour commencer à bénéficier des analyses IA personnalisées.',
+        confidence: 1.0,
+        impact: 'high',
         actionable: true
       });
     }
 
-    // Recommandation de clients inactifs
-    const inactiveClients = state.clients.filter(c => {
-      const lastOrderDate = new Date(c.lastOrder);
-      const daysSinceOrder = (Date.now() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceOrder > 60;
-    });
-
-    if (inactiveClients.length > 0) {
+    if (sales.length === 0) {
       recommendations.push({
-        id: 'client-reactivation',
+        id: 'first-sales',
         type: 'recommendation',
-        title: 'Réactivation clients recommandée',
-        description: `${inactiveClients.length} clients inactifs depuis 60+ jours. Campagne de réactivation suggérée.`,
-        confidence: 0.88,
+        title: 'Enregistrez vos premières ventes',
+        description: 'Commencez à enregistrer vos ventes pour des analyses prédictives précises.',
+        confidence: 1.0,
         impact: 'high',
-        actionable: true,
-        data: { clients: inactiveClients }
+        actionable: true
       });
     }
 
@@ -144,7 +189,7 @@ export const AIAssistant = () => {
     setIsAnalyzing(true);
     
     try {
-      // Simulation d'analyse IA complexe
+      // Simulation d'analyse IA
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const stockPredictions = predictStockNeeds();
@@ -163,7 +208,7 @@ export const AIAssistant = () => {
       
       toast({
         title: 'Analyse IA terminée',
-        description: `${allInsights.length} insights générés avec succès`
+        description: `${allInsights.length} insights générés avec vos données`
       });
     } catch (error) {
       toast({
@@ -177,9 +222,10 @@ export const AIAssistant = () => {
   };
 
   useEffect(() => {
-    // Analyse automatique au chargement
-    runAIAnalysis();
-  }, [state.products, state.clients]);
+    if (!loading && (products.length > 0 || clients.length > 0 || sales.length > 0)) {
+      runAIAnalysis();
+    }
+  }, [products, clients, sales, loading]);
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -198,6 +244,14 @@ export const AIAssistant = () => {
     return 'bg-green-100 text-green-700 border-green-200';
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -205,7 +259,7 @@ export const AIAssistant = () => {
           <Brain className="w-6 h-6 text-purple-600" />
           <h2 className="text-xl font-bold">Assistant IA</h2>
           <Badge variant="outline" className="bg-purple-50 text-purple-700">
-            Intelligence Avancée
+            Données Personnalisées
           </Badge>
         </div>
         <Button 
@@ -221,7 +275,7 @@ export const AIAssistant = () => {
           ) : (
             <>
               <Zap className="w-4 h-4 mr-2" />
-              Nouvelle analyse
+              Analyser mes données
             </>
           )}
         </Button>
@@ -232,7 +286,12 @@ export const AIAssistant = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Aucun insight disponible. Lancez une analyse pour commencer.</p>
+              <p className="text-gray-600 mb-4">
+                {products.length === 0 && sales.length === 0 
+                  ? "Ajoutez des produits et des ventes pour commencer l'analyse IA"
+                  : "Cliquez sur 'Analyser mes données' pour générer des insights personnalisés"
+                }
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -264,10 +323,10 @@ export const AIAssistant = () => {
                 {insight.actionable && (
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline">
-                      Appliquer la recommandation
+                      Appliquer
                     </Button>
                     <Button size="sm" variant="ghost">
-                      En savoir plus
+                      Détails
                     </Button>
                   </div>
                 )}
