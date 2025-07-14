@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -22,23 +23,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // TODO: Intégrer avec Supabase Auth
-      // Simulation de connexion
-      if (formData.email && formData.password) {
-        toast({
-          title: 'Connexion réussie',
-          description: 'Bienvenue dans StockPro Manager'
-        });
-        navigate('/');
-      } else {
-        throw new Error('Veuillez remplir tous les champs');
-      }
+      await signIn(formData.email, formData.password);
+      navigate('/');
     } catch (error) {
-      toast({
-        title: 'Erreur de connexion',
-        description: error instanceof Error ? error.message : 'Une erreur est survenue',
-        variant: 'destructive'
-      });
+      // Error is handled in the auth hook
     } finally {
       setLoading(false);
     }
@@ -118,12 +106,6 @@ export default function Login() {
                 </>
               )}
             </Button>
-
-            <div className="text-center text-sm text-gray-600">
-              <Link to="/forgot-password" className="hover:text-blue-600">
-                Mot de passe oublié ?
-              </Link>
-            </div>
 
             <div className="text-center text-sm text-gray-600">
               Pas encore de compte ?{' '}
