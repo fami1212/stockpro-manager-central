@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useProducts, useCategories, useClients, useSales } from '@/hooks/useSupabaseData';
+import { useSuppliers } from '@/hooks/useSuppliers';
 
 export interface Product {
   id: string;
@@ -96,6 +96,7 @@ interface AppContextType {
   categories: Category[];
   sales: Sale[];
   units: Unit[];
+  suppliers: Supplier[];
   
   // Loading states
   loading: boolean;
@@ -120,10 +121,16 @@ interface AppContextType {
   updateSale: (id: string, sale: any) => Promise<void>;
   deleteSale: (id: string) => Promise<void>;
   
+  // Supplier actions
+  addSupplier: (supplier: any) => Promise<void>;
+  updateSupplier: (id: string, supplier: any) => Promise<void>;
+  deleteSupplier: (id: string) => Promise<void>;
+  
   // Refetch functions
   refetchProducts: () => Promise<void>;
   refetchCategories: () => Promise<void>;
   refetchClients: () => Promise<void>;
+  refetchSuppliers: () => Promise<void>;
   
   // Legacy state access for compatibility
   state: {
@@ -132,6 +139,7 @@ interface AppContextType {
     categories: Category[];
     sales: Sale[];
     units: Unit[];
+    suppliers: Supplier[];
   };
 }
 
@@ -169,7 +177,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteSale
   } = useSales();
 
-  const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading;
+  const {
+    suppliers: rawSuppliers,
+    loading: suppliersLoading,
+    addSupplier: addSupplierRaw,
+    updateSupplier: updateSupplierRaw,
+    deleteSupplier: deleteSupplierRaw,
+    refetch: refetchSuppliers
+  } = useSuppliers();
+
+  const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading;
 
   // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
@@ -211,6 +228,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     paymentMethod: s.payment_method || ''
   }));
 
+  const suppliers: Supplier[] = (rawSuppliers || []).map(s => ({
+    ...s,
+    // Ensure all required properties are present
+    total_orders: s.total_orders || 0,
+    total_amount: s.total_amount || 0,
+    last_order: s.last_order || null
+  }));
+
   // Mock units data - should be fetched from Supabase
   const units: Unit[] = [
     { id: '1', name: 'Pièce', symbol: 'pcs', type: 'Unité' },
@@ -236,6 +261,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await updateSaleRaw(id, saleData);
   };
 
+  const addSupplier = async (supplierData: any): Promise<void> => {
+    await addSupplierRaw(supplierData);
+  };
+
+  const updateSupplier = async (id: string, supplierData: any): Promise<void> => {
+    await updateSupplierRaw(id, supplierData);
+  };
+
+  const deleteSupplier = async (id: string): Promise<void> => {
+    await deleteSupplierRaw(id);
+  };
+
   // Mock functions for missing actions
   const deleteCategory = async (id: string) => {
     console.log('Delete category:', id);
@@ -250,7 +287,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clients,
     categories,
     sales,
-    units
+    units,
+    suppliers
   };
 
   const value = {
@@ -259,6 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories,
     sales,
     units,
+    suppliers,
     loading,
     addProduct,
     updateProduct,
@@ -270,9 +309,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSale,
     updateSale,
     deleteSale,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
     refetchProducts,
     refetchCategories,
     refetchClients,
+    refetchSuppliers,
     state
   };
 
