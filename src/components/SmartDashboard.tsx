@@ -196,7 +196,7 @@ export const SmartDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-sm">Marges élevées (>30%)</div>
+                <div className="text-sm">Marges élevées (&gt;30%)</div>
                 <div className="text-sm font-medium text-green-600">65%</div>
               </div>
               <div className="flex items-center justify-between">
@@ -204,7 +204,7 @@ export const SmartDashboard = () => {
                 <div className="text-sm font-medium text-yellow-600">25%</div>
               </div>
               <div className="flex items-center justify-between">
-                <div className="text-sm">Marges faibles (<20%)</div>
+                <div className="text-sm">Marges faibles (&lt;20%)</div>
                 <div className="text-sm font-medium text-red-600">10%</div>
               </div>
             </div>
