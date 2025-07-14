@@ -17,7 +17,7 @@ export const SalesModule = () => {
   const [editingSale, setEditingSale] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; saleId?: number; saleName?: string }>({
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; saleId?: string; saleName?: string }>({
     open: false
   });
 

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useProducts, useCategories, useClients } from '@/hooks/useSupabaseData';
+import { useProducts, useCategories, useClients, useSales } from '@/hooks/useSupabaseData';
 
 export interface Product {
   id: string;
@@ -95,6 +95,7 @@ interface AppContextType {
   clients: Client[];
   categories: Category[];
   sales: Sale[];
+  units: Unit[];
   
   // Loading states
   loading: boolean;
@@ -116,7 +117,7 @@ interface AppContextType {
   
   // Sale actions
   addSale: (sale: any) => Promise<void>;
-  updateSale: (sale: any) => Promise<void>;
+  updateSale: (id: string, sale: any) => Promise<void>;
   deleteSale: (id: string) => Promise<void>;
   
   // Refetch functions
@@ -130,6 +131,7 @@ interface AppContextType {
     clients: Client[];
     categories: Category[];
     sales: Sale[];
+    units: Unit[];
   };
 }
 
@@ -139,8 +141,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const {
     products: rawProducts,
     loading: productsLoading,
-    addProduct,
-    updateProduct,
+    addProduct: addProductRaw,
+    updateProduct: updateProductRaw,
     deleteProduct,
     refetch: refetchProducts
   } = useProducts();
@@ -159,7 +161,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refetch: refetchClients
   } = useClients();
 
-  const loading = productsLoading || categoriesLoading || clientsLoading;
+  const {
+    sales: rawSales,
+    loading: salesLoading,
+    addSale: addSaleRaw,
+    updateSale: updateSaleRaw,
+    deleteSale
+  } = useSales();
+
+  const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading;
 
   // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
@@ -186,8 +196,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     products: products.filter(p => p.category === c.name).length
   }));
 
-  // Mock sales data for now
-  const sales: Sale[] = [];
+  const sales: Sale[] = (rawSales || []).map(s => ({
+    ...s,
+    client: s.clients?.name || '',
+    items: (s.sale_items || []).map((item: any) => ({
+      id: item.id,
+      product: item.products?.name || '',
+      price: item.price,
+      quantity: item.quantity,
+      discount: item.discount || 0,
+      total: item.total
+    })),
+    // Alias pour la compatibilité
+    paymentMethod: s.payment_method || ''
+  }));
+
+  // Mock units data - should be fetched from Supabase
+  const units: Unit[] = [
+    { id: '1', name: 'Pièce', symbol: 'pcs', type: 'Unité' },
+    { id: '2', name: 'Kilogramme', symbol: 'kg', type: 'Poids' },
+    { id: '3', name: 'Litre', symbol: 'L', type: 'Volume' },
+    { id: '4', name: 'Pack', symbol: 'pack', type: 'Groupé' }
+  ];
+
+  // Wrapper functions to match interface
+  const addProduct = async (productData: any): Promise<void> => {
+    await addProductRaw(productData);
+  };
+
+  const updateProduct = async (id: string, productData: any): Promise<void> => {
+    await updateProductRaw(id, productData);
+  };
+
+  const addSale = async (saleData: any): Promise<void> => {
+    await addSaleRaw(saleData);
+  };
+
+  const updateSale = async (id: string, saleData: any): Promise<void> => {
+    await updateSaleRaw(id, saleData);
+  };
 
   // Mock functions for missing actions
   const deleteCategory = async (id: string) => {
@@ -198,23 +245,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     console.log('Delete unit:', id);
   };
 
-  const addSale = async (sale: any) => {
-    console.log('Add sale:', sale);
-  };
-
-  const updateSale = async (sale: any) => {
-    console.log('Update sale:', sale);
-  };
-
-  const deleteSale = async (id: string) => {
-    console.log('Delete sale:', id);
-  };
-
   const state = {
     products,
     clients,
     categories,
-    sales
+    sales,
+    units
   };
 
   const value = {
@@ -222,6 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clients,
     categories,
     sales,
+    units,
     loading,
     addProduct,
     updateProduct,

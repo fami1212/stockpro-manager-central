@@ -74,9 +74,9 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
       };
 
       if (product) {
-        updateProduct({ ...productData, id: product.id });
+        await updateProduct(product.id, productData);
       } else {
-        addProduct(productData);
+        await addProduct(productData);
       }
       
       onClose();

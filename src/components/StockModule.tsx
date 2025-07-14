@@ -27,7 +27,7 @@ export const StockModule = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ 
     open: boolean; 
     type?: 'product' | 'category' | 'unit';
-    id?: number; 
+    id?: string; 
     name?: string 
   }>({ open: false });
 
@@ -79,7 +79,7 @@ export const StockModule = () => {
     setShowAddProduct(true);
   };
 
-  const handleDelete = (type: 'product' | 'category' | 'unit', id: number, name: string) => {
+  const handleDelete = (type: 'product' | 'category' | 'unit', id: string, name: string) => {
     setDeleteConfirm({
       open: true,
       type,
@@ -358,8 +358,6 @@ export const StockModule = () => {
             )}
           </div>
         </TabsContent>
-
-        
 
         <TabsContent value="movements" className="space-y-4">
           <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
