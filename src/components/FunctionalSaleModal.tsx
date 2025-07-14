@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { X, Plus, Minus, Calculator } from 'lucide-react';
@@ -149,7 +148,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
       };
 
       if (sale) {
-        await updateSale({ ...saleData, id: sale.id });
+        await updateSale(sale.id, saleData);
       } else {
         await addSale(saleData);
       }
