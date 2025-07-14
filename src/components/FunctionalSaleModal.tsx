@@ -32,7 +32,7 @@ interface SaleFormData {
 }
 
 export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
-  const { state, addSale, updateSale } = useApp();
+  const { products, clients, addSale, updateSale } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calculatedTotals, setCalculatedTotals] = useState({
     subtotal: 0,
@@ -52,7 +52,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
     defaultValues: sale ? {
       client: sale.client,
       documentType: 'facture',
-      paymentMethod: sale.paymentMethod,
+      paymentMethod: sale.payment_method,
       globalDiscount: sale.discount,
       taxRate: 20,
       notes: '',
@@ -99,7 +99,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
     });
   }, [watchedItems, watchedGlobalDiscount, watchedTaxRate]);
 
-  const clients = ['Marie Dupont', 'Pierre Martin', 'Sophie Bernard', 'Lucas Moreau'];
+  const clientNames = clients.map(c => c.name);
   const paymentMethods = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Crédit client'];
 
   const addItem = () => {
@@ -112,9 +112,9 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   };
 
   const updateItemPrice = (index: number, productName: string) => {
-    const product = state.products.find(p => p.name === productName);
+    const product = products.find(p => p.name === productName);
     if (product) {
-      setValue(`items.${index}.price`, product.sellPrice);
+      setValue(`items.${index}.price`, product.sell_price);
     }
   };
 
@@ -126,7 +126,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const saleItems: SaleItemType[] = data.items.map((item, index) => ({
-        id: Date.now() + index,
+        id: `${Date.now()}-${index}`,
         product: item.product,
         price: item.price,
         quantity: item.quantity,
@@ -144,13 +144,14 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
         tax: calculatedTotals.taxAmount,
         total: calculatedTotals.total,
         status: 'Confirmée' as const,
-        paymentMethod: data.paymentMethod
+        payment_method: data.paymentMethod,
+        paymentMethod: data.paymentMethod // Alias pour compatibilité
       };
 
       if (sale) {
-        updateSale({ ...saleData, id: sale.id });
+        await updateSale({ ...saleData, id: sale.id });
       } else {
-        addSale(saleData);
+        await addSale(saleData);
       }
 
       onClose();
@@ -201,7 +202,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((client) => (
+                  {clientNames.map((client) => (
                     <SelectItem key={client} value={client}>{client}</SelectItem>
                   ))}
                 </SelectContent>
@@ -252,9 +253,9 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                         <SelectValue placeholder="Produit" />
                       </SelectTrigger>
                       <SelectContent>
-                        {state.products.map((product) => (
+                        {products.map((product) => (
                           <SelectItem key={product.id} value={product.name}>
-                            {product.name} (€{product.sellPrice})
+                            {product.name} (€{product.sell_price})
                           </SelectItem>
                         ))}
                       </SelectContent>

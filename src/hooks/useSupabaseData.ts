@@ -11,7 +11,6 @@ export function useProducts() {
 
   useEffect(() => {
     if (!user) return
-
     fetchProducts()
   }, [user])
 
@@ -221,5 +220,131 @@ export function useClients() {
     loading,
     addClient,
     refetch: fetchClients
+  }
+}
+
+export function useSales() {
+  const { user } = useAuth()
+  const [sales, setSales] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) return
+    fetchSales()
+  }, [user])
+
+  const fetchSales = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sales')
+        .select(`
+          *,
+          clients(name),
+          sale_items(*, products(name))
+        `)
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setSales(data || [])
+    } catch (error) {
+      console.error('Error fetching sales:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addSale = async (saleData: any) => {
+    try {
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert([{ ...saleData, user_id: user?.id }])
+        .select()
+        .single()
+
+      if (saleError) throw saleError
+
+      // Add sale items
+      if (saleData.items && saleData.items.length > 0) {
+        const saleItems = saleData.items.map((item: any) => ({
+          sale_id: sale.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          discount: item.discount,
+          total: item.total
+        }))
+
+        const { error: itemsError } = await supabase
+          .from('sale_items')
+          .insert(saleItems)
+
+        if (itemsError) throw itemsError
+      }
+      
+      await fetchSales()
+      toast({ title: 'Vente ajoutée', description: `${saleData.reference} a été ajoutée avec succès.` })
+      return sale
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter la vente',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
+  const updateSale = async (id: string, saleData: any) => {
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .update(saleData)
+        .eq('id', id)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+      
+      await fetchSales()
+      toast({ title: 'Vente modifiée', description: 'La vente a été modifiée avec succès.' })
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de modifier la vente',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
+  const deleteSale = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+      
+      await fetchSales()
+      toast({ title: 'Vente supprimée', description: 'La vente a été supprimée.' })
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la vente',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
+  return {
+    sales,
+    loading,
+    addSale,
+    updateSale,
+    deleteSale,
+    refetch: fetchSales
   }
 }
