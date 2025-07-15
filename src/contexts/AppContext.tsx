@@ -55,6 +55,7 @@ export interface Sale {
   id: string;
   reference: string;
   client: string;
+  client_id: string;
   date: string;
   items: SaleItem[];
   subtotal: number;
@@ -70,6 +71,7 @@ export interface Sale {
 export interface SaleItem {
   id: string;
   product: string;
+  product_id: string;
   price: number;
   quantity: number;
   discount: number;
@@ -224,11 +226,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const sales: Sale[] = (rawSales || []).map(s => ({
     ...s,
     client: s.clients?.name || '',
-    client_id: s.client_id, // Add client_id to the transformed data
+    client_id: s.client_id || '',
     items: (s.sale_items || []).map((item: any) => ({
       id: item.id,
       product: item.products?.name || '',
-      product_id: item.product_id,
+      product_id: item.product_id || '',
       price: item.price,
       quantity: item.quantity,
       discount: item.discount || 0,
