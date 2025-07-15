@@ -5,7 +5,6 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useApp, Product } from '@/contexts/AppContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -18,14 +17,13 @@ interface ProductFormProps {
 interface ProductFormData {
   name: string;
   reference: string;
-  category: string;
+  category_id: string;
   stock: number;
-  alertThreshold: number;
-  buyPrice: number;
-  sellPrice: number;
-  unit: string;
+  alert_threshold: number;
+  buy_price: number;
+  sell_price: number;
+  unit_id: string;
   barcode: string;
-  description?: string;
 }
 
 export function ProductForm({ product, onClose }: ProductFormProps) {
@@ -42,35 +40,39 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     defaultValues: product ? {
       name: product.name,
       reference: product.reference,
-      category: product.category,
+      category_id: state.categories.find(c => c.name === product.category)?.id || '',
       stock: product.stock,
-      alertThreshold: product.alertThreshold,
-      buyPrice: product.buyPrice,
-      sellPrice: product.sellPrice,
-      unit: product.unit,
+      alert_threshold: product.alert_threshold,
+      buy_price: product.buy_price,
+      sell_price: product.sell_price,
+      unit_id: state.units.find(u => u.symbol === product.unit)?.id || '',
       barcode: product.barcode
     } : {
       stock: 0,
-      alertThreshold: 5,
-      buyPrice: 0,
-      sellPrice: 0
+      alert_threshold: 5,
+      buy_price: 0,
+      sell_price: 0
     }
   });
 
-  const watchedCategory = watch('category');
-  const watchedUnit = watch('unit');
+  const watchedCategoryId = watch('category_id');
+  const watchedUnitId = watch('unit_id');
 
   const onSubmit = async (data: ProductFormData) => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const productData = {
-        ...data,
-        status: (data.stock <= data.alertThreshold ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture',
-        variants: product?.variants || []
+        name: data.name,
+        reference: data.reference,
+        category_id: data.category_id,
+        stock: Number(data.stock),
+        alert_threshold: Number(data.alert_threshold),
+        buy_price: Number(data.buy_price),
+        sell_price: Number(data.sell_price),
+        unit_id: data.unit_id,
+        barcode: data.barcode || null,
+        status: (Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
       };
 
       if (product) {
@@ -134,10 +136,10 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="category">Catégorie *</Label>
+              <Label htmlFor="category_id">Catégorie *</Label>
               <Select 
-                value={watchedCategory} 
-                onValueChange={(value) => setValue('category', value)}
+                value={watchedCategoryId} 
+                onValueChange={(value) => setValue('category_id', value)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger>
@@ -145,22 +147,22 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {state.categories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
+                    <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.category && (
-                <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+              {errors.category_id && (
+                <p className="text-sm text-red-600 mt-1">{errors.category_id.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="unit">Unité *</Label>
+              <Label htmlFor="unit_id">Unité *</Label>
               <Select 
-                value={watchedUnit} 
-                onValueChange={(value) => setValue('unit', value)}
+                value={watchedUnitId} 
+                onValueChange={(value) => setValue('unit_id', value)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger>
@@ -168,14 +170,14 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {state.units.map((unit) => (
-                    <SelectItem key={unit.id} value={unit.symbol}>
+                    <SelectItem key={unit.id} value={unit.id}>
                       {unit.name} ({unit.symbol})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.unit && (
-                <p className="text-sm text-red-600 mt-1">{errors.unit.message}</p>
+              {errors.unit_id && (
+                <p className="text-sm text-red-600 mt-1">{errors.unit_id.message}</p>
               )}
             </div>
           </div>
@@ -199,19 +201,19 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             </div>
 
             <div>
-              <Label htmlFor="alertThreshold">Seuil d'alerte</Label>
+              <Label htmlFor="alert_threshold">Seuil d'alerte</Label>
               <Input
-                id="alertThreshold"
+                id="alert_threshold"
                 type="number"
-                {...register('alertThreshold', { 
+                {...register('alert_threshold', { 
                   required: 'Le seuil d\'alerte est requis',
                   min: { value: 0, message: 'Le seuil doit être positif' }
                 })}
                 min="0"
                 disabled={isSubmitting}
               />
-              {errors.alertThreshold && (
-                <p className="text-sm text-red-600 mt-1">{errors.alertThreshold.message}</p>
+              {errors.alert_threshold && (
+                <p className="text-sm text-red-600 mt-1">{errors.alert_threshold.message}</p>
               )}
             </div>
 
@@ -228,38 +230,38 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="buyPrice">Prix d'achat (€) *</Label>
+              <Label htmlFor="buy_price">Prix d'achat (€) *</Label>
               <Input
-                id="buyPrice"
+                id="buy_price"
                 type="number"
                 step="0.01"
-                {...register('buyPrice', { 
+                {...register('buy_price', { 
                   required: 'Le prix d\'achat est requis',
                   min: { value: 0, message: 'Le prix doit être positif' }
                 })}
                 min="0"
                 disabled={isSubmitting}
               />
-              {errors.buyPrice && (
-                <p className="text-sm text-red-600 mt-1">{errors.buyPrice.message}</p>
+              {errors.buy_price && (
+                <p className="text-sm text-red-600 mt-1">{errors.buy_price.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="sellPrice">Prix de vente (€) *</Label>
+              <Label htmlFor="sell_price">Prix de vente (€) *</Label>
               <Input
-                id="sellPrice"
+                id="sell_price"
                 type="number"
                 step="0.01"
-                {...register('sellPrice', { 
+                {...register('sell_price', { 
                   required: 'Le prix de vente est requis',
                   min: { value: 0, message: 'Le prix doit être positif' }
                 })}
                 min="0"
                 disabled={isSubmitting}
               />
-              {errors.sellPrice && (
-                <p className="text-sm text-red-600 mt-1">{errors.sellPrice.message}</p>
+              {errors.sell_price && (
+                <p className="text-sm text-red-600 mt-1">{errors.sell_price.message}</p>
               )}
             </div>
           </div>

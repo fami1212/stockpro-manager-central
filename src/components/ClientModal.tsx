@@ -4,27 +4,45 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useApp } from '@/contexts/AppContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface ClientModalProps {
   onClose: () => void;
 }
 
 export const ClientModal = ({ onClose }: ClientModalProps) => {
+  const { addClient } = useApp();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
-    city: '',
-    postalCode: '',
-    country: '',
     notes: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nouveau client:', formData);
-    onClose();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addClient({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim() || null,
+        status: 'Actif'
+      });
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la création du client:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -39,6 +57,7 @@ export const ClientModal = ({ onClose }: ClientModalProps) => {
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-6 h-6" />
           </button>
@@ -55,6 +74,7 @@ export const ClientModal = ({ onClose }: ClientModalProps) => {
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
 
@@ -68,10 +88,11 @@ export const ClientModal = ({ onClose }: ClientModalProps) => {
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Téléphone *
               </label>
@@ -80,50 +101,19 @@ export const ClientModal = ({ onClose }: ClientModalProps) => {
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
                 required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Adresse
-              </label>
-              <Input
-                placeholder="123 Rue de la Paix"
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ville
-              </label>
-              <Input
-                placeholder="Paris"
-                value={formData.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Code postal
-              </label>
-              <Input
-                placeholder="75001"
-                value={formData.postalCode}
-                onChange={(e) => handleChange('postalCode', e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pays
+                Adresse
               </label>
               <Input
-                placeholder="France"
-                value={formData.country}
-                onChange={(e) => handleChange('country', e.target.value)}
+                placeholder="123 Rue de la Paix, 75001 Paris"
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -137,14 +127,29 @@ export const ClientModal = ({ onClose }: ClientModalProps) => {
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
               rows={3}
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
-              Créer le client
+            <Button 
+              type="submit" 
+              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <LoadingSpinner size="sm" text="Création..." />
+              ) : (
+                'Créer le client'
+              )}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1"
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
           </div>

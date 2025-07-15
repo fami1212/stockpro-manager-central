@@ -4,15 +4,19 @@ import { X, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useApp } from '@/contexts/AppContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface CategoryModalProps {
   onClose: () => void;
 }
 
 export const CategoryModal = ({ onClose }: CategoryModalProps) => {
+  const { addCategory } = useApp();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedColor, setSelectedColor] = useState('blue');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const colors = [
     { name: 'blue', label: 'Bleu', class: 'bg-blue-500' },
@@ -25,14 +29,22 @@ export const CategoryModal = ({ onClose }: CategoryModalProps) => {
     { name: 'indigo', label: 'Indigo', class: 'bg-indigo-500' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nouvelle catégorie:', {
-      name,
-      description,
-      color: selectedColor
-    });
-    onClose();
+    if (!name.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await addCategory({
+        name: name.trim(),
+        color: selectedColor
+      });
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la création de la catégorie:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -43,6 +55,7 @@ export const CategoryModal = ({ onClose }: CategoryModalProps) => {
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-6 h-6" />
           </button>
@@ -58,18 +71,7 @@ export const CategoryModal = ({ onClose }: CategoryModalProps) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <Textarea
-              placeholder="Description de la catégorie..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -89,6 +91,7 @@ export const CategoryModal = ({ onClose }: CategoryModalProps) => {
                       ? 'border-gray-900 ring-2 ring-gray-200' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
+                  disabled={isSubmitting}
                 >
                   <div className={`w-6 h-6 rounded-full ${color.class}`}></div>
                 </button>
@@ -100,10 +103,24 @@ export const CategoryModal = ({ onClose }: CategoryModalProps) => {
           </div>
 
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
-              Créer la catégorie
+            <Button 
+              type="submit" 
+              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <LoadingSpinner size="sm" text="Création..." />
+              ) : (
+                'Créer la catégorie'
+              )}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1"
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
           </div>

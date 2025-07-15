@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useProducts, useCategories, useClients, useSales } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
