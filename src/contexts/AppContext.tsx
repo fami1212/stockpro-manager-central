@@ -224,9 +224,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const sales: Sale[] = (rawSales || []).map(s => ({
     ...s,
     client: s.clients?.name || '',
+    client_id: s.client_id, // Add client_id to the transformed data
     items: (s.sale_items || []).map((item: any) => ({
       id: item.id,
       product: item.products?.name || '',
+      product_id: item.product_id,
       price: item.price,
       quantity: item.quantity,
       discount: item.discount || 0,

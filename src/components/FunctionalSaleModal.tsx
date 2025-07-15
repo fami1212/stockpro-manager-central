@@ -17,6 +17,7 @@ interface SaleModalProps {
 
 interface SaleItemForm {
   id: string;
+  product_id: string;
   product: string;
   price: number;
   quantity: number;
@@ -27,7 +28,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const { products, clients, addSale, updateSale } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    client: sale?.client || '',
+    client_id: sale?.client_id || '',
     documentType: 'facture',
     paymentMethod: sale?.payment_method || '',
     globalDiscount: sale?.discount || 0,
@@ -37,6 +38,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const [items, setItems] = useState<SaleItemForm[]>(
     sale?.items.map(item => ({
       id: item.id,
+      product_id: item.product_id || '',
       product: item.product,
       price: item.price,
       quantity: item.quantity,
@@ -51,7 +53,6 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
     total: 0
   });
 
-  const clientNames = clients.map(c => c.name);
   const paymentMethods = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Crédit client'];
 
   // Calculate totals whenever items or discounts change
@@ -76,6 +77,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const addItem = () => {
     const newItem: SaleItemForm = {
       id: `item-${Date.now()}`,
+      product_id: '',
       product: '',
       price: 0,
       quantity: 1,
@@ -92,6 +94,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
           const product = products.find(p => p.name === value);
           if (product) {
             updated.price = product.sell_price;
+            updated.product_id = product.id;
           }
         }
         return updated;
@@ -111,8 +114,13 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.client) {
+    if (!formData.client_id) {
       console.error('Client requis');
+      return;
+    }
+
+    if (items.length === 0) {
+      console.error('Au moins un article est requis');
       return;
     }
 
@@ -122,6 +130,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
       const saleItems: SaleItemType[] = items.map((item) => ({
         id: item.id,
         product: item.product,
+        product_id: item.product_id,
         price: item.price,
         quantity: item.quantity,
         discount: item.discount,
@@ -130,7 +139,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
 
       const saleData = {
         reference: sale?.reference || `VT-${Date.now()}`,
-        client: formData.client,
+        client_id: formData.client_id,
         date: new Date().toISOString().split('T')[0],
         items: saleItems,
         subtotal: calculatedTotals.subtotal,
@@ -141,6 +150,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
         payment_method: formData.paymentMethod,
         paymentMethod: formData.paymentMethod
       };
+
+      console.log('Sale data to submit:', saleData);
 
       if (sale) {
         await updateSale(sale.id, saleData);
@@ -191,17 +202,17 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
 
             <div>
               <Label htmlFor="client">Client *</Label>
-              <Select value={formData.client} onValueChange={(value) => handleFormChange('client', value)} disabled={isSubmitting}>
+              <Select value={formData.client_id} onValueChange={(value) => handleFormChange('client_id', value)} disabled={isSubmitting}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clientNames.map((client) => (
-                    <SelectItem key={client} value={client}>{client}</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {!formData.client && (
+              {!formData.client_id && (
                 <p className="text-sm text-red-600 mt-1">Le client est requis</p>
               )}
             </div>
@@ -393,7 +404,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             <Button 
               type="submit" 
               className="flex-1 bg-green-600 hover:bg-green-700"
-              disabled={isSubmitting || items.length === 0 || !formData.client}
+              disabled={isSubmitting || items.length === 0 || !formData.client_id}
             >
               {isSubmitting ? (
                 <LoadingSpinner size="sm" text="Enregistrement..." />

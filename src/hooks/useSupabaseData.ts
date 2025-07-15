@@ -261,22 +261,41 @@ export function useSales() {
 
   const addSale = async (saleData: any) => {
     try {
+      console.log('Adding sale with data:', saleData);
+      
+      // Prepare sale data for database
+      const dbSaleData = {
+        reference: saleData.reference,
+        client_id: saleData.client_id, // Use client_id instead of client
+        date: saleData.date,
+        subtotal: saleData.subtotal,
+        discount: saleData.discount,
+        tax: saleData.tax,
+        total: saleData.total,
+        status: saleData.status,
+        payment_method: saleData.payment_method,
+        user_id: user?.id
+      };
+
       const { data: sale, error: saleError } = await supabase
         .from('sales')
-        .insert([{ ...saleData, user_id: user?.id }])
+        .insert([dbSaleData])
         .select()
         .single()
 
-      if (saleError) throw saleError
+      if (saleError) {
+        console.error('Sale insert error:', saleError);
+        throw saleError;
+      }
 
-      // Add sale items
+      // Add sale items if they exist
       if (saleData.items && saleData.items.length > 0) {
         const saleItems = saleData.items.map((item: any) => ({
           sale_id: sale.id,
           product_id: item.product_id,
           quantity: item.quantity,
           price: item.price,
-          discount: item.discount,
+          discount: item.discount || 0,
           total: item.total
         }))
 
@@ -284,7 +303,10 @@ export function useSales() {
           .from('sale_items')
           .insert(saleItems)
 
-        if (itemsError) throw itemsError
+        if (itemsError) {
+          console.error('Sale items insert error:', itemsError);
+          throw itemsError;
+        }
       }
       
       await fetchSales()
@@ -303,9 +325,21 @@ export function useSales() {
 
   const updateSale = async (id: string, saleData: any) => {
     try {
+      const dbSaleData = {
+        reference: saleData.reference,
+        client_id: saleData.client_id,
+        date: saleData.date,
+        subtotal: saleData.subtotal,
+        discount: saleData.discount,
+        tax: saleData.tax,
+        total: saleData.total,
+        status: saleData.status,
+        payment_method: saleData.payment_method
+      };
+
       const { error } = await supabase
         .from('sales')
-        .update(saleData)
+        .update(dbSaleData)
         .eq('id', id)
         .eq('user_id', user?.id)
 
