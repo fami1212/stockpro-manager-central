@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useProducts, useCategories, useClients, useSales } from '@/hooks/useSupabaseData';
+import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
 
 export interface Product {
@@ -115,6 +115,7 @@ interface AppContextType {
   deleteCategory: (id: string) => Promise<void>;
   
   // Unit actions
+  addUnit: (unit: any) => Promise<void>;
   deleteUnit: (id: string) => Promise<void>;
   
   // Sale actions
@@ -187,7 +188,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refetch: refetchSuppliers
   } = useSuppliers();
 
-  const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading;
+  const {
+    units: rawUnits,
+    loading: unitsLoading,
+    addUnit: addUnitRaw
+  } = useUnits();
+
+  const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading || unitsLoading;
 
   // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
@@ -237,13 +244,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     last_order: s.last_order || null
   }));
 
-  // Mock units data - should be fetched from Supabase
-  const units: Unit[] = [
-    { id: '1', name: 'Pièce', symbol: 'pcs', type: 'Unité' },
-    { id: '2', name: 'Kilogramme', symbol: 'kg', type: 'Poids' },
-    { id: '3', name: 'Litre', symbol: 'L', type: 'Volume' },
-    { id: '4', name: 'Pack', symbol: 'pack', type: 'Groupé' }
-  ];
+  const units: Unit[] = (rawUnits || []).map(u => ({
+    ...u
+  }));
 
   // Wrapper functions to match interface
   const addProduct = async (productData: any): Promise<void> => {
@@ -272,6 +275,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteSupplier = async (id: string): Promise<void> => {
     await deleteSupplierRaw(id);
+  };
+
+  const addUnit = async (unitData: any): Promise<void> => {
+    await addUnitRaw(unitData);
   };
 
   // Mock functions for missing actions
@@ -306,6 +313,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addClient,
     addCategory,
     deleteCategory,
+    addUnit,
     deleteUnit,
     addSale,
     updateSale,

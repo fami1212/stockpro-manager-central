@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
@@ -49,6 +50,7 @@ export function useProducts() {
       toast({ title: 'Produit ajouté', description: `${productData.name} a été ajouté avec succès.` })
       return data
     } catch (error) {
+      console.error('Error adding product:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible d\'ajouter le produit',
@@ -71,6 +73,7 @@ export function useProducts() {
       await fetchProducts()
       toast({ title: 'Produit modifié', description: 'Le produit a été modifié avec succès.' })
     } catch (error) {
+      console.error('Error updating product:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible de modifier le produit',
@@ -93,6 +96,7 @@ export function useProducts() {
       await fetchProducts()
       toast({ title: 'Produit supprimé', description: 'Le produit a été supprimé.' })
     } catch (error) {
+      console.error('Error deleting product:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le produit',
@@ -150,6 +154,7 @@ export function useCategories() {
       await fetchCategories()
       toast({ title: 'Catégorie ajoutée', description: `${categoryData.name} a été ajoutée avec succès.` })
     } catch (error) {
+      console.error('Error adding category:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible d\'ajouter la catégorie',
@@ -205,6 +210,7 @@ export function useClients() {
       await fetchClients()
       toast({ title: 'Client ajouté', description: `${clientData.name} a été ajouté avec succès.` })
     } catch (error) {
+      console.error('Error adding client:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible d\'ajouter le client',
@@ -285,6 +291,7 @@ export function useSales() {
       toast({ title: 'Vente ajoutée', description: `${saleData.reference} a été ajoutée avec succès.` })
       return sale
     } catch (error) {
+      console.error('Error adding sale:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible d\'ajouter la vente',
@@ -307,6 +314,7 @@ export function useSales() {
       await fetchSales()
       toast({ title: 'Vente modifiée', description: 'La vente a été modifiée avec succès.' })
     } catch (error) {
+      console.error('Error updating sale:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible de modifier la vente',
@@ -329,6 +337,7 @@ export function useSales() {
       await fetchSales()
       toast({ title: 'Vente supprimée', description: 'La vente a été supprimée.' })
     } catch (error) {
+      console.error('Error deleting sale:', error)
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer la vente',
@@ -348,91 +357,48 @@ export function useSales() {
   }
 }
 
-export function useSuppliers() {
+export function useUnits() {
   const { user } = useAuth()
-  const [suppliers, setSuppliers] = useState<any[]>([])
+  const [units, setUnits] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
-    fetchSuppliers()
+    fetchUnits()
   }, [user])
 
-  const fetchSuppliers = async () => {
+  const fetchUnits = async () => {
     try {
       const { data, error } = await supabase
-        .from('suppliers')
+        .from('units')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
+        .order('name')
 
       if (error) throw error
-      setSuppliers(data || [])
+      setUnits(data || [])
     } catch (error) {
-      console.error('Error fetching suppliers:', error)
+      console.error('Error fetching units:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const addSupplier = async (supplierData: any) => {
+  const addUnit = async (unitData: any) => {
     try {
       const { error } = await supabase
-        .from('suppliers')
-        .insert([{ ...supplierData, user_id: user?.id }])
+        .from('units')
+        .insert([{ ...unitData, user_id: user?.id }])
 
       if (error) throw error
       
-      await fetchSuppliers()
-      toast({ title: 'Fournisseur ajouté', description: `${supplierData.name} a été ajouté avec succès.` })
+      await fetchUnits()
+      toast({ title: 'Unité ajoutée', description: `${unitData.name} a été ajoutée avec succès.` })
     } catch (error) {
+      console.error('Error adding unit:', error)
       toast({
         title: 'Erreur',
-        description: 'Impossible d\'ajouter le fournisseur',
-        variant: 'destructive'
-      })
-      throw error
-    }
-  }
-
-  const updateSupplier = async (id: string, supplierData: any) => {
-    try {
-      const { error } = await supabase
-        .from('suppliers')
-        .update(supplierData)
-        .eq('id', id)
-        .eq('user_id', user?.id)
-
-      if (error) throw error
-      
-      await fetchSuppliers()
-      toast({ title: 'Fournisseur modifié', description: 'Le fournisseur a été modifié avec succès.' })
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de modifier le fournisseur',
-        variant: 'destructive'
-      })
-      throw error
-    }
-  }
-
-  const deleteSupplier = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('suppliers')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user?.id)
-
-      if (error) throw error
-      
-      await fetchSuppliers()
-      toast({ title: 'Fournisseur supprimé', description: 'Le fournisseur a été supprimé.' })
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer le fournisseur',
+        description: 'Impossible d\'ajouter l\'unité',
         variant: 'destructive'
       })
       throw error
@@ -440,11 +406,9 @@ export function useSuppliers() {
   }
 
   return {
-    suppliers,
+    units,
     loading,
-    addSupplier,
-    updateSupplier,
-    deleteSupplier,
-    refetch: fetchSuppliers
+    addUnit,
+    refetch: fetchUnits
   }
 }

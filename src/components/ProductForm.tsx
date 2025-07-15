@@ -27,7 +27,7 @@ interface ProductFormData {
 }
 
 export function ProductForm({ product, onClose }: ProductFormProps) {
-  const { state, addProduct, updateProduct } = useApp();
+  const { categories, units, addProduct, updateProduct } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -40,12 +40,12 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     defaultValues: product ? {
       name: product.name,
       reference: product.reference,
-      category_id: state.categories.find(c => c.name === product.category)?.id || '',
+      category_id: categories.find(c => c.name === product.category)?.id || '',
       stock: product.stock,
       alert_threshold: product.alert_threshold,
       buy_price: product.buy_price,
       sell_price: product.sell_price,
-      unit_id: state.units.find(u => u.symbol === product.unit)?.id || '',
+      unit_id: units.find(u => u.symbol === product.unit)?.id || '',
       barcode: product.barcode
     } : {
       stock: 0,
@@ -88,6 +88,24 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
       setIsSubmitting(false);
     }
   };
+
+  if (categories.length === 0 || units.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Configuration requise</h3>
+            <p className="text-gray-600 mb-4">
+              Vous devez créer au moins une catégorie et une unité avant d'ajouter un produit.
+            </p>
+            <Button onClick={onClose} className="w-full">
+              Fermer
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -146,7 +164,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.categories.map((category) => (
+                  {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
@@ -169,7 +187,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   <SelectValue placeholder="Sélectionner une unité" />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.units.map((unit) => (
+                  {units.map((unit) => (
                     <SelectItem key={unit.id} value={unit.id}>
                       {unit.name} ({unit.symbol})
                     </SelectItem>
