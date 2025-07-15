@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useApp } from '@/contexts/AppContext';
 
 interface PurchaseOrderModalProps {
   onClose: () => void;
@@ -19,13 +20,11 @@ interface OrderItem {
 }
 
 export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
+  const { suppliers, products } = useApp();
   const [supplier, setSupplier] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<OrderItem[]>([]);
-
-  const suppliers = ['TechDistrib', 'GlobalSupply', 'ElectroWholesale', 'OfficeSupplies'];
-  const products = ['iPhone 15 Pro', 'Samsung Galaxy S24', 'MacBook Air M2', 'iPad Pro'];
 
   const addItem = () => {
     const newItem: OrderItem = {
@@ -42,6 +41,12 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
+        if (field === 'product') {
+          const product = products.find(p => p.name === value);
+          if (product) {
+            updated.unitPrice = product.buy_price || 0;
+          }
+        }
         updated.total = updated.quantity * updated.unitPrice;
         return updated;
       }
@@ -92,7 +97,7 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((sup) => (
-                    <SelectItem key={sup} value={sup}>{sup}</SelectItem>
+                    <SelectItem key={sup.id} value={sup.name}>{sup.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -132,7 +137,7 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {products.map((product) => (
-                          <SelectItem key={product} value={product}>{product}</SelectItem>
+                          <SelectItem key={product.id} value={product.name}>{product.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
@@ -20,8 +19,7 @@ export const SupplierModal = ({ supplier, onClose }: SupplierModalProps) => {
     contact: supplier?.contact || '',
     email: supplier?.email || '',
     phone: supplier?.phone || '',
-    address: supplier?.address || '',
-    notes: ''
+    address: supplier?.address || ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,19 +125,6 @@ export const SupplierModal = ({ supplier, onClose }: SupplierModalProps) => {
                 disabled={isSubmitting}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
-            </label>
-            <Textarea
-              placeholder="Notes sur le fournisseur..."
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              rows={3}
-              disabled={isSubmitting}
-            />
           </div>
 
           <div className="flex space-x-3 pt-4">

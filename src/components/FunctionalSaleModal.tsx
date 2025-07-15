@@ -1,5 +1,5 @@
+
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
 import { X, Plus, Minus, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,24 +15,35 @@ interface SaleModalProps {
   onClose: () => void;
 }
 
-interface SaleFormData {
-  client: string;
-  documentType: string;
-  paymentMethod: string;
-  globalDiscount: number;
-  taxRate: number;
-  notes: string;
-  items: {
-    product: string;
-    price: number;
-    quantity: number;
-    discount: number;
-  }[];
+interface SaleItemForm {
+  id: string;
+  product: string;
+  price: number;
+  quantity: number;
+  discount: number;
 }
 
 export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const { products, clients, addSale, updateSale } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    client: sale?.client || '',
+    documentType: 'facture',
+    paymentMethod: sale?.payment_method || '',
+    globalDiscount: sale?.discount || 0,
+    taxRate: 20,
+    notes: ''
+  });
+  const [items, setItems] = useState<SaleItemForm[]>(
+    sale?.items.map(item => ({
+      id: item.id,
+      product: item.product,
+      price: item.price,
+      quantity: item.quantity,
+      discount: item.discount
+    })) || []
+  );
+
   const [calculatedTotals, setCalculatedTotals] = useState({
     subtotal: 0,
     discountAmount: 0,
@@ -40,54 +51,18 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
     total: 0
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors }
-  } = useForm<SaleFormData>({
-    defaultValues: sale ? {
-      client: sale.client,
-      documentType: 'facture',
-      paymentMethod: sale.payment_method,
-      globalDiscount: sale.discount,
-      taxRate: 20,
-      notes: '',
-      items: sale.items.map(item => ({
-        product: item.product,
-        price: item.price,
-        quantity: item.quantity,
-        discount: item.discount
-      }))
-    } : {
-      documentType: 'facture',
-      globalDiscount: 0,
-      taxRate: 20,
-      notes: '',
-      items: []
-    }
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'items'
-  });
-
-  const watchedItems = watch('items');
-  const watchedGlobalDiscount = watch('globalDiscount');
-  const watchedTaxRate = watch('taxRate');
+  const clientNames = clients.map(c => c.name);
+  const paymentMethods = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Crédit client'];
 
   // Calculate totals whenever items or discounts change
   useEffect(() => {
-    const subtotal = watchedItems.reduce((acc, item) => {
+    const subtotal = items.reduce((acc, item) => {
       const itemTotal = (item.price * item.quantity) * (1 - item.discount / 100);
       return acc + itemTotal;
     }, 0);
 
-    const discountAmount = subtotal * (watchedGlobalDiscount / 100);
-    const taxAmount = (subtotal - discountAmount) * (watchedTaxRate / 100);
+    const discountAmount = subtotal * (formData.globalDiscount / 100);
+    const taxAmount = (subtotal - discountAmount) * (formData.taxRate / 100);
     const total = subtotal - discountAmount + taxAmount;
 
     setCalculatedTotals({
@@ -96,36 +71,56 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
       taxAmount,
       total
     });
-  }, [watchedItems, watchedGlobalDiscount, watchedTaxRate]);
-
-  const clientNames = clients.map(c => c.name);
-  const paymentMethods = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Crédit client'];
+  }, [items, formData.globalDiscount, formData.taxRate]);
 
   const addItem = () => {
-    append({
+    const newItem: SaleItemForm = {
+      id: `item-${Date.now()}`,
       product: '',
       price: 0,
       quantity: 1,
       discount: 0
-    });
+    };
+    setItems([...items, newItem]);
   };
 
-  const updateItemPrice = (index: number, productName: string) => {
-    const product = products.find(p => p.name === productName);
-    if (product) {
-      setValue(`items.${index}.price`, product.sell_price);
+  const updateItem = (id: string, field: keyof SaleItemForm, value: any) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        if (field === 'product') {
+          const product = products.find(p => p.name === value);
+          if (product) {
+            updated.price = product.sell_price;
+          }
+        }
+        return updated;
+      }
+      return item;
+    }));
+  };
+
+  const removeItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const handleFormChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.client) {
+      console.error('Client requis');
+      return;
     }
-  };
 
-  const onSubmit = async (data: SaleFormData) => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const saleItems: SaleItemType[] = data.items.map((item, index) => ({
-        id: `${Date.now()}-${index}`,
+      const saleItems: SaleItemType[] = items.map((item) => ({
+        id: item.id,
         product: item.product,
         price: item.price,
         quantity: item.quantity,
@@ -134,8 +129,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
       }));
 
       const saleData = {
-        reference: `VT-${Date.now()}`,
-        client: data.client,
+        reference: sale?.reference || `VT-${Date.now()}`,
+        client: formData.client,
         date: new Date().toISOString().split('T')[0],
         items: saleItems,
         subtotal: calculatedTotals.subtotal,
@@ -143,8 +138,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
         tax: calculatedTotals.taxAmount,
         total: calculatedTotals.total,
         status: 'Confirmée' as const,
-        payment_method: data.paymentMethod,
-        paymentMethod: data.paymentMethod // Alias pour compatibilité
+        payment_method: formData.paymentMethod,
+        paymentMethod: formData.paymentMethod
       };
 
       if (sale) {
@@ -177,12 +172,12 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+        <form onSubmit={onSubmit} className="p-6 space-y-6">
           {/* En-tête de la vente */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="documentType">Type de document *</Label>
-              <Select {...register('documentType')} disabled={isSubmitting}>
+              <Select value={formData.documentType} onValueChange={(value) => handleFormChange('documentType', value)} disabled={isSubmitting}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -196,7 +191,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
 
             <div>
               <Label htmlFor="client">Client *</Label>
-              <Select {...register('client', { required: 'Le client est requis' })} disabled={isSubmitting}>
+              <Select value={formData.client} onValueChange={(value) => handleFormChange('client', value)} disabled={isSubmitting}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
@@ -206,14 +201,14 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.client && (
-                <p className="text-sm text-red-600 mt-1">{errors.client.message}</p>
+              {!formData.client && (
+                <p className="text-sm text-red-600 mt-1">Le client est requis</p>
               )}
             </div>
 
             <div>
               <Label htmlFor="paymentMethod">Mode de paiement</Label>
-              <Select {...register('paymentMethod')} disabled={isSubmitting}>
+              <Select value={formData.paymentMethod} onValueChange={(value) => handleFormChange('paymentMethod', value)} disabled={isSubmitting}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner le mode" />
                 </SelectTrigger>
@@ -237,15 +232,12 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             </div>
 
             <div className="space-y-3">
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
+              {items.map((item) => (
+                <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
                   <div className="col-span-4">
                     <Select 
-                      value={watchedItems[index]?.product || ''}
-                      onValueChange={(value) => {
-                        setValue(`items.${index}.product`, value);
-                        updateItemPrice(index, value);
-                      }}
+                      value={item.product}
+                      onValueChange={(value) => updateItem(item.id, 'product', value)}
                       disabled={isSubmitting}
                     >
                       <SelectTrigger>
@@ -266,10 +258,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                       type="number"
                       placeholder="Prix"
                       step="0.01"
-                      {...register(`items.${index}.price` as const, { 
-                        required: 'Prix requis',
-                        min: { value: 0, message: 'Prix positif' }
-                      })}
+                      value={item.price}
+                      onChange={(e) => updateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
                       disabled={isSubmitting}
                     />
                   </div>
@@ -278,10 +268,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                     <Input
                       type="number"
                       placeholder="Qté"
-                      {...register(`items.${index}.quantity` as const, { 
-                        required: 'Quantité requise',
-                        min: { value: 1, message: 'Min 1' }
-                      })}
+                      value={item.quantity}
+                      onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
                       min="1"
                       disabled={isSubmitting}
                     />
@@ -291,7 +279,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                     <Input
                       type="number"
                       placeholder="Remise %"
-                      {...register(`items.${index}.discount` as const)}
+                      value={item.discount}
+                      onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
                       min="0"
                       max="100"
                       step="0.1"
@@ -301,7 +290,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   
                   <div className="col-span-1">
                     <div className="text-sm font-medium">
-                      €{((watchedItems[index]?.price || 0) * (watchedItems[index]?.quantity || 1) * (1 - (watchedItems[index]?.discount || 0) / 100)).toFixed(2)}
+                      €{((item.price * item.quantity) * (1 - item.discount / 100)).toFixed(2)}
                     </div>
                   </div>
                   
@@ -310,7 +299,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => remove(index)}
+                      onClick={() => removeItem(item.id)}
                       className="text-red-600 hover:text-red-700"
                       disabled={isSubmitting}
                     >
@@ -321,7 +310,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
               ))}
             </div>
 
-            {fields.length === 0 && (
+            {items.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Aucun article ajouté. Cliquez sur "Ajouter un article" pour commencer.
               </div>
@@ -329,7 +318,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
           </div>
 
           {/* Totaux et remises */}
-          {fields.length > 0 && (
+          {items.length > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -338,7 +327,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                     <Input
                       id="globalDiscount"
                       type="number"
-                      {...register('globalDiscount')}
+                      value={formData.globalDiscount}
+                      onChange={(e) => handleFormChange('globalDiscount', parseFloat(e.target.value) || 0)}
                       min="0"
                       max="100"
                       step="0.1"
@@ -351,7 +341,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                     <Input
                       id="taxRate"
                       type="number"
-                      {...register('taxRate')}
+                      value={formData.taxRate}
+                      onChange={(e) => handleFormChange('taxRate', parseFloat(e.target.value) || 0)}
                       min="0"
                       step="0.1"
                       disabled={isSubmitting}
@@ -366,12 +357,12 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   </div>
                   {calculatedTotals.discountAmount > 0 && (
                     <div className="flex justify-between text-red-600">
-                      <span>Remise ({watchedGlobalDiscount}%):</span>
+                      <span>Remise ({formData.globalDiscount}%):</span>
                       <span>-€{calculatedTotals.discountAmount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>TVA ({watchedTaxRate}%):</span>
+                    <span>TVA ({formData.taxRate}%):</span>
                     <span>€{calculatedTotals.taxAmount.toFixed(2)}</span>
                   </div>
                   <Separator />
@@ -390,7 +381,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             <Textarea
               id="notes"
               placeholder="Notes complémentaires..."
-              {...register('notes')}
+              value={formData.notes}
+              onChange={(e) => handleFormChange('notes', e.target.value)}
               rows={3}
               disabled={isSubmitting}
             />
@@ -401,7 +393,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             <Button 
               type="submit" 
               className="flex-1 bg-green-600 hover:bg-green-700"
-              disabled={isSubmitting || fields.length === 0}
+              disabled={isSubmitting || items.length === 0 || !formData.client}
             >
               {isSubmitting ? (
                 <LoadingSpinner size="sm" text="Enregistrement..." />
