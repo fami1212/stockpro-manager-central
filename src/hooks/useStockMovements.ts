@@ -45,7 +45,14 @@ export function useStockMovements() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStockMovements(data || []);
+      
+      // Type assertion to ensure the data matches our interface
+      const typedData = (data || []).map(movement => ({
+        ...movement,
+        type: movement.type as StockMovement['type']
+      })) as StockMovement[];
+      
+      setStockMovements(typedData);
     } catch (error) {
       console.error('Error fetching stock movements:', error);
       toast({
@@ -67,10 +74,10 @@ export function useStockMovements() {
     notes?: string;
   }) => {
     try {
-      // Get current product stock
+      // Get current product stock and alert threshold
       const { data: product, error: productError } = await supabase
         .from('products')
-        .select('stock')
+        .select('stock, alert_threshold')
         .eq('id', movementData.product_id)
         .eq('user_id', user?.id)
         .single();
@@ -118,7 +125,7 @@ export function useStockMovements() {
         .from('products')
         .update({ 
           stock: newStock,
-          status: newStock <= 0 ? 'Rupture' : newStock <= product.alert_threshold ? 'Stock bas' : 'En stock'
+          status: newStock <= 0 ? 'Rupture' : newStock <= (product.alert_threshold || 5) ? 'Stock bas' : 'En stock'
         })
         .eq('id', movementData.product_id)
         .eq('user_id', user?.id);
