@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
 
@@ -102,6 +103,7 @@ interface AppContextType {
   
   // Loading states
   loading: boolean;
+  error: string | null;
   
   // Product actions
   addProduct: (product: any) => Promise<void>;
@@ -149,6 +151,17 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Wrap hooks in try-catch to handle initialization errors
+  const productsHook = useProducts();
+  const categoriesHook = useCategories();
+  const clientsHook = useClients();
+  const salesHook = useSales();
+  const suppliersHook = useSuppliers();
+  const unitsHook = useUnits();
+
   const {
     products: rawProducts,
     loading: productsLoading,
@@ -156,7 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateProduct: updateProductRaw,
     deleteProduct,
     refetch: refetchProducts
-  } = useProducts();
+  } = productsHook;
 
   const {
     categories: rawCategories,
@@ -164,14 +177,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addCategory,
     deleteCategory: deleteCategoryRaw,
     refetch: refetchCategories
-  } = useCategories();
+  } = categoriesHook;
 
   const {
     clients: rawClients,
     loading: clientsLoading,
     addClient,
     refetch: refetchClients
-  } = useClients();
+  } = clientsHook;
 
   const {
     sales: rawSales,
@@ -179,7 +192,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSale: addSaleRaw,
     updateSale: updateSaleRaw,
     deleteSale
-  } = useSales();
+  } = salesHook;
 
   const {
     suppliers: rawSuppliers,
@@ -188,16 +201,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateSupplier: updateSupplierRaw,
     deleteSupplier: deleteSupplierRaw,
     refetch: refetchSuppliers
-  } = useSuppliers();
+  } = suppliersHook;
 
   const {
     units: rawUnits,
     loading: unitsLoading,
     addUnit: addUnitRaw,
     deleteUnit: deleteUnitRaw
-  } = useUnits();
+  } = unitsHook;
 
   const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading || unitsLoading;
+
+  // Initialize the context once all data is loaded
+  useEffect(() => {
+    if (!loading && !isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [loading, isInitialized]);
 
   // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
@@ -255,44 +275,94 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Wrapper functions to match interface
   const addProduct = async (productData: any): Promise<void> => {
-    await addProductRaw(productData);
+    try {
+      await addProductRaw(productData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add product');
+      throw err;
+    }
   };
 
   const updateProduct = async (id: string, productData: any): Promise<void> => {
-    await updateProductRaw(id, productData);
+    try {
+      await updateProductRaw(id, productData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update product');
+      throw err;
+    }
   };
 
   const addSale = async (saleData: any): Promise<void> => {
-    await addSaleRaw(saleData);
+    try {
+      await addSaleRaw(saleData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add sale');
+      throw err;
+    }
   };
 
   const updateSale = async (id: string, saleData: any): Promise<void> => {
-    await updateSaleRaw(id, saleData);
+    try {
+      await updateSaleRaw(id, saleData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update sale');
+      throw err;
+    }
   };
 
   const addSupplier = async (supplierData: any): Promise<void> => {
-    await addSupplierRaw(supplierData);
+    try {
+      await addSupplierRaw(supplierData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add supplier');
+      throw err;
+    }
   };
 
   const updateSupplier = async (id: string, supplierData: any): Promise<void> => {
-    await updateSupplierRaw(id, supplierData);
+    try {
+      await updateSupplierRaw(id, supplierData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update supplier');
+      throw err;
+    }
   };
 
   const deleteSupplier = async (id: string): Promise<void> => {
-    await deleteSupplierRaw(id);
+    try {
+      await deleteSupplierRaw(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete supplier');
+      throw err;
+    }
   };
 
   const addUnit = async (unitData: any): Promise<void> => {
-    await addUnitRaw(unitData);
+    try {
+      await addUnitRaw(unitData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add unit');
+      throw err;
+    }
   };
 
   // Implemented functions for missing actions
   const deleteCategory = async (id: string) => {
-    await deleteCategoryRaw(id);
+    try {
+      await deleteCategoryRaw(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete category');
+      throw err;
+    }
   };
 
   const deleteUnit = async (id: string) => {
-    await deleteUnitRaw(id);
+    try {
+      await deleteUnitRaw(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete unit');
+      throw err;
+    }
   };
 
   const state = {
@@ -312,6 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     units,
     suppliers,
     loading,
+    error,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -332,6 +403,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refetchSuppliers,
     state
   };
+
+  // Don't render children until context is initialized
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <AppContext.Provider value={value}>
