@@ -276,7 +276,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Wrapper functions to match interface
   const addProduct = async (productData: any): Promise<void> => {
     try {
-      await addProductRaw(productData);
+      // Remove reference and barcode as they will be auto-generated
+      const { reference, barcode, ...cleanData } = productData;
+      await addProductRaw(cleanData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add product');
       throw err;

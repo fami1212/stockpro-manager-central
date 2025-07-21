@@ -16,14 +16,12 @@ interface ProductFormProps {
 
 interface ProductFormData {
   name: string;
-  reference: string;
   category_id: string;
   stock: number;
   alert_threshold: number;
   buy_price: number;
   sell_price: number;
   unit_id: string;
-  barcode: string;
 }
 
 export function ProductForm({ product, onClose }: ProductFormProps) {
@@ -39,14 +37,12 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
   } = useForm<ProductFormData>({
     defaultValues: product ? {
       name: product.name,
-      reference: product.reference,
       category_id: categories.find(c => c.name === product.category)?.id || '',
       stock: product.stock,
       alert_threshold: product.alert_threshold,
       buy_price: product.buy_price,
       sell_price: product.sell_price,
-      unit_id: units.find(u => u.symbol === product.unit)?.id || '',
-      barcode: product.barcode
+      unit_id: units.find(u => u.symbol === product.unit)?.id || ''
     } : {
       stock: 0,
       alert_threshold: 5,
@@ -64,19 +60,25 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     try {
       const productData = {
         name: data.name,
-        reference: data.reference,
         category_id: data.category_id,
         stock: Number(data.stock),
         alert_threshold: Number(data.alert_threshold),
         buy_price: Number(data.buy_price),
         sell_price: Number(data.sell_price),
         unit_id: data.unit_id,
-        barcode: data.barcode || null,
+        // Référence et code-barres seront générés automatiquement par la base de données
+        reference: '', 
+        barcode: '',
         status: (Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
       };
 
       if (product) {
-        await updateProduct(product.id, productData);
+        // Pour la modification, on garde les valeurs existantes
+        await updateProduct(product.id, {
+          ...productData,
+          reference: product.reference,
+          barcode: product.barcode
+        });
       } else {
         await addProduct(productData);
       }
@@ -138,18 +140,17 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="reference">Référence *</Label>
-              <Input
-                id="reference"
-                {...register('reference', { required: 'La référence est requise' })}
-                placeholder="Ex: IPH15P-128"
-                disabled={isSubmitting}
-              />
-              {errors.reference && (
-                <p className="text-sm text-red-600 mt-1">{errors.reference.message}</p>
-              )}
-            </div>
+            {product && (
+              <div>
+                <Label htmlFor="reference">Référence (générée automatiquement)</Label>
+                <Input
+                  id="reference"
+                  value={product.reference}
+                  disabled
+                  className="bg-gray-100"
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,7 +201,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="stock">Stock actuel</Label>
               <Input
@@ -234,17 +235,19 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 <p className="text-sm text-red-600 mt-1">{errors.alert_threshold.message}</p>
               )}
             </div>
+          </div>
 
+          {product && (
             <div>
-              <Label htmlFor="barcode">Code-barres</Label>
+              <Label htmlFor="barcode">Code-barres (généré automatiquement)</Label>
               <Input
                 id="barcode"
-                {...register('barcode')}
-                placeholder="1234567890123"
-                disabled={isSubmitting}
+                value={product.barcode}
+                disabled
+                className="bg-gray-100"
               />
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
