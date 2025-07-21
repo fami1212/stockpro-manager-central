@@ -164,10 +164,34 @@ export function useCategories() {
     }
   }
 
+  const deleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+      
+      await fetchCategories()
+      toast({ title: 'Catégorie supprimée', description: 'La catégorie a été supprimée.' })
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la catégorie',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
   return {
     categories,
     loading,
     addCategory,
+    deleteCategory,
     refetch: fetchCategories
   }
 }
@@ -439,10 +463,34 @@ export function useUnits() {
     }
   }
 
+  const deleteUnit = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('units')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+      
+      await fetchUnits()
+      toast({ title: 'Unité supprimée', description: 'L\'unité a été supprimée.' })
+    } catch (error) {
+      console.error('Error deleting unit:', error)
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'unité',
+        variant: 'destructive'
+      })
+      throw error
+    }
+  }
+
   return {
     units,
     loading,
     addUnit,
+    deleteUnit,
     refetch: fetchUnits
   }
 }

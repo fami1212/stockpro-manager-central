@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
@@ -163,6 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories: rawCategories,
     loading: categoriesLoading,
     addCategory,
+    deleteCategory: deleteCategoryRaw,
     refetch: refetchCategories
   } = useCategories();
 
@@ -193,7 +193,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const {
     units: rawUnits,
     loading: unitsLoading,
-    addUnit: addUnitRaw
+    addUnit: addUnitRaw,
+    deleteUnit: deleteUnitRaw
   } = useUnits();
 
   const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading || unitsLoading;
@@ -285,13 +286,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await addUnitRaw(unitData);
   };
 
-  // Mock functions for missing actions
+  // Implemented functions for missing actions
   const deleteCategory = async (id: string) => {
-    console.log('Delete category:', id);
+    await deleteCategoryRaw(id);
   };
 
   const deleteUnit = async (id: string) => {
-    console.log('Delete unit:', id);
+    await deleteUnitRaw(id);
   };
 
   const state = {

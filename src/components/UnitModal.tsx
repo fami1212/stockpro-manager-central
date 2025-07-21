@@ -4,22 +4,39 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useApp } from '@/contexts/AppContext';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface UnitModalProps {
   onClose: () => void;
 }
 
 export const UnitModal = ({ onClose }: UnitModalProps) => {
+  const { addUnit } = useApp();
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
   const [type, setType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const unitTypes = ['Unité', 'Poids', 'Volume', 'Longueur', 'Surface', 'Groupé'];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nouvelle unité:', { name, symbol, type });
-    onClose();
+    if (!name.trim() || !symbol.trim() || !type) return;
+
+    setIsSubmitting(true);
+    try {
+      await addUnit({
+        name: name.trim(),
+        symbol: symbol.trim(),
+        type
+      });
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'unité:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -30,6 +47,7 @@ export const UnitModal = ({ onClose }: UnitModalProps) => {
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-6 h-6" />
           </button>
@@ -45,6 +63,7 @@ export const UnitModal = ({ onClose }: UnitModalProps) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -57,6 +76,7 @@ export const UnitModal = ({ onClose }: UnitModalProps) => {
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -64,7 +84,7 @@ export const UnitModal = ({ onClose }: UnitModalProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type d'unité *
             </label>
-            <Select value={type} onValueChange={setType}>
+            <Select value={type} onValueChange={setType} disabled={isSubmitting}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner le type" />
               </SelectTrigger>
@@ -77,10 +97,24 @@ export const UnitModal = ({ onClose }: UnitModalProps) => {
           </div>
 
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="flex-1 bg-orange-600 hover:bg-orange-700">
-              Créer l'unité
+            <Button 
+              type="submit" 
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <LoadingSpinner size="sm" text="Création..." />
+              ) : (
+                'Créer l\'unité'
+              )}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1"
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
           </div>

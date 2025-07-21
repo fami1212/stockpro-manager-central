@@ -43,7 +43,14 @@ export function usePurchaseOrders() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setPurchaseOrders(data || [])
+      
+      // Transform data to match PurchaseOrder interface
+      const transformedData: PurchaseOrder[] = (data || []).map(order => ({
+        ...order,
+        status: order.status as 'En cours' | 'Reçue' | 'Facturée' | 'Annulée'
+      }))
+      
+      setPurchaseOrders(transformedData)
     } catch (error) {
       console.error('Error fetching purchase orders:', error)
     } finally {
