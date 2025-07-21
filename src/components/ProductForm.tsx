@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useApp, Product } from '@/contexts/AppContext';
+import { useStockMovements } from '@/hooks/useStockMovements';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface ProductFormProps {
@@ -26,6 +27,7 @@ interface ProductFormData {
 
 export function ProductForm({ product, onClose }: ProductFormProps) {
   const { categories, units, addProduct, updateProduct } = useApp();
+  const { addStockMovement } = useStockMovements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -66,21 +68,26 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         buy_price: Number(data.buy_price),
         sell_price: Number(data.sell_price),
         unit_id: data.unit_id,
-        // Référence et code-barres seront générés automatiquement par la base de données
-        reference: '', 
-        barcode: '',
         status: (Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
       };
 
       if (product) {
-        // Pour la modification, on garde les valeurs existantes
-        await updateProduct(product.id, {
-          ...productData,
-          reference: product.reference,
-          barcode: product.barcode
-        });
+        // Pour la modification, on garde les valeurs existantes et on ne touche pas au stock initial
+        await updateProduct(product.id, productData);
       } else {
-        await addProduct(productData);
+        // Pour la création, on laisse la base de données générer référence et code-barres
+        const newProduct = await addProduct(productData);
+        
+        // Si le stock initial est > 0, on crée un mouvement de stock
+        if (Number(data.stock) > 0 && newProduct) {
+          await addStockMovement({
+            product_id: newProduct.id,
+            type: 'adjustment',
+            quantity: Number(data.stock),
+            reason: 'Stock initial',
+            notes: 'Création du produit avec stock initial'
+          });
+        }
       }
       
       onClose();
@@ -203,7 +210,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="stock">Stock actuel</Label>
+              <Label htmlFor="stock">Stock initial</Label>
               <Input
                 id="stock"
                 type="number"

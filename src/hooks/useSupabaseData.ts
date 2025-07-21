@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
@@ -38,9 +37,12 @@ export function useProducts() {
 
   const addProduct = async (productData: any) => {
     try {
+      // Ne pas envoyer reference et barcode, ils seront générés par le trigger
+      const { reference, barcode, ...dataToInsert } = productData;
+      
       const { data, error } = await supabase
         .from('products')
-        .insert([{ ...productData, user_id: user?.id }])
+        .insert([{ ...dataToInsert, user_id: user?.id }])
         .select()
         .single()
 
