@@ -37,6 +37,8 @@ export function useProducts() {
 
   const addProduct = async (productData: any) => {
     try {
+      console.log('Adding product with data:', productData);
+      
       // Ne pas envoyer reference et barcode, ils seront générés par le trigger
       const { reference, barcode, ...dataToInsert } = productData;
       
@@ -46,8 +48,12 @@ export function useProducts() {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Product insert error:', error);
+        throw error;
+      }
       
+      console.log('Product created successfully:', data);
       await fetchProducts()
       toast({ title: 'Produit ajouté', description: `${productData.name} a été ajouté avec succès.` })
       return data

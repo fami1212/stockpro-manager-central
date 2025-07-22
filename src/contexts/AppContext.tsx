@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
@@ -106,7 +105,7 @@ interface AppContextType {
   error: string | null;
   
   // Product actions
-  addProduct: (product: any) => Promise<void>;
+  addProduct: (product: any) => Promise<any>;
   updateProduct: (id: string, product: any) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   
@@ -273,13 +272,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ...u
   }));
 
-  // Wrapper functions to match interface
-  const addProduct = async (productData: any): Promise<void> => {
+  // Wrapper functions to match interface - return the result from addProductRaw
+  const addProduct = async (productData: any): Promise<any> => {
     try {
+      console.log('AppContext: Adding product with data:', productData);
       // Remove reference and barcode as they will be auto-generated
       const { reference, barcode, ...cleanData } = productData;
-      await addProductRaw(cleanData);
+      const result = await addProductRaw(cleanData);
+      console.log('AppContext: Product added successfully:', result);
+      return result;
     } catch (err) {
+      console.error('AppContext: Error adding product:', err);
       setError(err instanceof Error ? err.message : 'Failed to add product');
       throw err;
     }

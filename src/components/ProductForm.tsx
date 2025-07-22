@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
@@ -79,7 +78,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         const newProduct = await addProduct(productData);
         
         // Si le stock initial est > 0, on crée un mouvement de stock
-        if (Number(data.stock) > 0 && newProduct) {
+        if (Number(data.stock) > 0 && newProduct && newProduct.id) {
           await addStockMovement({
             product_id: newProduct.id,
             type: 'adjustment',
