@@ -58,6 +58,8 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     setIsSubmitting(true);
     
     try {
+      console.log('Form data being submitted:', data);
+      
       const productData = {
         name: data.name,
         category_id: data.category_id,
@@ -69,18 +71,17 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         status: (Number(data.stock) <= 0 ? 'Rupture' : Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
       };
 
-      console.log('Submitting product data:', productData);
+      console.log('Product data formatted for backend:', productData);
 
       if (product) {
         await updateProduct(product.id, productData);
       } else {
-        // Pour la création, la base de données va automatiquement créer le mouvement de stock via le trigger
         await addProduct(productData);
       }
       
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      console.error('Error in form submission:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -135,20 +136,6 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               )}
             </div>
 
-            {product && (
-              <div>
-                <Label htmlFor="reference">Référence (générée automatiquement)</Label>
-                <Input
-                  id="reference"
-                  value={product.reference}
-                  disabled
-                  className="bg-gray-100"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category_id">Catégorie *</Label>
               <Select 
@@ -167,11 +154,10 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.category_id && (
-                <p className="text-sm text-red-600 mt-1">{errors.category_id.message}</p>
-              )}
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="unit_id">Unité *</Label>
               <Select 
@@ -190,13 +176,8 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.unit_id && (
-                <p className="text-sm text-red-600 mt-1">{errors.unit_id.message}</p>
-              )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="stock">Stock initial</Label>
               <Input
@@ -213,7 +194,9 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 <p className="text-sm text-red-600 mt-1">{errors.stock.message}</p>
               )}
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="alert_threshold">Seuil d'alerte</Label>
               <Input
@@ -230,21 +213,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 <p className="text-sm text-red-600 mt-1">{errors.alert_threshold.message}</p>
               )}
             </div>
-          </div>
 
-          {product && (
-            <div>
-              <Label htmlFor="barcode">Code-barres (généré automatiquement)</Label>
-              <Input
-                id="barcode"
-                value={product.barcode}
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="buy_price">Prix d'achat (€) *</Label>
               <Input
@@ -262,24 +231,24 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                 <p className="text-sm text-red-600 mt-1">{errors.buy_price.message}</p>
               )}
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="sell_price">Prix de vente (€) *</Label>
-              <Input
-                id="sell_price"
-                type="number"
-                step="0.01"
-                {...register('sell_price', { 
-                  required: 'Le prix de vente est requis',
-                  min: { value: 0, message: 'Le prix doit être positif' }
-                })}
-                min="0"
-                disabled={isSubmitting}
-              />
-              {errors.sell_price && (
-                <p className="text-sm text-red-600 mt-1">{errors.sell_price.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="sell_price">Prix de vente (€) *</Label>
+            <Input
+              id="sell_price"
+              type="number"
+              step="0.01"
+              {...register('sell_price', { 
+                required: 'Le prix de vente est requis',
+                min: { value: 0, message: 'Le prix doit être positif' }
+              })}
+              min="0"
+              disabled={isSubmitting}
+            />
+            {errors.sell_price && (
+              <p className="text-sm text-red-600 mt-1">{errors.sell_price.message}</p>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">

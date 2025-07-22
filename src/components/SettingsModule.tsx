@@ -1,37 +1,140 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, User, Building, Bell, Shield, Palette, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export const SettingsModule = () => {
-  const [activeTab, setActiveTab] = useState('company');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('profile');
+  const [profile, setProfile] = useState({
+    first_name: '',
+    last_name: '',
+    company: '',
+    phone: ''
+  });
+  const [settings, setSettings] = useState({
+    notifications: {
+      stock_alerts: true,
+      new_sales: true,
+      reports: false,
+      new_clients: false
+    },
+    appearance: {
+      theme: 'light',
+      language: 'fr',
+      date_format: 'dd/mm/yyyy'
+    },
+    security: {
+      session_timeout: 30,
+      two_factor: false,
+      audit_log: true
+    }
+  });
+  const [loading, setLoading] = useState(false);
 
   const tabs = [
-    { id: 'company', label: 'Entreprise', icon: Building },
-    { id: 'users', label: 'Utilisateurs', icon: User },
+    { id: 'profile', label: 'Profil', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Sécurité', icon: Shield },
     { id: 'appearance', label: 'Apparence', icon: Palette },
+    { id: 'security', label: 'Sécurité', icon: Shield },
     { id: 'data', label: 'Données', icon: Database },
   ];
 
-  const users = [
-    { id: 1, name: 'Admin Principal', email: 'admin@stockpro.com', role: 'Admin', status: 'Actif' },
-    { id: 2, name: 'Marie Vendeur', email: 'marie@stockpro.com', role: 'Vendeur', status: 'Actif' },
-    { id: 3, name: 'Pierre Stock', email: 'pierre@stockpro.com', role: 'Magasinier', status: 'Inactif' },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          company: data.company || '',
+          phone: data.phone || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profile)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Profil mis à jour',
+        description: 'Vos informations ont été sauvegardées avec succès.'
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le profil.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportData = () => {
+    const data = {
+      profile,
+      settings,
+      exportedAt: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `donnees_stockpro_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Export réussi',
+      description: 'Vos données ont été exportées avec succès.'
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Paramètres</h2>
-        <Button className="bg-gray-600 hover:bg-gray-700">
+        <Button onClick={handleSaveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
           <Save className="w-4 h-4 mr-2" />
-          Sauvegarder
+          {loading ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
       </div>
 
@@ -46,7 +149,7 @@ export const SettingsModule = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-gray-500 text-gray-600'
+                      ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -59,274 +162,342 @@ export const SettingsModule = () => {
         </div>
 
         <div className="p-6">
-          {activeTab === 'company' && (
+          {activeTab === 'profile' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Informations de l'entreprise</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="company-name">Nom de l'entreprise</Label>
-                  <Input id="company-name" defaultValue="Mon Entreprise SARL" />
-                </div>
-                <div>
-                  <Label htmlFor="company-siret">SIRET</Label>
-                  <Input id="company-siret" defaultValue="12345678901234" />
-                </div>
-                <div>
-                  <Label htmlFor="company-address">Adresse</Label>
-                  <Input id="company-address" defaultValue="123 Rue de la République" />
-                </div>
-                <div>
-                  <Label htmlFor="company-city">Ville</Label>
-                  <Input id="company-city" defaultValue="75001 Paris" />
-                </div>
-                <div>
-                  <Label htmlFor="company-phone">Téléphone</Label>
-                  <Input id="company-phone" defaultValue="01 23 45 67 89" />
-                </div>
-                <div>
-                  <Label htmlFor="company-email">Email</Label>
-                  <Input id="company-email" defaultValue="contact@monentreprise.fr" />
-                </div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informations personnelles</CardTitle>
+                  <CardDescription>
+                    Gérez vos informations de profil et de contact
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="first_name">Prénom</Label>
+                      <Input 
+                        id="first_name" 
+                        value={profile.first_name}
+                        onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                        placeholder="Votre prénom"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Nom</Label>
+                      <Input 
+                        id="last_name" 
+                        value={profile.last_name}
+                        onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
+                        placeholder="Votre nom"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="company">Entreprise</Label>
+                      <Input 
+                        id="company" 
+                        value={profile.company}
+                        onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                        placeholder="Nom de votre entreprise"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Téléphone</Label>
+                      <Input 
+                        id="phone" 
+                        value={profile.phone}
+                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="Votre numéro de téléphone"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div>
-                <Label htmlFor="company-currency">Devise</Label>
-                <Select defaultValue="eur">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="eur">Euro (€)</SelectItem>
-                    <SelectItem value="usd">Dollar US ($)</SelectItem>
-                    <SelectItem value="gbp">Livre Sterling (£)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'users' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900">Gestion des utilisateurs</h3>
-                <Button>Inviter un utilisateur</Button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Nom</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Email</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Rôle</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Statut</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium text-gray-900">{user.name}</td>
-                        <td className="py-3 px-4 text-gray-600">{user.email}</td>
-                        <td className="py-3 px-4 text-gray-600">{user.role}</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            user.status === 'Actif'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">Modifier</Button>
-                            <Button variant="outline" size="sm">Supprimer</Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Compte</CardTitle>
+                  <CardDescription>
+                    Informations de votre compte utilisateur
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      L'email ne peut pas être modifié depuis cette interface
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {activeTab === 'notifications' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Préférences de notification</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Alertes de stock bas</h4>
-                    <p className="text-sm text-gray-500">Recevoir une notification quand le stock est faible</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Nouvelles ventes</h4>
-                    <p className="text-sm text-gray-500">Notification à chaque nouvelle vente</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Rapports automatiques</h4>
-                    <p className="text-sm text-gray-500">Recevoir les rapports hebdomadaires par email</p>
-                  </div>
-                  <Switch />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Nouveaux clients</h4>
-                    <p className="text-sm text-gray-500">Notification lors de l'ajout d'un nouveau client</p>
-                  </div>
-                  <Switch />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Sécurité et accès</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="session-timeout">Délai d'expiration de session (minutes)</Label>
-                  <Input id="session-timeout" type="number" defaultValue="30" className="w-32" />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Authentification à deux facteurs</h4>
-                    <p className="text-sm text-gray-500">Sécurité renforcée pour les connexions</p>
-                  </div>
-                  <Switch />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Journalisation des actions</h4>
-                    <p className="text-sm text-gray-500">Enregistrer toutes les actions des utilisateurs</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div>
-                  <Label>Politique de mot de passe</Label>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm text-gray-600">Minimum 8 caractères</span>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Préférences de notification</CardTitle>
+                  <CardDescription>
+                    Configurez les notifications que vous souhaitez recevoir
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Alertes de stock bas</h4>
+                        <p className="text-sm text-gray-500">Recevoir une notification quand le stock est faible</p>
+                      </div>
+                      <Switch 
+                        checked={settings.notifications.stock_alerts}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, stock_alerts: checked }
+                          }))
+                        }
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm text-gray-600">Inclure des majuscules et minuscules</span>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Nouvelles ventes</h4>
+                        <p className="text-sm text-gray-500">Notification à chaque nouvelle vente</p>
+                      </div>
+                      <Switch 
+                        checked={settings.notifications.new_sales}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, new_sales: checked }
+                          }))
+                        }
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm text-gray-600">Inclure des chiffres</span>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Rapports automatiques</h4>
+                        <p className="text-sm text-gray-500">Recevoir les rapports hebdomadaires par email</p>
+                      </div>
+                      <Switch 
+                        checked={settings.notifications.reports}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, reports: checked }
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Nouveaux clients</h4>
+                        <p className="text-sm text-gray-500">Notification lors de l'ajout d'un nouveau client</p>
+                      </div>
+                      <Switch 
+                        checked={settings.notifications.new_clients}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, new_clients: checked }
+                          }))
+                        }
+                      />
                     </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {activeTab === 'appearance' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Apparence</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label>Thème</Label>
-                  <Select defaultValue="light">
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Clair</SelectItem>
-                      <SelectItem value="dark">Sombre</SelectItem>
-                      <SelectItem value="auto">Automatique</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Apparence</CardTitle>
+                  <CardDescription>
+                    Personnalisez l'apparence de l'application
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Thème</Label>
+                      <Select 
+                        value={settings.appearance.theme}
+                        onValueChange={(value) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            appearance: { ...prev.appearance, theme: value }
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="light">Clair</SelectItem>
+                          <SelectItem value="dark">Sombre</SelectItem>
+                          <SelectItem value="auto">Automatique</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div>
-                  <Label>Langue</Label>
-                  <Select defaultValue="fr">
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div>
+                      <Label>Langue</Label>
+                      <Select 
+                        value={settings.appearance.language}
+                        onValueChange={(value) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            appearance: { ...prev.appearance, language: value }
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fr">Français</SelectItem>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="es">Español</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div>
-                  <Label>Format de date</Label>
-                  <Select defaultValue="dd/mm/yyyy">
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
-                      <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
-                      <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                    <div>
+                      <Label>Format de date</Label>
+                      <Select 
+                        value={settings.appearance.date_format}
+                        onValueChange={(value) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            appearance: { ...prev.appearance, date_format: value }
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
+                          <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
+                          <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sécurité et accès</CardTitle>
+                  <CardDescription>
+                    Configurez les paramètres de sécurité de votre compte
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="session-timeout">Délai d'expiration de session (minutes)</Label>
+                      <Input 
+                        id="session-timeout" 
+                        type="number" 
+                        value={settings.security.session_timeout}
+                        onChange={(e) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            security: { ...prev.security, session_timeout: parseInt(e.target.value) || 30 }
+                          }))
+                        }
+                        className="w-32" 
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Authentification à deux facteurs</h4>
+                        <p className="text-sm text-gray-500">Sécurité renforcée pour les connexions</p>
+                      </div>
+                      <Switch 
+                        checked={settings.security.two_factor}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            security: { ...prev.security, two_factor: checked }
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Journalisation des actions</h4>
+                        <p className="text-sm text-gray-500">Enregistrer toutes les actions des utilisateurs</p>
+                      </div>
+                      <Switch 
+                        checked={settings.security.audit_log}
+                        onCheckedChange={(checked) => 
+                          setSettings(prev => ({
+                            ...prev,
+                            security: { ...prev.security, audit_log: checked }
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {activeTab === 'data' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Gestion des données</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Sauvegarde automatique</h4>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Dernière sauvegarde : 15/01/2024 02:00
-                  </p>
-                  <Button variant="outline">Configurer</Button>
-                </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des données</CardTitle>
+                  <CardDescription>
+                    Sauvegarde, export et gestion de vos données
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Export des données</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Exporter vos paramètres et données de profil
+                      </p>
+                      <Button variant="outline" onClick={handleExportData}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Exporter
+                      </Button>
+                    </div>
 
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Export des données</h4>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Exporter toutes vos données
-                  </p>
-                  <Button variant="outline">Exporter</Button>
-                </div>
-
-                <div className="p-4 border border-red-200 rounded-lg">
-                  <h4 className="font-medium text-red-900 mb-2">Réinitialisation</h4>
-                  <p className="text-sm text-red-600 mb-4">
-                    Supprimer toutes les données (irréversible)
-                  </p>
-                  <Button variant="destructive">Réinitialiser</Button>
-                </div>
-
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Import de données</h4>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Importer depuis un fichier CSV/Excel
-                  </p>
-                  <Button variant="outline">Importer</Button>
-                </div>
-              </div>
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Sauvegarde automatique</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Les données sont sauvegardées automatiquement
+                      </p>
+                      <Button variant="outline" disabled>
+                        Configuré
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

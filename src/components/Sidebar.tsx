@@ -14,6 +14,7 @@ import {
   Home
 } from 'lucide-react';
 import { useState } from 'react';
+import { useApp } from '@/contexts/AppContext';
 
 interface SidebarProps {
   activeModule: string;
@@ -21,22 +22,92 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
+  const { products, sales, clients, loading } = useApp();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Calculer les statistiques dynamiques
+  const lowStockCount = products.filter(p => p.status === 'Stock bas' || p.status === 'Rupture').length;
+  const pendingSalesCount = sales.filter(s => s.status === 'Brouillon').length;
+  const totalClients = clients.length;
+
   const menuItems = [
-    { id: 'dashboard', label: 'Tableau de bord', icon: Home, shortLabel: 'Accueil' },
-    { id: 'stock', label: 'Gestion Stock', icon: Box, shortLabel: 'Stock' },
-    { id: 'sales', label: 'Ventes', icon: Cart, shortLabel: 'Ventes' },
-    { id: 'purchases', label: 'Achats', icon: ShoppingBag, shortLabel: 'Achats' },
-    { id: 'clients', label: 'Clients', icon: Users, shortLabel: 'Clients' },
-    { id: 'suppliers', label: 'Fournisseurs', icon: Truck, shortLabel: 'Fournisseurs' },
-    { id: 'reports', label: 'Rapports', icon: FileText, shortLabel: 'Rapports' },
-    { id: 'settings', label: 'Paramètres', icon: Settings, shortLabel: 'Config' },
+    { 
+      id: 'dashboard', 
+      label: 'Tableau de bord', 
+      icon: Home, 
+      shortLabel: 'Accueil',
+      badge: null
+    },
+    { 
+      id: 'stock', 
+      label: 'Gestion Stock', 
+      icon: Box, 
+      shortLabel: 'Stock',
+      badge: lowStockCount > 0 ? lowStockCount : null,
+      badgeColor: 'bg-red-500'
+    },
+    { 
+      id: 'sales', 
+      label: 'Ventes', 
+      icon: Cart, 
+      shortLabel: 'Ventes',
+      badge: pendingSalesCount > 0 ? pendingSalesCount : null,
+      badgeColor: 'bg-blue-500'
+    },
+    { 
+      id: 'purchases', 
+      label: 'Achats', 
+      icon: ShoppingBag, 
+      shortLabel: 'Achats',
+      badge: null
+    },
+    { 
+      id: 'clients', 
+      label: 'Clients', 
+      icon: Users, 
+      shortLabel: 'Clients',
+      badge: totalClients > 0 ? totalClients : null,
+      badgeColor: 'bg-green-500'
+    },
+    { 
+      id: 'suppliers', 
+      label: 'Fournisseurs', 
+      icon: Truck, 
+      shortLabel: 'Fournisseurs',
+      badge: null
+    },
+    { 
+      id: 'reports', 
+      label: 'Rapports', 
+      icon: FileText, 
+      shortLabel: 'Rapports',
+      badge: null
+    },
+    { 
+      id: 'settings', 
+      label: 'Paramètres', 
+      icon: Settings, 
+      shortLabel: 'Config',
+      badge: null
+    },
   ];
 
   const handleMenuClick = (itemId: string) => {
     setActiveModule(itemId);
     setIsMobileOpen(false);
+  };
+
+  const renderBadge = (item: any) => {
+    if (!item.badge || loading) return null;
+    
+    return (
+      <span className={cn(
+        "ml-auto text-xs font-bold text-white rounded-full min-w-[20px] h-5 flex items-center justify-center px-2",
+        item.badgeColor || "bg-gray-500"
+      )}>
+        {item.badge > 99 ? '99+' : item.badge}
+      </span>
+    );
   };
 
   return (
@@ -82,9 +153,10 @@ export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
                         isActive ? "text-blue-600" : "text-gray-400 group-hover:text-blue-500"
                       )} 
                     />
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate flex-1 text-left">{item.label}</span>
+                    {renderBadge(item)}
                     {isActive && (
-                      <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full" />
+                      <div className="w-2 h-2 bg-blue-600 rounded-full" />
                     )}
                   </button>
                 );
@@ -161,9 +233,10 @@ export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
                   "h-6 w-6 shrink-0",
                   isActive ? "text-blue-600" : "text-gray-400"
                 )} />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium flex-1">{item.label}</span>
+                {renderBadge(item)}
                 {isActive && (
-                  <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full" />
+                  <div className="w-2 h-2 bg-blue-600 rounded-full" />
                 )}
               </button>
             );
@@ -196,13 +269,23 @@ export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
                 key={item.id}
                 onClick={() => handleMenuClick(item.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200",
+                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 relative",
                   isActive 
                     ? "bg-blue-50 text-blue-600" 
                     : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <div className="relative">
+                  <Icon className="h-5 w-5" />
+                  {item.badge && !loading && (
+                    <span className={cn(
+                      "absolute -top-2 -right-2 text-xs font-bold text-white rounded-full min-w-[16px] h-4 flex items-center justify-center px-1",
+                      item.badgeColor || "bg-gray-500"
+                    )}>
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs font-medium truncate w-full text-center">
                   {item.shortLabel}
                 </span>
