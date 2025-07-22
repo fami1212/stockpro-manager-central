@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
@@ -104,6 +103,7 @@ interface AppContextType {
   // Loading states
   loading: boolean;
   error: string | null;
+  initialized: boolean;
   
   // Product actions
   addProduct: (product: any) => Promise<any>;
@@ -152,6 +152,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
+
+  console.log('AppProvider: Initializing...');
 
   const productsHook = useProducts();
   const categoriesHook = useCategories();
@@ -210,7 +213,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading || unitsLoading;
 
-  // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
     ...p,
     category: p.categories?.name || '',
@@ -263,7 +265,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ...u
   }));
 
-  // Wrapper functions to match interface
   const addProduct = async (productData: any): Promise<any> => {
     try {
       console.log('AppContext: Adding product with data:', productData);
@@ -367,6 +368,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     suppliers
   };
 
+  useEffect(() => {
+    if (!loading && !initialized) {
+      console.log('AppProvider: Context initialized');
+      setInitialized(true);
+    }
+  }, [loading, initialized]);
+
   const value = {
     products,
     clients,
@@ -376,6 +384,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     suppliers,
     loading,
     error,
+    initialized,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -397,6 +406,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     state
   };
 
+  console.log('AppProvider: Rendering with initialized:', initialized, 'loading:', loading);
+
   return (
     <AppContext.Provider value={value}>
       {children}
@@ -407,6 +418,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export function useApp() {
   const context = useContext(AppContext);
   if (context === undefined) {
+    console.error('useApp called outside of AppProvider');
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;

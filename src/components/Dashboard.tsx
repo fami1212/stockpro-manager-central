@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { MetricCard } from '@/components/MetricCard';
 import { SalesChart } from '@/components/SalesChart';
@@ -14,8 +13,25 @@ import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 
 export const Dashboard = () => {
-  const { products, sales, clients, suppliers, loading } = useApp();
+  console.log('Dashboard: Component rendering...');
+  
+  const appContext = useApp();
+  const { products, sales, clients, suppliers, loading, initialized } = appContext;
   const { purchaseOrders } = usePurchaseOrders();
+
+  console.log('Dashboard: Context loaded, initialized:', initialized, 'loading:', loading);
+
+  // Show loading while context is initializing
+  if (!initialized || loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calcul des métriques réelles
   const totalRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
@@ -65,14 +81,6 @@ export const Dashboard = () => {
   // Calcul des achats en cours
   const pendingPurchases = purchaseOrders.filter(order => order.status === 'En cours');
   const pendingPurchasesAmount = pendingPurchases.reduce((acc, order) => acc + order.total, 0);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 lg:space-y-6">
