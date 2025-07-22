@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
@@ -151,9 +152,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Wrap hooks in try-catch to handle initialization errors
   const productsHook = useProducts();
   const categoriesHook = useCategories();
   const clientsHook = useClients();
@@ -211,13 +210,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const loading = productsLoading || categoriesLoading || clientsLoading || salesLoading || suppliersLoading || unitsLoading;
 
-  // Initialize the context once all data is loaded
-  useEffect(() => {
-    if (!loading && !isInitialized) {
-      setIsInitialized(true);
-    }
-  }, [loading, isInitialized]);
-
   // Transform Supabase data to match interface
   const products: Product[] = (rawProducts || []).map(p => ({
     ...p,
@@ -262,7 +254,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const suppliers: Supplier[] = (rawSuppliers || []).map(s => ({
     ...s,
-    // Ensure all required properties are present
     total_orders: s.total_orders || 0,
     total_amount: s.total_amount || 0,
     last_order: s.last_order || null
@@ -272,13 +263,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ...u
   }));
 
-  // Wrapper functions to match interface - return the result from addProductRaw
+  // Wrapper functions to match interface
   const addProduct = async (productData: any): Promise<any> => {
     try {
       console.log('AppContext: Adding product with data:', productData);
-      // Remove reference and barcode as they will be auto-generated
-      const { reference, barcode, ...cleanData } = productData;
-      const result = await addProductRaw(cleanData);
+      const result = await addProductRaw(productData);
       console.log('AppContext: Product added successfully:', result);
       return result;
     } catch (err) {
@@ -351,7 +340,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Implemented functions for missing actions
   const deleteCategory = async (id: string) => {
     try {
       await deleteCategoryRaw(id);
@@ -408,15 +396,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refetchSuppliers,
     state
   };
-
-  // Don't render children until context is initialized
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <AppContext.Provider value={value}>

@@ -39,13 +39,10 @@ export function useProducts() {
     try {
       console.log('Adding product with data:', productData);
       
-      // Ne pas envoyer reference et barcode, ils seront générés par le trigger
-      const { reference, barcode, ...dataToInsert } = productData;
-      
       const { data, error } = await supabase
         .from('products')
-        .insert([{ ...dataToInsert, user_id: user?.id }])
-        .select()
+        .insert([{ ...productData, user_id: user?.id }])
+        .select('*')
         .single()
 
       if (error) {
@@ -298,7 +295,7 @@ export function useSales() {
       // Prepare sale data for database
       const dbSaleData = {
         reference: saleData.reference,
-        client_id: saleData.client_id, // Use client_id instead of client
+        client_id: saleData.client_id,
         date: saleData.date,
         subtotal: saleData.subtotal,
         discount: saleData.discount,
@@ -320,7 +317,7 @@ export function useSales() {
         throw saleError;
       }
 
-      // Add sale items if they exist
+      // Add sale items and update stock automatically
       if (saleData.items && saleData.items.length > 0) {
         const saleItems = saleData.items.map((item: any) => ({
           sale_id: sale.id,
@@ -338,6 +335,59 @@ export function useSales() {
         if (itemsError) {
           console.error('Sale items insert error:', itemsError);
           throw itemsError;
+        }
+
+        // Create stock movements for each sold item
+        for (const item of saleData.items) {
+          // Get current product stock
+          const { data: product, error: productError } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('id', item.product_id)
+            .eq('user_id', user?.id)
+            .single();
+
+          if (productError) {
+            console.error('Error fetching product stock:', productError);
+            continue;
+          }
+
+          const previousStock = product.stock;
+          const newStock = Math.max(0, previousStock - item.quantity);
+
+          // Update product stock
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ 
+              stock: newStock,
+              status: newStock <= 0 ? 'Rupture' : 'En stock'
+            })
+            .eq('id', item.product_id)
+            .eq('user_id', user?.id);
+
+          if (updateError) {
+            console.error('Error updating product stock:', updateError);
+            continue;
+          }
+
+          // Create stock movement record
+          const { error: movementError } = await supabase
+            .from('stock_movements')
+            .insert([{
+              user_id: user?.id,
+              product_id: item.product_id,
+              type: 'sale',
+              quantity: item.quantity,
+              previous_stock: previousStock,
+              new_stock: newStock,
+              reason: 'Vente',
+              reference: sale.reference,
+              created_by: user?.id
+            }]);
+
+          if (movementError) {
+            console.error('Error creating stock movement:', movementError);
+          }
         }
       }
       

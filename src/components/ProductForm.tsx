@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
@@ -6,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useApp, Product } from '@/contexts/AppContext';
-import { useStockMovements } from '@/hooks/useStockMovements';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface ProductFormProps {
@@ -26,7 +26,6 @@ interface ProductFormData {
 
 export function ProductForm({ product, onClose }: ProductFormProps) {
   const { categories, units, addProduct, updateProduct } = useApp();
-  const { addStockMovement } = useStockMovements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -67,26 +66,16 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         buy_price: Number(data.buy_price),
         sell_price: Number(data.sell_price),
         unit_id: data.unit_id,
-        status: (Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
+        status: (Number(data.stock) <= 0 ? 'Rupture' : Number(data.stock) <= Number(data.alert_threshold) ? 'Stock bas' : 'En stock') as 'En stock' | 'Stock bas' | 'Rupture'
       };
 
+      console.log('Submitting product data:', productData);
+
       if (product) {
-        // Pour la modification, on garde les valeurs existantes et on ne touche pas au stock initial
         await updateProduct(product.id, productData);
       } else {
-        // Pour la création, on laisse la base de données générer référence et code-barres
-        const newProduct = await addProduct(productData);
-        
-        // Si le stock initial est > 0, on crée un mouvement de stock
-        if (Number(data.stock) > 0 && newProduct && newProduct.id) {
-          await addStockMovement({
-            product_id: newProduct.id,
-            type: 'adjustment',
-            quantity: Number(data.stock),
-            reason: 'Stock initial',
-            notes: 'Création du produit avec stock initial'
-          });
-        }
+        // Pour la création, la base de données va automatiquement créer le mouvement de stock via le trigger
+        await addProduct(productData);
       }
       
       onClose();
