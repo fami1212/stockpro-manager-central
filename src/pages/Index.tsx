@@ -42,7 +42,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
+      <Sidebar activePage={activeModule} onPageChange={setActiveModule} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}

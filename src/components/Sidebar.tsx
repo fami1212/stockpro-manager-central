@@ -1,302 +1,229 @@
 
-import { cn } from '@/lib/utils';
-import { 
-  BarChart, 
-  Box, 
-  Users, 
-  ShoppingCartIcon as Cart,
-  Settings,
-  FileText,
-  ShoppingBag,
-  Truck,
-  Menu,
-  X,
-  Home
-} from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  Users, 
+  Truck, 
+  UserCheck, 
+  FileText, 
+  Settings, 
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+  Clock,
+  TrendingUp
+} from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 
 interface SidebarProps {
-  activeModule: string;
-  setActiveModule: (module: string) => void;
+  activePage: string;
+  onPageChange: (page: string) => void;
 }
 
-export const Sidebar = ({ activeModule, setActiveModule }: SidebarProps) => {
-  const { products, sales, clients, loading } = useApp();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
+  const [collapsed, setCollapsed] = useState(false);
+  const { products, sales, clients } = useApp();
+  const { purchaseOrders } = usePurchaseOrders();
 
-  // Calculer les statistiques dynamiques
-  const lowStockCount = products.filter(p => p.status === 'Stock bas' || p.status === 'Rupture').length;
-  const pendingSalesCount = sales.filter(s => s.status === 'Brouillon').length;
-  const totalClients = clients.length;
+  // Calculs dynamiques
+  const lowStockCount = products.filter(p => p.stock <= p.alert_threshold && p.stock > 0).length;
+  const outOfStockCount = products.filter(p => p.stock === 0).length;
+  const pendingOrdersCount = purchaseOrders.filter(order => order.status === 'En cours').length;
+  const draftSalesCount = sales.filter(sale => sale.status === 'Brouillon').length;
+  const activeClientsCount = clients.filter(client => client.status === 'Actif').length;
 
   const menuItems = [
-    { 
-      id: 'dashboard', 
-      label: 'Tableau de bord', 
-      icon: Home, 
-      shortLabel: 'Accueil',
+    {
+      id: 'dashboard',
+      label: 'Tableau de bord',
+      icon: LayoutDashboard,
       badge: null
     },
-    { 
-      id: 'stock', 
-      label: 'Gestion Stock', 
-      icon: Box, 
-      shortLabel: 'Stock',
-      badge: lowStockCount > 0 ? lowStockCount : null,
-      badgeColor: 'bg-red-500'
+    {
+      id: 'sales',
+      label: 'Ventes',
+      icon: ShoppingCart,
+      badge: draftSalesCount > 0 ? { count: draftSalesCount, color: 'bg-blue-500', tooltip: 'Brouillons en attente' } : null
     },
-    { 
-      id: 'sales', 
-      label: 'Ventes', 
-      icon: Cart, 
-      shortLabel: 'Ventes',
-      badge: pendingSalesCount > 0 ? pendingSalesCount : null,
-      badgeColor: 'bg-blue-500'
+    {
+      id: 'stock',
+      label: 'Stock',
+      icon: Package,
+      badge: (lowStockCount + outOfStockCount) > 0 ? { 
+        count: lowStockCount + outOfStockCount, 
+        color: outOfStockCount > 0 ? 'bg-red-500' : 'bg-yellow-500',
+        tooltip: outOfStockCount > 0 ? 'Produits en rupture' : 'Stock faible'
+      } : null
     },
-    { 
-      id: 'purchases', 
-      label: 'Achats', 
-      icon: ShoppingBag, 
-      shortLabel: 'Achats',
+    {
+      id: 'purchases',
+      label: 'Achats',
+      icon: Truck,
+      badge: pendingOrdersCount > 0 ? { count: pendingOrdersCount, color: 'bg-orange-500', tooltip: 'Commandes en attente' } : null
+    },
+    {
+      id: 'suppliers',
+      label: 'Fournisseurs',
+      icon: Users,
       badge: null
     },
-    { 
-      id: 'clients', 
-      label: 'Clients', 
-      icon: Users, 
-      shortLabel: 'Clients',
-      badge: totalClients > 0 ? totalClients : null,
-      badgeColor: 'bg-green-500'
+    {
+      id: 'clients',
+      label: 'Clients',
+      icon: UserCheck,
+      badge: activeClientsCount > 99 ? { count: '99+', color: 'bg-green-500', tooltip: 'Clients actifs' } : null
     },
-    { 
-      id: 'suppliers', 
-      label: 'Fournisseurs', 
-      icon: Truck, 
-      shortLabel: 'Fournisseurs',
+    {
+      id: 'reports',
+      label: 'Rapports',
+      icon: FileText,
       badge: null
     },
-    { 
-      id: 'reports', 
-      label: 'Rapports', 
-      icon: FileText, 
-      shortLabel: 'Rapports',
+    {
+      id: 'settings',
+      label: 'Paramètres',
+      icon: Settings,
       badge: null
-    },
-    { 
-      id: 'settings', 
-      label: 'Paramètres', 
-      icon: Settings, 
-      shortLabel: 'Config',
-      badge: null
-    },
+    }
   ];
 
-  const handleMenuClick = (itemId: string) => {
-    setActiveModule(itemId);
-    setIsMobileOpen(false);
-  };
-
-  const renderBadge = (item: any) => {
-    if (!item.badge || loading) return null;
-    
-    return (
-      <span className={cn(
-        "ml-auto text-xs font-bold text-white rounded-full min-w-[20px] h-5 flex items-center justify-center px-2",
-        item.badgeColor || "bg-gray-500"
-      )}>
-        {item.badge > 99 ? '99+' : item.badge}
-      </span>
-    );
+  const handleLogout = async () => {
+    try {
+      // TODO: Implement logout when available
+      console.log('Logout clicked');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
   };
 
   return (
-    <>
-      {/* Desktop Sidebar - Modern Design */}
-      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-72">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-6 shadow-lg">
-          {/* Header */}
-          <div className="flex h-16 shrink-0 items-center border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg">
-                <Box className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  StockPro
-                </h2>
-                <p className="text-xs text-gray-500 font-medium">Manager Pro</p>
-              </div>
-            </div>
+    <div className={cn(
+      "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+      collapsed ? "w-16" : "w-64"
+    )}>
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        {!collapsed && (
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">StockPro</h1>
+            <p className="text-xs text-gray-500">Gestion intelligente</p>
           </div>
-          
-          {/* Navigation */}
-          <nav className="flex flex-1 flex-col gap-2">
-            <div className="space-y-1">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeModule === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleMenuClick(item.id)}
-                    className={cn(
-                      "group flex w-full items-center gap-x-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
-                      isActive 
-                        ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200" 
-                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                    )}
-                  >
-                    <Icon 
-                      className={cn(
-                        "h-5 w-5 shrink-0 transition-colors",
-                        isActive ? "text-blue-600" : "text-gray-400 group-hover:text-blue-500"
-                      )} 
-                    />
-                    <span className="truncate flex-1 text-left">{item.label}</span>
-                    {renderBadge(item)}
-                    {isActive && (
-                      <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-          
-          {/* User Profile - Prepared for Backend */}
-          <div className="border-t border-gray-200 pt-4">
-            <div className="flex items-center gap-x-3 p-3 bg-gray-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">A</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">Admin User</p>
-                <p className="text-xs text-gray-500 truncate">admin@stockpro.com</p>
-              </div>
-              <div className="w-2 h-2 bg-green-400 rounded-full" title="En ligne" />
-            </div>
-          </div>
-        </div>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-2"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </Button>
       </div>
 
-      {/* Mobile Top Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-              <Box className="w-5 h-5 text-white" />
+      {/* Quick Stats */}
+      {!collapsed && (
+        <div className="p-4 border-b border-gray-200">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Chiffre du jour</span>
+              <span className="font-medium text-green-600">
+                €{sales
+                  .filter(sale => new Date(sale.date).toDateString() === new Date().toDateString())
+                  .reduce((acc, sale) => acc + sale.total, 0)
+                  .toLocaleString()}
+              </span>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-blue-600">StockPro</h2>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Ventes du jour</span>
+              <span className="font-medium text-blue-600">
+                {sales.filter(sale => new Date(sale.date).toDateString() === new Date().toDateString()).length}
+              </span>
             </div>
+            {(lowStockCount + outOfStockCount) > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 flex items-center">
+                  <AlertTriangle className="w-3 h-3 mr-1 text-red-500" />
+                  Alertes stock
+                </span>
+                <span className="font-medium text-red-600">{lowStockCount + outOfStockCount}</span>
+              </div>
+            )}
           </div>
-          
-          <button
-            onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
-      </div>
-
-      {/* Mobile Drawer Overlay */}
-      {isMobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm"
-          onClick={() => setIsMobileOpen(false)}
-        />
       )}
 
-      {/* Mobile Drawer */}
-      <div className={cn(
-        "lg:hidden fixed top-14 left-0 right-0 bottom-0 z-40 bg-white transform transition-transform duration-300 ease-out",
-        isMobileOpen ? "translate-y-0" : "-translate-y-full"
-      )}>
-        <div className="p-4 space-y-2 max-h-full overflow-y-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeModule === item.id;
-            return (
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {menuItems.map((item) => (
+            <li key={item.id}>
               <button
-                key={item.id}
-                onClick={() => handleMenuClick(item.id)}
+                onClick={() => onPageChange(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-x-4 rounded-xl px-4 py-4 text-left transition-all duration-200",
-                  isActive 
-                    ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200" 
-                    : "text-gray-700 hover:bg-gray-50"
+                  "w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all duration-200",
+                  activePage === item.id
+                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
-                <Icon className={cn(
-                  "h-6 w-6 shrink-0",
-                  isActive ? "text-blue-600" : "text-gray-400"
+                <item.icon className={cn(
+                  "w-5 h-5 flex-shrink-0",
+                  activePage === item.id ? "text-blue-700" : "text-gray-400"
                 )} />
-                <span className="font-medium flex-1">{item.label}</span>
-                {renderBadge(item)}
-                {isActive && (
-                  <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 font-medium">{item.label}</span>
+                    {item.badge && (
+                      <span 
+                        className={cn(
+                          "text-xs text-white px-2 py-0.5 rounded-full font-medium min-w-[20px] text-center",
+                          item.badge.color
+                        )}
+                        title={item.badge.tooltip}
+                      >
+                        {item.badge.count}
+                      </span>
+                    )}
+                  </>
                 )}
               </button>
-            );
-          })}
-          
-          {/* Mobile User Profile */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-x-3 p-4 bg-gray-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">A</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@stockpro.com</p>
-              </div>
-              <div className="w-2 h-2 bg-green-400 rounded-full" />
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200">
+        {!collapsed && (
+          <div className="mb-3 text-xs text-gray-500 space-y-1">
+            <div className="flex items-center justify-between">
+              <span>Produits:</span>
+              <span className="font-medium">{products.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Clients actifs:</span>
+              <span className="font-medium">{activeClientsCount}</span>
             </div>
           </div>
-        </div>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className={cn(
+            "w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50",
+            collapsed && "px-2"
+          )}
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && <span className="ml-2">Déconnexion</span>}
+        </Button>
       </div>
-
-      {/* Bottom Navigation for Mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
-        <div className="grid grid-cols-4 gap-1 p-2">
-          {menuItems.slice(0, 4).map((item) => {
-            const Icon = item.icon;
-            const isActive = activeModule === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleMenuClick(item.id)}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 relative",
-                  isActive 
-                    ? "bg-blue-50 text-blue-600" 
-                    : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                )}
-              >
-                <div className="relative">
-                  <Icon className="h-5 w-5" />
-                  {item.badge && !loading && (
-                    <span className={cn(
-                      "absolute -top-2 -right-2 text-xs font-bold text-white rounded-full min-w-[16px] h-4 flex items-center justify-center px-1",
-                      item.badgeColor || "bg-gray-500"
-                    )}>
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs font-medium truncate w-full text-center">
-                  {item.shortLabel}
-                </span>
-                {isActive && (
-                  <div className="w-1 h-1 bg-blue-600 rounded-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
