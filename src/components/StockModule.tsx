@@ -36,13 +36,17 @@ export const StockModule = () => {
   }, [products, searchTerm, categoryFilter, statusFilter]);
 
   const {
+    currentData: paginatedProducts,
     currentPage,
     totalPages,
-    paginatedItems: paginatedProducts,
-    goToPage,
-    goToNextPage,
-    goToPreviousPage
-  } = usePagination(filteredProducts, 10);
+    totalItems,
+    hasNextPage,
+    hasPreviousPage,
+    goToPage
+  } = usePagination({
+    data: filteredProducts,
+    itemsPerPage: 10
+  });
 
   const totalValue = products.reduce((sum, product) => sum + (product.stock * product.sell_price), 0);
   const lowStockCount = products.filter(p => p.status === 'Stock bas').length;
@@ -171,12 +175,8 @@ export const StockModule = () => {
               ? "Aucun produit ne correspond à vos critères de recherche."
               : "Commencez par ajouter votre premier produit."
             }
-            action={
-              <Button onClick={() => setShowProductForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter un produit
-              </Button>
-            }
+            actionText="Ajouter un produit"
+            onAction={() => setShowProductForm(true)}
           />
         ) : (
           <>
@@ -252,9 +252,11 @@ export const StockModule = () => {
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={10}
               onPageChange={goToPage}
-              onPreviousPage={goToPreviousPage}
-              onNextPage={goToNextPage}
+              hasNextPage={hasNextPage}
+              hasPreviousPage={hasPreviousPage}
             />
           </>
         )}

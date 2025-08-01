@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Save, User, Building, Bell, Shield, Palette, Database } from 'lucide-react';
+import { Save, User, Building, Bell, Shield, Palette, Database, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
