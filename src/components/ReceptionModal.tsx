@@ -1,10 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ReceptionModalProps {
   onClose: () => void;
@@ -13,35 +16,91 @@ interface ReceptionModalProps {
 
 export const ReceptionModal = ({ onClose, orderId }: ReceptionModalProps) => {
   const [selectedOrder, setSelectedOrder] = useState(orderId || '');
-  const [receivedItems, setReceivedItems] = useState<any[]>([]);
+  const [receivedItems, setReceivedItems] = useState<{[key: string]: number}>({});
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const orders = [
-    { id: 'A-001', supplier: 'TechDistrib', items: [
-      { product: 'iPhone 15 Pro', ordered: 20, received: 0 },
-      { product: 'iPad Pro', ordered: 10, received: 0 },
-    ]},
-    { id: 'A-002', supplier: 'GlobalSupply', items: [
-      { product: 'Samsung Galaxy S24', ordered: 15, received: 0 },
-    ]},
-  ];
+  const { purchaseOrders, refetch } = usePurchaseOrders();
+  
+  // Filtrer les commandes "En cours" seulement
+  const pendingOrders = purchaseOrders.filter(order => order.status === 'En cours');
+  
+  const selectedOrderData = pendingOrders.find(o => o.id === selectedOrder);
 
-  const selectedOrderData = orders.find(o => o.id === selectedOrder);
+  useEffect(() => {
+    if (selectedOrderData && selectedOrderData.purchase_order_items) {
+      const initialReceived: {[key: string]: number} = {};
+      selectedOrderData.purchase_order_items.forEach((item: any) => {
+        initialReceived[item.id] = 0;
+      });
+      setReceivedItems(initialReceived);
+    }
+  }, [selectedOrderData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nouvelle réception:', {
-      orderId: selectedOrder,
-      receivedItems,
-      notes
-    });
-    onClose();
+    if (!selectedOrderData) return;
+
+    setIsSubmitting(true);
+    try {
+      // Mettre à jour le statut de la commande
+      const { error: orderError } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'Reçue',
+          notes: notes 
+        })
+        .eq('id', selectedOrder);
+
+      if (orderError) throw orderError;
+
+      // Mettre à jour les stocks des produits
+      for (const item of selectedOrderData.purchase_order_items || []) {
+        const receivedQty = receivedItems[item.id] || 0;
+        if (receivedQty > 0) {
+          // Récupérer le stock actuel
+          const { data: product, error: productError } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('id', item.product_id)
+            .single();
+
+          if (productError) throw productError;
+
+          // Mettre à jour le stock
+          const { error: stockError } = await supabase
+            .from('products')
+            .update({ stock: (product.stock || 0) + receivedQty })
+            .eq('id', item.product_id);
+
+          if (stockError) throw stockError;
+        }
+      }
+
+      toast({
+        title: 'Réception validée',
+        description: `La commande ${selectedOrderData.reference} a été reçue avec succès.`
+      });
+
+      await refetch();
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de la réception:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de valider la réception',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const updateReceived = (index: number, received: number) => {
-    const updatedItems = [...(selectedOrderData?.items || [])];
-    updatedItems[index] = { ...updatedItems[index], received };
-    setReceivedItems(updatedItems);
+  const updateReceived = (itemId: string, received: number) => {
+    setReceivedItems(prev => ({
+      ...prev,
+      [itemId]: received
+    }));
   };
 
   return (
@@ -67,31 +126,31 @@ export const ReceptionModal = ({ onClose, orderId }: ReceptionModalProps) => {
                 <SelectValue placeholder="Sélectionner une commande" />
               </SelectTrigger>
               <SelectContent>
-                {orders.map((order) => (
+                {pendingOrders.map((order) => (
                   <SelectItem key={order.id} value={order.id}>
-                    {order.id} - {order.supplier}
+                    {order.reference} - {order.supplier?.name || 'Fournisseur inconnu'}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedOrderData && (
+          {selectedOrderData && selectedOrderData.purchase_order_items && (
             <div>
               <h4 className="text-md font-medium text-gray-900 mb-3">Articles commandés</h4>
               <div className="space-y-3">
-                {selectedOrderData.items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
+                {selectedOrderData.purchase_order_items.map((item: any) => (
+                  <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
                     <div className="col-span-5">
                       <div className="flex items-center">
                         <Package className="w-4 h-4 mr-2 text-gray-500" />
-                        <span className="font-medium">{item.product}</span>
+                        <span className="font-medium">{item.products?.name || 'Produit inconnu'}</span>
                       </div>
                     </div>
                     
                     <div className="col-span-2 text-center">
                       <div className="text-sm text-gray-500">Commandé</div>
-                      <div className="font-medium">{item.ordered}</div>
+                      <div className="font-medium">{item.quantity}</div>
                     </div>
                     
                     <div className="col-span-3">
@@ -99,15 +158,16 @@ export const ReceptionModal = ({ onClose, orderId }: ReceptionModalProps) => {
                       <Input
                         type="number"
                         min="0"
-                        max={item.ordered}
+                        max={item.quantity}
                         placeholder="0"
-                        onChange={(e) => updateReceived(index, parseInt(e.target.value) || 0)}
+                        value={receivedItems[item.id] || ''}
+                        onChange={(e) => updateReceived(item.id, parseInt(e.target.value) || 0)}
                       />
                     </div>
                     
                     <div className="col-span-2 text-center">
                       <div className="text-sm text-gray-500">Restant</div>
-                      <div className="font-medium">{item.ordered - (receivedItems[index]?.received || 0)}</div>
+                      <div className="font-medium">{item.quantity - (receivedItems[item.id] || 0)}</div>
                     </div>
                   </div>
                 ))}
@@ -128,8 +188,12 @@ export const ReceptionModal = ({ onClose, orderId }: ReceptionModalProps) => {
           </div>
 
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
-              Valider la réception
+            <Button 
+              type="submit" 
+              className="flex-1 bg-green-600 hover:bg-green-700"
+              disabled={isSubmitting || !selectedOrder}
+            >
+              {isSubmitting ? 'Validation...' : 'Valider la réception'}
             </Button>
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Annuler
