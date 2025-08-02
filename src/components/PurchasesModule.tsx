@@ -262,23 +262,43 @@ export const PurchasesModule = () => {
                                   <span className="text-gray-500">Non définie</span>
                                 )}
                               </td>
-                              <td className="py-3 px-4">
-                                <div className="flex space-x-2">
-                                  <Button variant="outline" size="sm">
-                                    Voir
-                                  </Button>
-                                  {order.status === 'En cours' && (
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      onClick={() => handleReceiveOrder(order.id)}
-                                      className="text-green-600 hover:text-green-700"
-                                    >
-                                      Recevoir
-                                    </Button>
-                                  )}
-                                </div>
-                              </td>
+                               <td className="py-3 px-4">
+                                 <div className="flex space-x-2">
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm"
+                                     onClick={() => {
+                                       // Fonction pour voir les détails de la commande
+                                       console.log('Voir commande:', order);
+                                     }}
+                                   >
+                                     Voir
+                                   </Button>
+                                   {order.status === 'En cours' && (
+                                     <Button 
+                                       variant="outline" 
+                                       size="sm" 
+                                       onClick={() => handleReceiveOrder(order.id)}
+                                       className="text-green-600 hover:text-green-700"
+                                     >
+                                       Recevoir
+                                     </Button>
+                                   )}
+                                   {order.status === 'Reçue' && (
+                                     <Button 
+                                       variant="outline" 
+                                       size="sm"
+                                       className="text-blue-600 hover:text-blue-700"
+                                       onClick={() => {
+                                         // Fonction pour facturer
+                                         console.log('Facturer commande:', order);
+                                       }}
+                                     >
+                                       Facturer
+                                     </Button>
+                                   )}
+                                 </div>
+                               </td>
                             </tr>
                           );
                         })}
