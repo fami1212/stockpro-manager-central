@@ -132,7 +132,7 @@ export function SubscriptionsManagement() {
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{totalRevenue.toLocaleString()} CFA</div>
             <p className="text-xs text-muted-foreground">
               {subscriptions.filter(s => s.status === 'active').length} abonnements actifs
             </p>

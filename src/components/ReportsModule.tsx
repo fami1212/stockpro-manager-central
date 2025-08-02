@@ -165,7 +165,7 @@ export const ReportsModule = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              €{filteredData.totalSales.toLocaleString()}
+              {filteredData.totalSales.toLocaleString()} CFA
             </div>
             <p className="text-xs text-muted-foreground">
               {periods.find(p => p.value === selectedPeriod)?.label}
@@ -352,7 +352,7 @@ export const ReportsModule = () => {
             <CardContent>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  €{stockData.totalValue.toLocaleString()}
+                  {stockData.totalValue.toLocaleString()} CFA
                 </div>
                 <p className="text-gray-600">Valeur totale du stock</p>
                 <p className="text-sm text-gray-500 mt-2">

@@ -200,7 +200,7 @@ export const SmartDashboard = () => {
             ) : (
               <div className="space-y-2">
                 <div className="text-sm text-gray-600">
-                  Total: €{sales.reduce((acc, sale) => acc + sale.total, 0).toLocaleString()}
+                  Total: {sales.reduce((acc, sale) => acc + sale.total, 0).toLocaleString()} CFA
                 </div>
                 <div className="text-sm text-gray-600">
                   Moyenne: €{(sales.reduce((acc, sale) => acc + sale.total, 0) / sales.length).toFixed(2)}

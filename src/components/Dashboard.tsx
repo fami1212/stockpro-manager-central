@@ -91,7 +91,7 @@ export const Dashboard = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">Tableau de Bord</h1>
             <p className="text-blue-100">
-              Aujourd'hui: {todaySales.length} ventes • €{todayRevenue.toLocaleString()} de chiffre d'affaires
+              Aujourd'hui: {todaySales.length} ventes • {todayRevenue.toLocaleString()} CFA de chiffre d'affaires
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-2">
@@ -177,7 +177,7 @@ export const Dashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Achats en cours</p>
                   <p className="text-2xl font-bold text-gray-900 mt-2">{pendingPurchases.length}</p>
-                  <p className="text-xs text-gray-500 mt-1">€{pendingPurchasesAmount.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 mt-1">{pendingPurchasesAmount.toLocaleString()} CFA</p>
                 </div>
                 <Clock className="w-8 h-8 text-orange-600" />
               </div>
@@ -239,7 +239,7 @@ export const Dashboard = () => {
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm text-green-600 font-medium">€{sale.total.toLocaleString()}</span>
+                        <span className="text-sm text-green-600 font-medium">{sale.total.toLocaleString()} CFA</span>
                       </div>
                     ))}
 
@@ -271,7 +271,7 @@ export const Dashboard = () => {
                             <p className="text-xs text-gray-500">{order.reference}</p>
                           </div>
                         </div>
-                        <span className="text-sm text-orange-600 font-medium">€{order.total.toLocaleString()}</span>
+                        <span className="text-sm text-orange-600 font-medium">{order.total.toLocaleString()} CFA</span>
                       </div>
                     ))}
                   </>

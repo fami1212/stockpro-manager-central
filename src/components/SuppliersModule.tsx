@@ -196,7 +196,7 @@ export const SuppliersModule = () => {
                   {/* Métriques du fournisseur */}
                   <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-indigo-600">€{(supplier.total_amount || 0).toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-indigo-600">{(supplier.total_amount || 0).toLocaleString()} CFA</p>
                       <p className="text-xs text-gray-500">Montant total</p>
                     </div>
                     <div className="text-center">

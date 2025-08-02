@@ -169,7 +169,7 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
-          reference: string
+          reference: string | null
           sell_price: number | null
           status: string | null
           stock: number | null
@@ -185,7 +185,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
-          reference: string
+          reference?: string | null
           sell_price?: number | null
           status?: string | null
           stock?: number | null
@@ -201,7 +201,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
-          reference?: string
+          reference?: string | null
           sell_price?: number | null
           status?: string | null
           stock?: number | null

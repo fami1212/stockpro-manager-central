@@ -88,7 +88,7 @@ export const SalesModule = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Chiffre d'affaires</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-green-600">€{totalRevenue.toLocaleString()}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-green-600">{totalRevenue.toLocaleString()} CFA</p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Total</p>
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">

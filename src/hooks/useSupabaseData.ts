@@ -39,16 +39,17 @@ export function useProducts() {
     try {
       console.log('Adding product with data:', productData);
       
-      // Ne pas envoyer le champ reference pour éviter le conflit avec le trigger
+      // Inclure reference vide pour éviter le conflit avec le trigger qui l'auto-génère
       const cleanProductData = {
         name: productData.name,
+        reference: '', // Sera auto-généré par le trigger
         category_id: productData.category_id,
         unit_id: productData.unit_id,
         stock: productData.stock || 0,
         alert_threshold: productData.alert_threshold || 5,
         buy_price: productData.buy_price || 0,
         sell_price: productData.sell_price || 0,
-        barcode: productData.barcode || null,
+        barcode: productData.barcode || '',
         status: productData.status || 'En stock',
         user_id: user?.id
       };
