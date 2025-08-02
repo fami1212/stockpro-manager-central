@@ -82,7 +82,10 @@ export const ReceptionModal = ({ onClose, orderId }: ReceptionModalProps) => {
         description: `La commande ${selectedOrderData.reference} a été reçue avec succès.`
       });
 
+      // Rafraîchir les données pour mettre à jour les onglets
       await refetch();
+      
+      // Fermer le modal après succès
       onClose();
     } catch (error) {
       console.error('Erreur lors de la réception:', error);

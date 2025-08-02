@@ -312,17 +312,20 @@ export const PurchasesModule = () => {
                 <div className="grid gap-4">
                   {receivedThisMonth.map((order) => (
                     <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-medium text-green-600">{order.reference}</h4>
-                          <p className="text-sm text-gray-600">
-                            Reçu le {new Date(order.date).toLocaleDateString('fr-FR')}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                          Reçue
-                        </span>
-                      </div>
+                       <div className="flex justify-between items-start mb-2">
+                         <div>
+                           <h4 className="font-medium text-green-600">{order.reference}</h4>
+                           <p className="text-sm text-gray-600">
+                             Reçu le {new Date(order.updated_at).toLocaleDateString('fr-FR')}
+                           </p>
+                           {order.notes && (
+                             <p className="text-xs text-gray-500 mt-1">Notes: {order.notes}</p>
+                           )}
+                         </div>
+                         <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                           Reçue
+                         </span>
+                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="font-medium">Fournisseur:</span>

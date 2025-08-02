@@ -60,8 +60,9 @@ export function usePurchaseOrders() {
 
   const addPurchaseOrder = async (orderData: any) => {
     try {
+      const reference = orderData.reference || `PO-${Date.now()}`
       const dbOrderData = {
-        reference: orderData.reference || `PO-${Date.now()}`,
+        reference,
         supplier_id: orderData.supplier_id,
         date: orderData.date || new Date().toISOString().split('T')[0],
         expected_date: orderData.expected_date,
@@ -74,7 +75,11 @@ export function usePurchaseOrders() {
       const { data: order, error: orderError } = await supabase
         .from('purchase_orders')
         .insert([dbOrderData])
-        .select()
+        .select(`
+          *,
+          suppliers(name),
+          purchase_order_items(*, products(name))
+        `)
         .single()
 
       if (orderError) throw orderError
@@ -97,7 +102,10 @@ export function usePurchaseOrders() {
       }
       
       await fetchPurchaseOrders()
-      toast({ title: 'Commande ajoutée', description: `${orderData.reference} a été ajoutée avec succès.` })
+      toast({ 
+        title: 'Commande créée', 
+        description: `La commande ${reference} a été créée avec succès.` 
+      })
       return order
     } catch (error) {
       console.error('Error adding purchase order:', error)
