@@ -48,7 +48,6 @@ export function useProducts() {
         alert_threshold: productData.alert_threshold || 5,
         buy_price: productData.buy_price || 0,
         sell_price: productData.sell_price || 0,
-        barcode: '', // Laisser vide pour que le trigger le génère
         status: productData.status || 'En stock',
         user_id: user?.id
       };

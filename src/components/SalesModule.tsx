@@ -98,9 +98,9 @@ export const SalesModule = () => {
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Panier moyen</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-purple-600">
-            €{state.sales.length > 0 ? (totalRevenue / state.sales.length).toFixed(0) : '0'}
-          </p>
+           <p className="text-2xl lg:text-3xl font-bold text-purple-600">
+             {state.sales.length > 0 ? (totalRevenue / state.sales.length).toFixed(0) : '0'} CFA
+           </p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Par vente</p>
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">

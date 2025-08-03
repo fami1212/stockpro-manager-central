@@ -202,9 +202,9 @@ export const SmartDashboard = () => {
                 <div className="text-sm text-gray-600">
                   Total: {sales.reduce((acc, sale) => acc + sale.total, 0).toLocaleString()} CFA
                 </div>
-                <div className="text-sm text-gray-600">
-                  Moyenne: €{(sales.reduce((acc, sale) => acc + sale.total, 0) / sales.length).toFixed(2)}
-                </div>
+                 <div className="text-sm text-gray-600">
+                   Moyenne: {(sales.reduce((acc, sale) => acc + sale.total, 0) / sales.length).toFixed(2)} CFA
+                 </div>
                 <div className="text-sm text-gray-600">
                   Dernière vente: {sales.length > 0 ? new Date(sales[sales.length - 1].date).toLocaleDateString('fr-FR') : 'N/A'}
                 </div>

@@ -1,12 +1,12 @@
 
 export const TopProducts = () => {
   const products = [
-    { name: 'iPhone 15 Pro', sales: 145, revenue: '€145,000' },
-    { name: 'Samsung Galaxy S24', sales: 98, revenue: '€78,400' },
-    { name: 'MacBook Air M2', sales: 67, revenue: '€80,400' },
-    { name: 'iPad Pro', sales: 54, revenue: '€43,200' },
-    { name: 'AirPods Pro', sales: 123, revenue: '€36,900' },
-  ];
+     { name: 'iPhone 15 Pro', sales: 145, revenue: '145 000 CFA' },
+     { name: 'Samsung Galaxy S24', sales: 98, revenue: '78 400 CFA' },
+     { name: 'MacBook Air M2', sales: 67, revenue: '80 400 CFA' },
+     { name: 'iPad Pro', sales: 54, revenue: '43 200 CFA' },
+     { name: 'AirPods Pro', sales: 123, revenue: '36 900 CFA' },
+   ];
 
   return (
     <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">

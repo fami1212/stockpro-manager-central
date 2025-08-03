@@ -101,18 +101,18 @@ export const PurchasesModule = () => {
           icon={Clock}
           color="orange"
         />
-        <MetricCard
-          title="En attente"
-          value={`€${totalPendingAmount.toLocaleString()}`}
-          icon={AlertTriangle}
-          color="yellow"
-        />
-        <MetricCard
-          title="Reçu ce mois"
-          value={`€${receivedAmount.toLocaleString()}`}
-          icon={CheckCircle}
-          color="green"
-        />
+         <MetricCard
+           title="En attente"
+           value={`${totalPendingAmount.toLocaleString()} CFA`}
+           icon={AlertTriangle}
+           color="yellow"
+         />
+         <MetricCard
+           title="Reçu ce mois"
+           value={`${receivedAmount.toLocaleString()} CFA`}
+           icon={CheckCircle}
+           color="green"
+         />
         <MetricCard
           title="En retard"
           value={overdueOrders.length.toString()}
