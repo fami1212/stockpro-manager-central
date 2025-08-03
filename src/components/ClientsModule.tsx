@@ -62,7 +62,7 @@ export const ClientsModule = () => {
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Panier moyen</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-blue-600">€{Math.round(averageBasket)}</p>
+          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{Math.round(averageBasket).toLocaleString()} CFA</p>
           <p className="text-xs lg:text-sm text-gray-500 mt-1">Par client</p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export const ClientsModule = () => {
                     </span>
                   </div>
                   <div className="text-right ml-2">
-                    <p className="text-lg font-bold text-purple-600">€{client.total_amount || 0}</p>
+                    <p className="text-lg font-bold text-purple-600">{(client.total_amount || 0).toLocaleString()} CFA</p>
                     <p className="text-xs text-gray-500">Total achats</p>
                   </div>
                 </div>

@@ -130,7 +130,7 @@ export const Dashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               title="Chiffre d'affaires"
-              value={`€${totalRevenue.toLocaleString()}`}
+              value={`${totalRevenue.toLocaleString()} CFA`}
               change={`${revenueChange.startsWith('-') ? '' : '+'}${revenueChange}%`}
               changeType={parseFloat(revenueChange) >= 0 ? "positive" : "negative"}
               description="Ce mois"
@@ -166,7 +166,7 @@ export const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Panier moyen</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">€{averageBasket.toFixed(0)}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{Math.round(averageBasket).toLocaleString()} CFA</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600" />
               </div>

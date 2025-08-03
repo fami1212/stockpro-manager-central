@@ -34,7 +34,7 @@ export const IntelligentReports = () => {
     const lowStockProducts = state.products.filter(p => p.stock <= p.alertThreshold).length;
 
     const insights = [
-      `Chiffre d'affaires total: €${totalRevenue.toLocaleString()}`,
+      `Chiffre d'affaires total: ${totalRevenue.toLocaleString()} CFA`,
       `${totalProducts} produits dans le catalogue`,
       `${activeClients} clients actifs`,
       `${lowStockProducts} produits en stock critique`,
@@ -69,7 +69,7 @@ export const IntelligentReports = () => {
 
     const insights = [
       `Croissance prévue: +${(predictedGrowth * 100).toFixed(1)}% sur 3 mois`,
-      `CA prévu: €${predictedRevenue.toLocaleString()}`,
+      `CA prévu: ${predictedRevenue.toLocaleString()} CFA`,
       'Tendance saisonnière détectée pour les produits électroniques',
       'Pic de demande attendu dans 2 semaines',
       'Opportunité de diversification dans 3 nouvelles catégories'
@@ -109,7 +109,7 @@ export const IntelligentReports = () => {
       `${overStockedProducts.length} produits en surstock`,
       'Potentiel d\'optimisation de 15% sur les marges',
       'Rotation de stock améliorable de 22%',
-      'Coûts de stockage réductibles de €2,400/mois'
+      'Coûts de stockage réductibles de 2,400,000 CFA/mois'
     ];
 
     const recommendations = [

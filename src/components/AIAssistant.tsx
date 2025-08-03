@@ -99,7 +99,7 @@ export const AIAssistant = () => {
           id: 'order-value',
           type: 'recommendation',
           title: 'Valeur moyenne des commandes faible',
-          description: `Panier moyen de €${averageOrderValue.toFixed(2)}. Opportunité d'augmentation par vente croisée.`,
+          description: `Panier moyen de ${Math.round(averageOrderValue).toLocaleString()} CFA. Opportunité d'augmentation par vente croisée.`,
           confidence: 0.78,
           impact: 'medium',
           actionable: true,

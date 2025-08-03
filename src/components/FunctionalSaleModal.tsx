@@ -257,7 +257,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                       <SelectContent>
                         {products.map((product) => (
                           <SelectItem key={product.id} value={product.name}>
-                            {product.name} (€{product.sell_price})
+                            {product.name} ({product.sell_price.toLocaleString()} CFA)
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -301,7 +301,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   
                   <div className="col-span-1">
                     <div className="text-sm font-medium">
-                      €{((item.price * item.quantity) * (1 - item.discount / 100)).toFixed(2)}
+                      {Math.round((item.price * item.quantity) * (1 - item.discount / 100)).toLocaleString()} CFA
                     </div>
                   </div>
                   
@@ -364,22 +364,22 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Sous-total:</span>
-                    <span className="font-medium">€{calculatedTotals.subtotal.toFixed(2)}</span>
+                    <span className="font-medium">{Math.round(calculatedTotals.subtotal).toLocaleString()} CFA</span>
                   </div>
                   {calculatedTotals.discountAmount > 0 && (
                     <div className="flex justify-between text-red-600">
                       <span>Remise ({formData.globalDiscount}%):</span>
-                      <span>-€{calculatedTotals.discountAmount.toFixed(2)}</span>
+                      <span>-{Math.round(calculatedTotals.discountAmount).toLocaleString()} CFA</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>TVA ({formData.taxRate}%):</span>
-                    <span>€{calculatedTotals.taxAmount.toFixed(2)}</span>
+                    <span>{Math.round(calculatedTotals.taxAmount).toLocaleString()} CFA</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total TTC:</span>
-                    <span>€{calculatedTotals.total.toFixed(2)}</span>
+                    <span>{Math.round(calculatedTotals.total).toLocaleString()} CFA</span>
                   </div>
                 </div>
               </div>

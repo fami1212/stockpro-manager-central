@@ -39,10 +39,9 @@ export function useProducts() {
     try {
       console.log('Adding product with data:', productData);
       
-      // Inclure reference vide pour éviter le conflit avec le trigger qui l'auto-génère
+      // Ne pas inclure reference - il sera auto-généré par le trigger
       const cleanProductData = {
         name: productData.name,
-        reference: '', // Sera auto-généré par le trigger
         category_id: productData.category_id,
         unit_id: productData.unit_id,
         stock: productData.stock || 0,

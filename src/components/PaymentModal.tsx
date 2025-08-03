@@ -74,7 +74,7 @@ export const PaymentModal = ({ onClose, type, invoiceId }: PaymentModalProps) =>
               <SelectContent>
                 {invoices.map((invoice) => (
                   <SelectItem key={invoice.id} value={invoice.id}>
-                    {invoice.id} - €{invoice.due} dû
+                    {invoice.id} - {invoice.due.toLocaleString()} CFA dû
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -83,7 +83,7 @@ export const PaymentModal = ({ onClose, type, invoiceId }: PaymentModalProps) =>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Montant (€) *
+              Montant (CFA) *
             </label>
             <Input
               type="number"
