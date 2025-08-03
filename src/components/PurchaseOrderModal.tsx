@@ -204,9 +204,9 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
                     />
                   </div>
                   
-                  <div className="col-span-2">
-                    <div className="text-sm font-medium">€{item.total.toFixed(2)}</div>
-                  </div>
+                   <div className="col-span-2">
+                     <div className="text-sm font-medium">{item.total.toFixed(2)} CFA</div>
+                   </div>
                   
                   <div className="col-span-1">
                     <Button
@@ -232,12 +232,12 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
           </div>
 
           {items.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total de la commande:</span>
-                <span>€{getTotal().toFixed(2)}</span>
-              </div>
-            </div>
+             <div className="bg-gray-50 p-4 rounded-lg">
+               <div className="flex justify-between text-lg font-bold">
+                 <span>Total de la commande:</span>
+                 <span>{getTotal().toFixed(2)} CFA</span>
+               </div>
+             </div>
           )}
 
           <div>

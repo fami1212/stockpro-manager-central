@@ -39,7 +39,7 @@ export function useProducts() {
     try {
       console.log('Adding product with data:', productData);
       
-      // Ne pas inclure reference - il sera auto-généré par le trigger
+      // Laisser reference vide pour que le trigger le génère automatiquement
       const cleanProductData = {
         name: productData.name,
         category_id: productData.category_id,
@@ -48,7 +48,7 @@ export function useProducts() {
         alert_threshold: productData.alert_threshold || 5,
         buy_price: productData.buy_price || 0,
         sell_price: productData.sell_price || 0,
-        barcode: productData.barcode || '',
+        barcode: '', // Laisser vide pour que le trigger le génère
         status: productData.status || 'En stock',
         user_id: user?.id
       };

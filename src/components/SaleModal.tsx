@@ -194,11 +194,11 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                         <SelectValue placeholder="Produit" />
                       </SelectTrigger>
                       <SelectContent>
-                        {products.map((product) => (
-                          <SelectItem key={product.name} value={product.name}>
-                            {product.name} (€{product.price})
-                          </SelectItem>
-                        ))}
+                         {products.map((product) => (
+                           <SelectItem key={product.name} value={product.name}>
+                             {product.name} ({product.price} CFA)
+                           </SelectItem>
+                         ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -235,9 +235,9 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                     />
                   </div>
                   
-                  <div className="col-span-1">
-                    <div className="text-sm font-medium">€{item.total.toFixed(2)}</div>
-                  </div>
+                   <div className="col-span-1">
+                     <div className="text-sm font-medium">{item.total.toFixed(2)} CFA</div>
+                   </div>
                   
                   <div className="col-span-1">
                     <Button
@@ -294,27 +294,27 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Sous-total:</span>
-                    <span className="font-medium">€{getSubtotal().toFixed(2)}</span>
-                  </div>
-                  {globalDiscount > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>Remise ({globalDiscount}%):</span>
-                      <span>-€{getDiscountAmount().toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>TVA ({taxRate}%):</span>
-                    <span>€{getTaxAmount().toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total TTC:</span>
-                    <span>€{getTotal().toFixed(2)}</span>
-                  </div>
-                </div>
+                 <div className="space-y-2">
+                   <div className="flex justify-between">
+                     <span>Sous-total:</span>
+                     <span className="font-medium">{getSubtotal().toFixed(2)} CFA</span>
+                   </div>
+                   {globalDiscount > 0 && (
+                     <div className="flex justify-between text-red-600">
+                       <span>Remise ({globalDiscount}%):</span>
+                       <span>-{getDiscountAmount().toFixed(2)} CFA</span>
+                     </div>
+                   )}
+                   <div className="flex justify-between">
+                     <span>TVA ({taxRate}%):</span>
+                     <span>{getTaxAmount().toFixed(2)} CFA</span>
+                   </div>
+                   <Separator />
+                   <div className="flex justify-between text-lg font-bold">
+                     <span>Total TTC:</span>
+                     <span>{getTotal().toFixed(2)} CFA</span>
+                   </div>
+                 </div>
               </div>
             </div>
           )}

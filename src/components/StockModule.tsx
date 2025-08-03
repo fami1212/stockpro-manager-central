@@ -106,7 +106,7 @@ export const StockModule = () => {
         />
         <MetricCard
           title="Valeur du stock"
-          value={`€${totalValue.toLocaleString()}`}
+          value={`${totalValue.toLocaleString()} CFA`}
           icon={TrendingUp}
           color="green"
         />
@@ -209,8 +209,8 @@ export const StockModule = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm">
-                          <p className="text-gray-900">Vente: €{product.sell_price}</p>
-                          <p className="text-gray-500">Achat: €{product.buy_price}</p>
+                          <p className="text-gray-900">Vente: {product.sell_price} CFA</p>
+                          <p className="text-gray-500">Achat: {product.buy_price} CFA</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">

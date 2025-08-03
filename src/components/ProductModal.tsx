@@ -171,10 +171,10 @@ export const ProductModal = ({ onClose, product }: ProductModalProps) => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prix d'achat (€)
-                  </label>
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                     Prix d'achat (CFA)
+                   </label>
                   <Input
                     type="number"
                     step="0.01"
@@ -184,10 +184,10 @@ export const ProductModal = ({ onClose, product }: ProductModalProps) => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prix de vente (€) *
-                  </label>
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                     Prix de vente (CFA) *
+                   </label>
                   <Input
                     type="number"
                     step="0.01"
