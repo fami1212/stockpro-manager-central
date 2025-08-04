@@ -108,6 +108,24 @@ export function useProducts() {
 
   const deleteProduct = async (id: string) => {
     try {
+      // Vérifier d'abord s'il y a des ventes liées
+      const { data: saleItems, error: saleItemsError } = await supabase
+        .from('sale_items')
+        .select('id')
+        .eq('product_id', id)
+        .limit(1)
+
+      if (saleItemsError) throw saleItemsError
+
+      if (saleItems && saleItems.length > 0) {
+        toast({
+          title: 'Suppression impossible',
+          description: 'Ce produit est utilisé dans des ventes et ne peut pas être supprimé',
+          variant: 'destructive'
+        })
+        return
+      }
+
       const { error } = await supabase
         .from('products')
         .delete()

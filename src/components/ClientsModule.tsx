@@ -133,10 +133,53 @@ export const ClientsModule = () => {
                   <p className="text-xs text-gray-500 mb-3">
                     Dernier achat: {client.last_order || 'Aucun'}
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 text-xs">Voir</Button>
-                    <Button variant="outline" size="sm" className="flex-1 text-xs">Contacter</Button>
-                  </div>
+                   <div className="flex flex-col sm:flex-row gap-2">
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="flex-1 text-xs"
+                       onClick={() => {
+                         const clientModal = document.createElement('div');
+                         clientModal.innerHTML = `
+                           <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                             <div class="bg-white p-6 rounded-lg max-w-md w-full m-4">
+                               <h3 class="text-lg font-semibold mb-4">Détails du client</h3>
+                               <div class="space-y-3">
+                                 <p><strong>Nom:</strong> ${client.name}</p>
+                                 <p><strong>Email:</strong> ${client.email || 'Non renseigné'}</p>
+                                 <p><strong>Téléphone:</strong> ${client.phone || 'Non renseigné'}</p>
+                                 <p><strong>Adresse:</strong> ${client.address || 'Non renseignée'}</p>
+                                 <p><strong>Statut:</strong> ${client.status}</p>
+                                 <p><strong>Total achats:</strong> ${(client.total_amount || 0).toLocaleString()} CFA</p>
+                                 <p><strong>Nombre de commandes:</strong> ${client.total_orders || 0}</p>
+                                 <p><strong>Dernier achat:</strong> ${client.last_order || 'Aucun'}</p>
+                               </div>
+                               <button onclick="this.closest('.fixed').remove()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Fermer</button>
+                             </div>
+                           </div>
+                         `;
+                         document.body.appendChild(clientModal);
+                       }}
+                     >
+                       Voir
+                     </Button>
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="flex-1 text-xs"
+                       onClick={() => {
+                         if (client.email) {
+                           window.open(`mailto:${client.email}?subject=Contact depuis l'application`);
+                         } else if (client.phone) {
+                           window.open(`tel:${client.phone}`);
+                         } else {
+                           alert('Aucune information de contact disponible');
+                         }
+                       }}
+                     >
+                       Contacter
+                     </Button>
+                   </div>
                 </div>
               </div>
             ))}

@@ -263,41 +263,100 @@ export const PurchasesModule = () => {
                                 )}
                               </td>
                                <td className="py-3 px-4">
-                                 <div className="flex space-x-2">
-                                   <Button 
-                                     variant="outline" 
-                                     size="sm"
-                                     onClick={() => {
-                                       // Fonction pour voir les détails de la commande
-                                       console.log('Voir commande:', order);
-                                     }}
-                                   >
-                                     Voir
-                                   </Button>
-                                   {order.status === 'En cours' && (
-                                     <Button 
-                                       variant="outline" 
-                                       size="sm" 
-                                       onClick={() => handleReceiveOrder(order.id)}
-                                       className="text-green-600 hover:text-green-700"
-                                     >
-                                       Recevoir
-                                     </Button>
-                                   )}
-                                   {order.status === 'Reçue' && (
-                                     <Button 
-                                       variant="outline" 
-                                       size="sm"
-                                       className="text-blue-600 hover:text-blue-700"
-                                       onClick={() => {
-                                         // Fonction pour facturer
-                                         console.log('Facturer commande:', order);
-                                       }}
-                                     >
-                                       Facturer
-                                     </Button>
-                                   )}
-                                 </div>
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        const orderModal = document.createElement('div');
+                                        orderModal.innerHTML = `
+                                          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                            <div class="bg-white p-6 rounded-lg max-w-2xl w-full m-4 max-h-96 overflow-y-auto">
+                                              <h3 class="text-lg font-semibold mb-4">Détails de la commande ${order.reference}</h3>
+                                              <div class="space-y-3">
+                                                <p><strong>Fournisseur:</strong> ${order.supplier?.name || 'N/A'}</p>
+                                                <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString('fr-FR')}</p>
+                                                <p><strong>Date prévue:</strong> ${order.expected_date ? new Date(order.expected_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
+                                                <p><strong>Statut:</strong> ${order.status}</p>
+                                                <p><strong>Total:</strong> ${order.total.toLocaleString()} CFA</p>
+                                                ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
+                                                <div class="mt-4">
+                                                  <h4 class="font-medium mb-2">Articles:</h4>
+                                                  ${order.purchase_order_items?.map(item => `
+                                                    <div class="border p-2 rounded mb-2">
+                                                      <p><strong>${item.products?.name || 'N/A'}</strong></p>
+                                                      <p>Quantité: ${item.quantity} × ${item.unit_price.toLocaleString()} CFA = ${item.total.toLocaleString()} CFA</p>
+                                                    </div>
+                                                  `).join('') || '<p>Aucun article</p>'}
+                                                </div>
+                                              </div>
+                                              <button onclick="this.closest('.fixed').remove()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Fermer</button>
+                                            </div>
+                                          </div>
+                                        `;
+                                        document.body.appendChild(orderModal);
+                                      }}
+                                    >
+                                      Voir
+                                    </Button>
+                                    {order.status === 'En cours' && (
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => handleReceiveOrder(order.id)}
+                                        className="text-green-600 hover:text-green-700"
+                                      >
+                                        Recevoir
+                                      </Button>
+                                    )}
+                                    {order.status === 'Reçue' && (
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        className="text-blue-600 hover:text-blue-700"
+                                        onClick={() => {
+                                          window.open(`data:text/html;charset=utf-8,
+                                            <html>
+                                              <head><title>Facture ${order.reference}</title></head>
+                                              <body style="font-family: Arial, sans-serif; padding: 20px;">
+                                                <h1>Facture ${order.reference}</h1>
+                                                <p><strong>Fournisseur:</strong> ${order.supplier?.name || 'N/A'}</p>
+                                                <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString('fr-FR')}</p>
+                                                <h3>Articles:</h3>
+                                                <table border="1" style="width: 100%; border-collapse: collapse;">
+                                                  <tr><th>Article</th><th>Quantité</th><th>Prix unitaire</th><th>Total</th></tr>
+                                                  ${order.purchase_order_items?.map(item => `
+                                                    <tr>
+                                                      <td>${item.products?.name || 'N/A'}</td>
+                                                      <td>${item.quantity}</td>
+                                                      <td>${item.unit_price.toLocaleString()} CFA</td>
+                                                      <td>${item.total.toLocaleString()} CFA</td>
+                                                    </tr>
+                                                  `).join('') || ''}
+                                                </table>
+                                                <p><strong>Total: ${order.total.toLocaleString()} CFA</strong></p>
+                                              </body>
+                                            </html>
+                                          `, '_blank');
+                                        }}
+                                      >
+                                        Facturer
+                                      </Button>
+                                    )}
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => {
+                                        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+                                          // TODO: Implémenter la suppression
+                                          console.log('Supprimer commande:', order.id);
+                                        }
+                                      }}
+                                    >
+                                      Supprimer
+                                    </Button>
+                                  </div>
                                </td>
                             </tr>
                           );

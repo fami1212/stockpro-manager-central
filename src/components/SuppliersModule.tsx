@@ -121,12 +121,12 @@ export const SuppliersModule = () => {
           icon={TrendingUp}
           color="green"
         />
-        <MetricCard
-          title="Montant total"
-          value={`€${totalAmount.toLocaleString()}`}
-          icon={DollarSign}
-          color="yellow"
-        />
+         <MetricCard
+           title="Montant total"
+           value={`${totalAmount.toLocaleString()} CFA`}
+           icon={DollarSign}
+           color="yellow"
+         />
         <MetricCard
           title="Commandes totales"
           value={totalOrders.toString()}

@@ -90,6 +90,9 @@ export const StockModule = () => {
           <Button onClick={() => setShowUnitModal(true)} variant="outline" size="sm">
             Unités
           </Button>
+          <Button variant="outline" size="sm">
+            Gérer les réapprovisionnements
+          </Button>
           <Button onClick={() => setShowProductForm(true)} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" />
             Nouveau produit
