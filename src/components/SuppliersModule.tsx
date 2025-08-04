@@ -9,12 +9,14 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { MetricCard } from '@/components/MetricCard';
 import { PaginationControls } from '@/components/PaginationControls';
-import { useSuppliers } from '@/hooks/useSuppliers';
+import { useSupplierStats } from '@/hooks/useSupplierStats';
 import { usePagination } from '@/hooks/usePagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useSuppliers } from '@/hooks/useSuppliers';
 
 export const SuppliersModule = () => {
-  const { suppliers, loading, deleteSupplier } = useSuppliers();
+  const { suppliers: originalSuppliers, loading, deleteSupplier } = useSuppliers();
+  const { suppliers } = useSupplierStats();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showSupplierModal, setShowSupplierModal] = useState(false);
@@ -71,11 +73,11 @@ export const SuppliersModule = () => {
     setEditingSupplier(null);
   };
 
-  // Calculs des métriques
+  // Calculs des métriques dynamiques
   const totalSuppliers = suppliers.length;
   const activeSuppliers = suppliers.filter(s => s.status === 'Actif').length;
-  const totalAmount = suppliers.reduce((acc, supplier) => acc + (supplier.total_amount || 0), 0);
-  const totalOrders = suppliers.reduce((acc, supplier) => acc + (supplier.total_orders || 0), 0);
+  const totalAmount = suppliers.reduce((acc, supplier) => acc + (supplier.calculatedTotalAmount || 0), 0);
+  const totalOrders = suppliers.reduce((acc, supplier) => acc + (supplier.calculatedTotalOrders || 0), 0);
   
   // Fournisseurs avec commandes récentes
   const thisMonth = new Date().getMonth();
@@ -193,17 +195,17 @@ export const SuppliersModule = () => {
                     </div>
                   </div>
                   
-                  {/* Métriques du fournisseur */}
-                  <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-indigo-600">{(supplier.total_amount || 0).toLocaleString()} CFA</p>
-                      <p className="text-xs text-gray-500">Montant total</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{supplier.total_orders || 0}</p>
-                      <p className="text-xs text-gray-500">Commandes</p>
-                    </div>
-                  </div>
+                   {/* Métriques du fournisseur */}
+                   <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                     <div className="text-center">
+                       <p className="text-2xl font-bold text-indigo-600">{(supplier.calculatedTotalAmount || 0).toLocaleString()} CFA</p>
+                       <p className="text-xs text-gray-500">Montant total</p>
+                     </div>
+                     <div className="text-center">
+                       <p className="text-2xl font-bold text-green-600">{supplier.calculatedTotalOrders || 0}</p>
+                       <p className="text-xs text-gray-500">Commandes</p>
+                     </div>
+                   </div>
                   
                   {/* Informations de contact */}
                   <div className="space-y-2 mb-4">
@@ -228,13 +230,13 @@ export const SuppliersModule = () => {
                   </div>
                   
                   {/* Footer avec dernière commande et actions */}
-                  <div className="border-t pt-4">
-                    <p className="text-xs text-gray-500 mb-3">
-                      Dernière commande: {supplier.last_order 
-                        ? new Date(supplier.last_order).toLocaleDateString('fr-FR')
-                        : 'Aucune'
-                      }
-                    </p>
+                   <div className="border-t pt-4">
+                     <p className="text-xs text-gray-500 mb-3">
+                       Dernière commande: {supplier.calculatedLastOrder 
+                         ? new Date(supplier.calculatedLastOrder).toLocaleDateString('fr-FR')
+                         : 'Aucune'
+                       }
+                     </p>
                     <div className="flex gap-2">
                       <Button 
                         variant="outline" 

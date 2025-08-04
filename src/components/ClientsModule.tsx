@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClientModal } from '@/components/ClientModal';
 import { PaymentModal } from '@/components/PaymentModal';
-import { useApp } from '@/contexts/AppContext';
+import { useClientStats } from '@/hooks/useClientStats';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useApp } from '@/contexts/AppContext';
 
 export const ClientsModule = () => {
-  const { clients, loading } = useApp();
+  const { loading } = useApp();
+  const { clients } = useClientStats();
   const [searchTerm, setSearchTerm] = useState('');
   const [showClientModal, setShowClientModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -22,7 +24,7 @@ export const ClientsModule = () => {
   const totalClients = clients.length;
   const activeClients = clients.filter(c => c.status === 'Actif').length;
   const averageBasket = clients.length > 0 
-    ? clients.reduce((acc, client) => acc + (client.total_amount || 0), 0) / clients.length 
+    ? clients.reduce((acc, client) => acc + (client.calculatedTotalAmount || 0), 0) / clients.length 
     : 0;
 
   if (loading) {
@@ -107,11 +109,11 @@ export const ClientsModule = () => {
                     }`}>
                       {client.status}
                     </span>
-                  </div>
-                  <div className="text-right ml-2">
-                    <p className="text-lg font-bold text-purple-600">{(client.total_amount || 0).toLocaleString()} CFA</p>
-                    <p className="text-xs text-gray-500">Total achats</p>
-                  </div>
+                   </div>
+                   <div className="text-right ml-2">
+                     <p className="text-lg font-bold text-purple-600">{(client.calculatedTotalAmount || 0).toLocaleString()} CFA</p>
+                     <p className="text-xs text-gray-500">Total achats</p>
+                   </div>
                 </div>
                 
                 <div className="space-y-2 mb-4">
@@ -129,10 +131,12 @@ export const ClientsModule = () => {
                   )}
                 </div>
                 
-                <div className="border-t pt-3">
-                  <p className="text-xs text-gray-500 mb-3">
-                    Dernier achat: {client.last_order || 'Aucun'}
-                  </p>
+                 <div className="border-t pt-3">
+                   <p className="text-xs text-gray-500 mb-3">
+                     Dernier achat: {client.calculatedLastOrder 
+                       ? new Date(client.calculatedLastOrder).toLocaleDateString('fr-FR')
+                       : 'Aucun'}
+                   </p>
                    <div className="flex flex-col sm:flex-row gap-2">
                      <Button 
                        variant="outline" 
@@ -150,9 +154,11 @@ export const ClientsModule = () => {
                                  <p><strong>Téléphone:</strong> ${client.phone || 'Non renseigné'}</p>
                                  <p><strong>Adresse:</strong> ${client.address || 'Non renseignée'}</p>
                                  <p><strong>Statut:</strong> ${client.status}</p>
-                                 <p><strong>Total achats:</strong> ${(client.total_amount || 0).toLocaleString()} CFA</p>
-                                 <p><strong>Nombre de commandes:</strong> ${client.total_orders || 0}</p>
-                                 <p><strong>Dernier achat:</strong> ${client.last_order || 'Aucun'}</p>
+                                 <p><strong>Total achats:</strong> ${(client.calculatedTotalAmount || 0).toLocaleString()} CFA</p>
+                                 <p><strong>Nombre de commandes:</strong> ${client.calculatedTotalOrders || 0}</p>
+                                 <p><strong>Dernier achat:</strong> ${client.calculatedLastOrder 
+                                   ? new Date(client.calculatedLastOrder).toLocaleDateString('fr-FR') 
+                                   : 'Aucun'}</p>
                                </div>
                                <button onclick="this.closest('.fixed').remove()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Fermer</button>
                              </div>
