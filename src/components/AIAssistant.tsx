@@ -322,10 +322,47 @@ export const AIAssistant = () => {
                 </CardDescription>
                 {insight.actionable && (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        if (insight.id.includes('stock-')) {
+                          // Naviguer vers le module stock
+                          window.location.hash = '#stock';
+                          toast({
+                            title: "Navigation vers le stock",
+                            description: "Consultez le module stock pour gérer les réapprovisionnements"
+                          });
+                        } else if (insight.id === 'setup-products') {
+                          window.location.hash = '#stock';
+                          toast({
+                            title: "Navigation vers les produits",
+                            description: "Ajoutez vos premiers produits dans le module stock"
+                          });
+                        } else if (insight.id === 'first-sales') {
+                          // Ouvrir le modal de vente
+                          const event = new CustomEvent('openSaleModal');
+                          window.dispatchEvent(event);
+                        } else {
+                          toast({
+                            title: "Action appliquée",
+                            description: "L'insight a été pris en compte",
+                          });
+                        }
+                      }}
+                    >
                       Appliquer
                     </Button>
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        toast({
+                          title: insight.title,
+                          description: `Confiance: ${Math.round(insight.confidence * 100)}% - Impact: ${insight.impact}`,
+                        });
+                      }}
+                    >
                       Détails
                     </Button>
                   </div>

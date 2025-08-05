@@ -95,8 +95,25 @@ export const Dashboard = () => {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-2">
-            <Button variant="secondary" size="sm">Nouvelle vente</Button>
-            <Button variant="outline" size="sm" className="text-white border-white hover:bg-white/10">
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={() => {
+                const event = new CustomEvent('openSaleModal');
+                window.dispatchEvent(event);
+              }}
+            >
+              Nouvelle vente
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-white border-white hover:bg-white/10"
+              onClick={() => {
+                const reportsTab = document.querySelector('[value="reports"]') as HTMLElement;
+                if (reportsTab) reportsTab.click();
+              }}
+            >
               Voir rapports
             </Button>
           </div>

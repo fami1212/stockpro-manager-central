@@ -157,7 +157,7 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mode de paiement
+                Mode de paiement *
               </label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger>
@@ -186,12 +186,13 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
               {items.map((item, index) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
                   <div className="col-span-4">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Produit *</label>
                     <Select 
                       value={item.product} 
                       onValueChange={(value) => updateItem(item.id, 'product', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Produit" />
+                        <SelectValue placeholder="Sélectionner un produit" />
                       </SelectTrigger>
                       <SelectContent>
                          {products.map((product) => (
@@ -204,9 +205,10 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                   </div>
                   
                   <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Prix unitaire (CFA)</label>
                     <Input
                       type="number"
-                      placeholder="Prix"
+                      placeholder="0"
                       value={item.price}
                       onChange={(e) => updateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
                       step="0.01"
@@ -214,9 +216,10 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                   </div>
                   
                   <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Quantité</label>
                     <Input
                       type="number"
-                      placeholder="Qté"
+                      placeholder="1"
                       value={item.quantity}
                       onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
                       min="1"
@@ -224,9 +227,10 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                   </div>
                   
                   <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Remise (%)</label>
                     <Input
                       type="number"
-                      placeholder="Remise %"
+                      placeholder="0"
                       value={item.discount}
                       onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
                       min="0"
@@ -236,7 +240,8 @@ export const SaleModal = ({ onClose }: SaleModalProps) => {
                   </div>
                   
                    <div className="col-span-1">
-                     <div className="text-sm font-medium">{item.total.toFixed(2)} CFA</div>
+                     <label className="block text-xs font-medium text-gray-600 mb-1">Total</label>
+                     <div className="text-sm font-medium pt-2">{item.total.toFixed(2)} CFA</div>
                    </div>
                   
                   <div className="col-span-1">
