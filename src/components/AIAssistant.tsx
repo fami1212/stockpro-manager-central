@@ -320,51 +320,15 @@ export const AIAssistant = () => {
                 <CardDescription className="text-sm mb-4">
                   {insight.description}
                 </CardDescription>
-                {insight.actionable && (
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        if (insight.id.includes('stock-')) {
-                          // Naviguer vers le module stock
-                          window.location.hash = '#stock';
-                          toast({
-                            title: "Navigation vers le stock",
-                            description: "Consultez le module stock pour gérer les réapprovisionnements"
-                          });
-                        } else if (insight.id === 'setup-products') {
-                          window.location.hash = '#stock';
-                          toast({
-                            title: "Navigation vers les produits",
-                            description: "Ajoutez vos premiers produits dans le module stock"
-                          });
-                        } else if (insight.id === 'first-sales') {
-                          // Ouvrir le modal de vente
-                          const event = new CustomEvent('openSaleModal');
-                          window.dispatchEvent(event);
-                        } else {
-                          toast({
-                            title: "Action appliquée",
-                            description: "L'insight a été pris en compte",
-                          });
-                        }
-                      }}
-                    >
-                      Appliquer
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        toast({
-                          title: insight.title,
-                          description: `Confiance: ${Math.round(insight.confidence * 100)}% - Impact: ${insight.impact}`,
-                        });
-                      }}
-                    >
-                      Détails
-                    </Button>
+                {insight.data && (
+                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border-l-4 border-blue-200">
+                    <strong>Détails supplémentaires:</strong>
+                    {insight.data.productId && <div>• Produit concerné</div>}
+                    {insight.data.recommendedOrder && <div>• Quantité recommandée: {insight.data.recommendedOrder}</div>}
+                    {insight.data.currentStock !== undefined && <div>• Stock actuel: {insight.data.currentStock}</div>}
+                    {insight.data.products && <div>• Produits affectés: {insight.data.products.slice(0,3).join(', ')}{insight.data.products.length > 3 ? '...' : ''}</div>}
+                    {insight.data.currentAOV && <div>• Panier moyen actuel: {Math.round(insight.data.currentAOV).toLocaleString()} CFA</div>}
+                    {insight.data.inactiveCount && <div>• Clients inactifs: {insight.data.inactiveCount}/{insight.data.totalClients}</div>}
                   </div>
                 )}
               </CardContent>

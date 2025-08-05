@@ -174,8 +174,8 @@ export const SalesModule = () => {
                       <td className="py-3 px-4 text-gray-600">{sale.client}</td>
                       <td className="py-3 px-4 text-gray-600">{sale.date}</td>
                       <td className="py-3 px-4 text-gray-600">{sale.items.length} article(s)</td>
-                      <td className="py-3 px-4 text-gray-900">€{(sale.total - sale.tax).toFixed(2)}</td>
-                      <td className="py-3 px-4 font-medium text-gray-900">€{sale.total.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-gray-900">{(sale.total - sale.tax).toLocaleString()} CFA</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">{sale.total.toLocaleString()} CFA</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           sale.status === 'Confirmée' 
@@ -191,7 +191,14 @@ export const SalesModule = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // Afficher les détails de la vente
+                              alert(`Détails de la vente ${sale.reference}:\n\nClient: ${sale.client}\nDate: ${sale.date}\nStatut: ${sale.status}\nTotal: ${sale.total.toLocaleString()} CFA\nArticles: ${sale.items.length}\n\nMode de paiement: ${sale.payment_method || 'Non spécifié'}`);
+                            }}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(sale)}>
@@ -246,17 +253,25 @@ export const SalesModule = () => {
                     </div>
                     <div>
                       <span className="text-gray-500">Total HT:</span>
-                      <p className="font-medium">€{(sale.total - sale.tax).toFixed(2)}</p>
+                      <p className="font-medium">{(sale.total - sale.tax).toLocaleString()} CFA</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Total TTC:</span>
-                      <p className="font-medium text-green-600">€{sale.total.toFixed(2)}</p>
+                      <p className="font-medium text-green-600">{sale.total.toLocaleString()} CFA</p>
                     </div>
                   </div>
                   
                   <div className="flex flex-col gap-2 pt-2 border-t">
                     <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" size="sm" className="text-xs">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => {
+                          // Afficher les détails de la vente en mobile
+                          alert(`Détails de la vente ${sale.reference}:\n\nClient: ${sale.client}\nDate: ${sale.date}\nStatut: ${sale.status}\nTotal: ${sale.total.toLocaleString()} CFA\nArticles: ${sale.items.length}\n\nMode de paiement: ${sale.payment_method || 'Non spécifié'}`);
+                        }}
+                      >
                         <Eye className="w-3 h-3 mr-1" />
                         Voir
                       </Button>

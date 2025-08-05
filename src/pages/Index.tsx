@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Dashboard } from '@/components/Dashboard';
 import { Sidebar } from '@/components/Sidebar';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { StockModule } from '@/components/StockModule';
 import { SalesModule } from '@/components/SalesModule';
 import { ClientsModule } from '@/components/ClientsModule';
@@ -41,12 +42,15 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar activePage={activeModule} onPageChange={setActiveModule} />
+    <div className="flex h-screen bg-gray-50 w-full">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar activePage={activeModule} onPageChange={setActiveModule} />
+      </div>
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        {/* Header - Hidden on mobile */}
+        <header className="hidden lg:block bg-white shadow-sm border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">StockPro Manager</h1>
@@ -72,12 +76,15 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 lg:p-6 pb-20 lg:pb-6">
           <div className="max-w-7xl mx-auto">
             {renderActiveModule()}
           </div>
         </main>
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation activePage={activeModule} onPageChange={setActiveModule} />
     </div>
   );
 };
