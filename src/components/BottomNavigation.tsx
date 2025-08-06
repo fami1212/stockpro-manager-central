@@ -27,6 +27,9 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
   const outOfStockCount = products.filter(p => p.stock === 0).length;
   const pendingOrdersCount = purchaseOrders.filter(order => order.status === 'En cours').length;
   const draftSalesCount = sales.filter(sale => sale.status === 'Brouillon').length;
+  const todayRevenue = sales
+    .filter(sale => new Date(sale.date).toDateString() === new Date().toDateString())
+    .reduce((acc, sale) => acc + sale.total, 0);
 
   const menuItems = [
     {
@@ -81,36 +84,50 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-      <div className="flex overflow-x-auto scrollbar-hide px-2 py-2">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 backdrop-blur-md border-t border-blue-200/20 z-50 shadow-lg">
+      {/* Stats en haut */}
+      <div className="px-4 py-2 border-b border-blue-200/20">
+        <div className="flex justify-between items-center text-white text-xs">
+          <span>Aujourd'hui: {todayRevenue.toLocaleString()} CFA</span>
+          <span>{sales.filter(sale => new Date(sale.date).toDateString() === new Date().toDateString()).length} ventes</span>
+        </div>
+      </div>
+      
+      {/* Navigation scrollable */}
+      <div className="flex overflow-x-auto scrollbar-hide px-2 py-3">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onPageChange(item.id)}
             className={cn(
-              "flex flex-col items-center justify-center min-w-[80px] p-2 rounded-lg transition-all duration-200 relative",
+              "flex flex-col items-center justify-center min-w-[75px] p-2 rounded-xl transition-all duration-300 relative mx-1",
               activePage === item.id
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-white/20 text-white shadow-lg scale-105 backdrop-blur-md"
+                : "text-blue-100 hover:bg-white/10 hover:text-white"
             )}
           >
             <div className="relative">
               <item.icon className={cn(
-                "w-5 h-5 mb-1",
-                activePage === item.id ? "text-blue-700" : "text-gray-400"
+                "w-5 h-5 mb-1 transition-all duration-300",
+                activePage === item.id ? "text-white scale-110" : "text-blue-200"
               )} />
               {item.badge && (
                 <span 
                   className={cn(
-                    "absolute -top-2 -right-2 text-xs text-white px-1.5 py-0.5 rounded-full font-medium min-w-[18px] text-center leading-none",
-                    item.isAlert ? "bg-red-500" : "bg-blue-500"
+                    "absolute -top-2 -right-2 text-xs text-white px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center leading-none shadow-md",
+                    item.isAlert ? "bg-red-500 animate-pulse" : "bg-orange-500"
                   )}
                 >
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
               )}
             </div>
-            <span className="text-xs font-medium truncate w-full text-center">{item.label}</span>
+            <span className={cn(
+              "text-xs font-medium truncate w-full text-center transition-all duration-300",
+              activePage === item.id ? "text-white font-semibold" : "text-blue-100"
+            )}>
+              {item.label}
+            </span>
           </button>
         ))}
       </div>

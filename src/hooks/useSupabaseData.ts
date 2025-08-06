@@ -266,14 +266,17 @@ export function useClients() {
 
   const addClient = async (clientData: any) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('clients')
         .insert([{ ...clientData, user_id: user?.id }])
+        .select()
+        .single()
 
       if (error) throw error
       
       await fetchClients()
       toast({ title: 'Client ajouté', description: `${clientData.name} a été ajouté avec succès.` })
+      return data
     } catch (error) {
       console.error('Error adding client:', error)
       toast({

@@ -132,10 +132,10 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Chiffre du jour</span>
               <span className="font-medium text-green-600">
-                €{sales
+                {sales
                   .filter(sale => new Date(sale.date).toDateString() === new Date().toDateString())
                   .reduce((acc, sale) => acc + sale.total, 0)
-                  .toLocaleString()}
+                  .toLocaleString()} CFA
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">

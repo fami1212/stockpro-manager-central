@@ -8,7 +8,7 @@ import { AIAssistant } from '@/components/AIAssistant';
 import { PredictiveAnalytics } from '@/components/PredictiveAnalytics';
 import { IntelligentReports } from '@/components/IntelligentReports';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, TrendingUp, BarChart3, FileText, DollarSign, ShoppingCart, Package, Users, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Brain, TrendingUp, BarChart3, FileText, DollarSign, ShoppingCart, Package, Users, AlertTriangle, CheckCircle, Clock, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -122,7 +122,7 @@ export const Dashboard = () => {
 
       {/* Tabs pour organiser les vues */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="hidden lg:grid w-full grid-cols-5">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="smart">
             <Brain className="w-4 h-4 mr-2" />
@@ -141,6 +141,40 @@ export const Dashboard = () => {
             Rapports IA
           </TabsTrigger>
         </TabsList>
+
+        {/* Mobile Cards pour les tabs */}
+        <div className="lg:hidden grid grid-cols-2 gap-4 mb-6">
+          <TabsTrigger value="overview" className="p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
+            <div className="flex flex-col items-center text-center">
+              <LayoutDashboard className="w-6 h-6 mb-2 text-blue-600" />
+              <span className="text-sm font-medium">Vue d'ensemble</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="smart" className="p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
+            <div className="flex flex-col items-center text-center">
+              <Brain className="w-6 h-6 mb-2 text-blue-600" />
+              <span className="text-sm font-medium">Smart Dashboard</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="ai-assistant" className="p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
+            <div className="flex flex-col items-center text-center">
+              <Brain className="w-6 h-6 mb-2 text-blue-600" />
+              <span className="text-sm font-medium">Assistant IA</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="predictions" className="p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
+            <div className="flex flex-col items-center text-center">
+              <TrendingUp className="w-6 h-6 mb-2 text-blue-600" />
+              <span className="text-sm font-medium">Prédictions</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="col-span-2 p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
+            <div className="flex flex-col items-center text-center">
+              <FileText className="w-6 h-6 mb-2 text-blue-600" />
+              <span className="text-sm font-medium">Rapports IA</span>
+            </div>
+          </TabsTrigger>
+        </div>
 
         <TabsContent value="overview" className="space-y-6">
           {/* Métriques principales */}

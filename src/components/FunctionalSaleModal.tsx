@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus, Calculator } from 'lucide-react';
+import { X, Plus, Minus, Calculator, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { useApp, SaleItem as SaleItemType, Sale } from '@/contexts/AppContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ClientFormModal } from '@/components/ClientFormModal';
 
 interface SaleModalProps {
   sale?: Sale;
@@ -27,6 +28,7 @@ interface SaleItemForm {
 export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const { products, clients, addSale, updateSale } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [formData, setFormData] = useState({
     client_id: sale?.client_id || '',
     documentType: 'facture',
@@ -111,6 +113,11 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleClientCreated = (clientId: string) => {
+    setFormData(prev => ({ ...prev, client_id: clientId }));
+    setShowClientForm(false);
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -168,8 +175,9 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             {sale ? 'Modifier la vente' : 'Nouvelle Vente'}
@@ -202,16 +210,28 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
 
             <div>
               <Label htmlFor="client">Client *</Label>
-              <Select value={formData.client_id} onValueChange={(value) => handleFormChange('client_id', value)} disabled={isSubmitting}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={formData.client_id} onValueChange={(value) => handleFormChange('client_id', value)} disabled={isSubmitting}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Sélectionner un client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowClientForm(true)}
+                  disabled={isSubmitting}
+                  className="px-3"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </Button>
+              </div>
               {!formData.client_id && (
                 <p className="text-sm text-red-600 mt-1">Le client est requis</p>
               )}
@@ -265,6 +285,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   </div>
                   
                   <div className="col-span-2">
+                    <Label className="text-xs text-gray-500">Prix unitaire (CFA)</Label>
                     <Input
                       type="number"
                       placeholder="Prix"
@@ -276,6 +297,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   </div>
                   
                   <div className="col-span-2">
+                    <Label className="text-xs text-gray-500">Quantité</Label>
                     <Input
                       type="number"
                       placeholder="Qté"
@@ -287,6 +309,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   </div>
                   
                   <div className="col-span-2">
+                    <Label className="text-xs text-gray-500">Remise (%)</Label>
                     <Input
                       type="number"
                       placeholder="Remise %"
@@ -300,7 +323,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                   </div>
                   
                   <div className="col-span-1">
-                    <div className="text-sm font-medium">
+                    <Label className="text-xs text-gray-500">Total</Label>
+                    <div className="text-sm font-medium mt-2">
                       {Math.round((item.price * item.quantity) * (1 - item.discount / 100)).toLocaleString()} CFA
                     </div>
                   </div>
@@ -426,7 +450,15 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             </Button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+
+      {showClientForm && (
+        <ClientFormModal
+          onClose={() => setShowClientForm(false)}
+          onClientCreated={handleClientCreated}
+        />
+      )}
+    </>
   );
 }

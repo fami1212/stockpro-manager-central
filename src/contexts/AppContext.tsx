@@ -111,7 +111,7 @@ interface AppContextType {
   deleteProduct: (id: string) => Promise<void>;
   
   // Client actions
-  addClient: (client: any) => Promise<void>;
+  addClient: (client: any) => Promise<any>;
   
   // Category actions
   addCategory: (category: any) => Promise<void>;
