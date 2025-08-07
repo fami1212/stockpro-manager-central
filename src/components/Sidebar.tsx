@@ -14,9 +14,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  AlertTriangle,
-  Clock,
-  TrendingUp
+  AlertTriangle
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
