@@ -511,7 +511,7 @@ export type Database = {
           },
         ]
       }
-      suppliers: {
+      s: {
         Row: {
           address: string | null
           contact: string | null
@@ -520,7 +520,7 @@ export type Database = {
           id: string
           last_order: string | null
           name: string
-          phone: string | null
+      supplier    phone: string | null
           status: string | null
           total_amount: number | null
           total_orders: number | null

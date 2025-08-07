@@ -15,7 +15,7 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 
 export const Dashboard = () => {
   console.log('Dashboard: Component rendering...');
-  
+
   const appContext = useApp();
   const { products, sales, clients, suppliers, loading, initialized } = appContext;
   const { purchaseOrders } = usePurchaseOrders();
@@ -39,7 +39,7 @@ export const Dashboard = () => {
   const totalSales = sales.length;
   const totalStock = products.reduce((acc, product) => acc + product.stock, 0);
   const activeClients = clients.filter(client => client.status === 'Actif').length;
-  
+
   // Calcul des pourcentages de changement
   const thisMonth = new Date().getMonth();
   const thisYear = new Date().getFullYear();
@@ -59,27 +59,27 @@ export const Dashboard = () => {
   const thisMonthRevenue = thisMonthSales.reduce((acc, sale) => acc + sale.total, 0);
   const lastMonthRevenue = lastMonthSales.reduce((acc, sale) => acc + sale.total, 0);
 
-  const revenueChange = lastMonthRevenue > 0 
+  const revenueChange = lastMonthRevenue > 0
     ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
     : thisMonthRevenue > 0 ? "100" : "0";
 
-  const salesChange = lastMonthSales.length > 0 
+  const salesChange = lastMonthSales.length > 0
     ? ((thisMonthSales.length - lastMonthSales.length) / lastMonthSales.length * 100).toFixed(1)
     : thisMonthSales.length > 0 ? "100" : "0";
 
   // Calcul du stock critique
   const criticalStockProducts = products.filter(p => p.stock <= p.alert_threshold);
   const outOfStockProducts = products.filter(p => p.stock === 0);
-  
+
   // Calcul des achats
   const pendingPurchases = purchaseOrders.filter(order => order.status === 'En cours');
   const pendingPurchasesAmount = pendingPurchases.reduce((acc, order) => acc + order.total, 0);
-  
+
   // Calcul des ventes du jour
   const today = new Date().toDateString();
   const todaySales = sales.filter(sale => new Date(sale.date).toDateString() === today);
   const todayRevenue = todaySales.reduce((acc, sale) => acc + sale.total, 0);
-  
+
   // Panier moyen
   const averageBasket = sales.length > 0 ? totalRevenue / sales.length : 0;
 
@@ -95,8 +95,8 @@ export const Dashboard = () => {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-2">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="sm"
               onClick={() => {
                 const event = new CustomEvent('openSaleModal');
@@ -105,9 +105,9 @@ export const Dashboard = () => {
             >
               Nouvelle vente
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="text-white border-white hover:bg-white/10"
               onClick={() => {
                 const reportsTab = document.querySelector('[value="reports"]') as HTMLElement;
@@ -143,7 +143,7 @@ export const Dashboard = () => {
         </TabsList>
 
         {/* Mobile Cards pour les tabs */}
-        <div className="lg:hidden grid grid-cols-2 gap-4 mb-6">
+        <TabsList className="lg:hidden grid grid-cols-2 gap-4 mb-6">
           <TabsTrigger value="overview" className="p-4 h-auto bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow data-[state=active]:bg-blue-50 data-[state=active]:border-blue-200">
             <div className="flex flex-col items-center text-center">
               <LayoutDashboard className="w-6 h-6 mb-2 text-blue-600" />
@@ -174,7 +174,8 @@ export const Dashboard = () => {
               <span className="text-sm font-medium">Rapports IA</span>
             </div>
           </TabsTrigger>
-        </div>
+        </TabsList>
+
 
         <TabsContent value="overview" className="space-y-6">
           {/* Métriques principales */}
@@ -222,7 +223,7 @@ export const Dashboard = () => {
                 <TrendingUp className="w-8 h-8 text-green-600" />
               </div>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -233,7 +234,7 @@ export const Dashboard = () => {
                 <Clock className="w-8 h-8 text-orange-600" />
               </div>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -244,7 +245,7 @@ export const Dashboard = () => {
                 <AlertTriangle className="w-8 h-8 text-red-600" />
               </div>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>

@@ -36,20 +36,21 @@ export function usePurchaseOrders() {
         .from('purchase_orders')
         .select(`
           *,
-          suppliers(name),
+          supplier:suppliers(name),
           purchase_order_items(*, products(name))
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      
+
       // Transform data to match PurchaseOrder interface
       const transformedData: PurchaseOrder[] = (data || []).map(order => ({
         ...order,
+        supplier: order.supplier, // This now contains the supplier name
         status: order.status as 'En cours' | 'Reçue' | 'Facturée' | 'Annulée'
       }))
-      
+
       setPurchaseOrders(transformedData)
     } catch (error) {
       console.error('Error fetching purchase orders:', error)
@@ -100,11 +101,11 @@ export function usePurchaseOrders() {
 
         if (itemsError) throw itemsError
       }
-      
+
       await fetchPurchaseOrders()
-      toast({ 
-        title: 'Commande créée', 
-        description: `La commande ${reference} a été créée avec succès.` 
+      toast({
+        title: 'Commande créée',
+        description: `La commande ${reference} a été créée avec succès.`
       })
       return order
     } catch (error) {

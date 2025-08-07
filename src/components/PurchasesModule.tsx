@@ -1,6 +1,7 @@
-
 import { useState, useMemo } from 'react';
-import { Plus, Search, Calendar, Package, Truck, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, Calendar, Package, Truck, TrendingUp, AlertTriangle, CheckCircle, Clock, X } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +15,25 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { usePagination } from '@/hooks/usePagination';
 import { useApp } from '@/contexts/AppContext';
 
+// Simple confirmation modal component
+const ConfirmationModal = ({ title, description, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white rounded-lg shadow-xl p-6 w-96">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold">{title}</h3>
+        <button onClick={onCancel}>
+          <X className="w-6 h-6 text-gray-500 hover:text-gray-700" />
+        </button>
+      </div>
+      <p className="text-gray-600 mb-6">{description}</p>
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onCancel}>Annuler</Button>
+        <Button onClick={onConfirm} className="bg-red-600 hover:bg-red-700">Confirmer</Button>
+      </div>
+    </div>
+  </div>
+);
+
 export const PurchasesModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('orders');
@@ -21,8 +41,10 @@ export const PurchasesModule = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showReceptionModal, setShowReceptionModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // New state for delete modal
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderToDelete, setOrderToDelete] = useState<any>(null); // New state for order to delete
 
   const { purchaseOrders, loading } = usePurchaseOrders();
   const { suppliers } = useApp();
@@ -30,7 +52,7 @@ export const PurchasesModule = () => {
   const filteredOrders = useMemo(() => {
     return purchaseOrders.filter(order => {
       const matchesSearch = order.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           order.supplier?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        order.supplier?.name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -54,26 +76,73 @@ export const PurchasesModule = () => {
     setShowReceptionModal(true);
   };
 
+  const handleShowDeleteModal = (order) => {
+    setOrderToDelete(order);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteOrder = () => {
+    // TODO: Implémenter la suppression réelle
+    console.log('Supprimer commande:', orderToDelete.id);
+    setShowDeleteModal(false);
+    setOrderToDelete(null);
+  };
+
   // Calculs des métriques
   const pendingOrders = purchaseOrders.filter(order => order.status === 'En cours');
   const totalPendingAmount = pendingOrders.reduce((acc, order) => acc + order.total, 0);
-  
+
   const thisMonth = new Date().getMonth();
   const thisYear = new Date().getFullYear();
-  
+
   const receivedThisMonth = purchaseOrders.filter(order => {
     const orderDate = new Date(order.date);
     return orderDate.getMonth() === thisMonth &&
-           orderDate.getFullYear() === thisYear &&
-           order.status === 'Reçue';
+      orderDate.getFullYear() === thisYear &&
+      order.status === 'Reçue';
   });
-  
+
   const receivedAmount = receivedThisMonth.reduce((acc, order) => acc + order.total, 0);
-  
+
   const overdueOrders = purchaseOrders.filter(order => {
     if (order.status !== 'En cours' || !order.expected_date) return false;
     return new Date(order.expected_date) < new Date();
   });
+
+  function generateInvoicePDF(order: any) {
+    const doc = new jsPDF();
+
+    // Titre de la facture
+    doc.setFontSize(18);
+    doc.text(`Facture ${order.reference}`, 14, 20);
+
+    // Infos fournisseur et date
+    doc.setFontSize(12);
+    doc.text(`Fournisseur: ${order.supplier?.name || 'N/A'}`, 14, 30);
+    doc.text(`Date: ${new Date(order.date).toLocaleDateString('fr-FR')}`, 14, 37);
+
+    // Articles
+    autoTable(doc, {
+      startY: 45,
+      head: [['Article', 'Quantité', 'Prix unitaire', 'Total']],
+      body: order.purchase_order_items?.map((item: any) => [
+        item.products?.name || 'N/A',
+        item.quantity,
+        `${item.unit_price.toLocaleString()} CFA`,
+        `${item.total.toLocaleString()} CFA`,
+      ]) || [],
+    });
+
+    // Correction: Cast 'doc' to 'any' to access 'lastAutoTable' property
+    const finalY = (doc as any).lastAutoTable.finalY;
+
+    // Total général
+    doc.setFontSize(14);
+    doc.text(`Total: ${order.total.toLocaleString()} CFA`, 14, finalY + 10);
+
+    // Sauvegarde ou ouverture du PDF
+    doc.save(`Facture_${order.reference}.pdf`);
+  }
 
   if (loading) {
     return (
@@ -104,18 +173,18 @@ export const PurchasesModule = () => {
           icon={Clock}
           color="orange"
         />
-         <MetricCard
-           title="En attente"
-           value={`${totalPendingAmount.toLocaleString()} CFA`}
-           icon={AlertTriangle}
-           color="yellow"
-         />
-         <MetricCard
-           title="Reçu ce mois"
-           value={`${receivedAmount.toLocaleString()} CFA`}
-           icon={CheckCircle}
-           color="green"
-         />
+        <MetricCard
+          title="En attente"
+          value={`${totalPendingAmount.toLocaleString()} CFA`}
+          icon={AlertTriangle}
+          color="yellow"
+        />
+        <MetricCard
+          title="Reçu ce mois"
+          value={`${receivedAmount.toLocaleString()} CFA`}
+          icon={CheckCircle}
+          color="green"
+        />
         <MetricCard
           title="En retard"
           value={overdueOrders.length.toString()}
@@ -129,22 +198,20 @@ export const PurchasesModule = () => {
           <nav className="flex px-6">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`py-4 px-4 border-b-2 font-medium text-sm ${
-                activeTab === 'orders'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`py-4 px-4 border-b-2 font-medium text-sm ${activeTab === 'orders'
+                ? 'border-orange-500 text-orange-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               <Package className="w-4 h-4 inline mr-2" />
               Commandes ({purchaseOrders.length})
             </button>
             <button
               onClick={() => setActiveTab('receptions')}
-              className={`py-4 px-4 border-b-2 font-medium text-sm ${
-                activeTab === 'receptions'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`py-4 px-4 border-b-2 font-medium text-sm ${activeTab === 'receptions'
+                ? 'border-orange-500 text-orange-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               <Truck className="w-4 h-4 inline mr-2" />
               Réceptions ({receivedThisMonth.length})
@@ -188,7 +255,7 @@ export const PurchasesModule = () => {
                 <EmptyState
                   icon={Package}
                   title="Aucune commande trouvée"
-                  description={searchTerm || statusFilter !== 'all' 
+                  description={searchTerm || statusFilter !== 'all'
                     ? "Aucune commande ne correspond à vos critères."
                     : "Commencez par créer votre première commande d'achat."
                   }
@@ -213,9 +280,9 @@ export const PurchasesModule = () => {
                       </thead>
                       <tbody>
                         {paginatedOrders.map((order) => {
-                          const isOverdue = order.status === 'En cours' && order.expected_date && 
-                                          new Date(order.expected_date) < new Date();
-                          
+                          const isOverdue = order.status === 'En cours' && order.expected_date &&
+                            new Date(order.expected_date) < new Date();
+
                           return (
                             <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                               <td className="py-3 px-4">
@@ -241,13 +308,12 @@ export const PurchasesModule = () => {
                                 <p className="font-medium text-gray-900">{order.total.toLocaleString()} CFA</p>
                               </td>
                               <td className="py-3 px-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  order.status === 'Reçue' 
-                                    ? 'bg-green-100 text-green-700'
-                                    : order.status === 'En cours'
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === 'Reçue'
+                                  ? 'bg-green-100 text-green-700'
+                                  : order.status === 'En cours'
                                     ? (isOverdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')
                                     : 'bg-gray-100 text-gray-700'
-                                }`}>
+                                  }`}>
                                   {isOverdue ? 'En retard' : order.status}
                                 </span>
                               </td>
@@ -265,84 +331,56 @@ export const PurchasesModule = () => {
                                   <span className="text-gray-500">Non définie</span>
                                 )}
                               </td>
-                               <td className="py-3 px-4">
-                                  <div className="flex space-x-2">
-                                     <Button 
-                                       variant="outline" 
-                                       size="sm"
-                                       onClick={() => {
-                                         setSelectedOrder(order);
-                                         setShowDetailsModal(true);
-                                       }}
-                                     >
-                                      Voir
-                                    </Button>
-                                    {order.status === 'En cours' && (
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        onClick={() => handleReceiveOrder(order.id)}
-                                        className="text-green-600 hover:text-green-700"
-                                      >
-                                        Recevoir
-                                      </Button>
-                                    )}
-                                    {order.status === 'Reçue' && (
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        className="text-blue-600 hover:text-blue-700"
-                                        onClick={() => {
-                                          window.open(`data:text/html;charset=utf-8,
-                                            <html>
-                                              <head><title>Facture ${order.reference}</title></head>
-                                              <body style="font-family: Arial, sans-serif; padding: 20px;">
-                                                <h1>Facture ${order.reference}</h1>
-                                                <p><strong>Fournisseur:</strong> ${order.supplier?.name || 'N/A'}</p>
-                                                <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString('fr-FR')}</p>
-                                                <h3>Articles:</h3>
-                                                <table border="1" style="width: 100%; border-collapse: collapse;">
-                                                  <tr><th>Article</th><th>Quantité</th><th>Prix unitaire</th><th>Total</th></tr>
-                                                  ${order.purchase_order_items?.map(item => `
-                                                    <tr>
-                                                      <td>${item.products?.name || 'N/A'}</td>
-                                                      <td>${item.quantity}</td>
-                                                      <td>${item.unit_price.toLocaleString()} CFA</td>
-                                                      <td>${item.total.toLocaleString()} CFA</td>
-                                                    </tr>
-                                                  `).join('') || ''}
-                                                </table>
-                                                <p><strong>Total: ${order.total.toLocaleString()} CFA</strong></p>
-                                              </body>
-                                            </html>
-                                          `, '_blank');
-                                        }}
-                                      >
-                                        Facturer
-                                      </Button>
-                                    )}
-                                    <Button 
-                                      variant="outline" 
+                              <td className="py-3 px-4">
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setShowDetailsModal(true);
+                                    }}
+                                  >
+                                    Voir
+                                  </Button>
+                                  {order.status === 'En cours' && (
+                                    <Button
+                                      variant="outline"
                                       size="sm"
-                                      className="text-red-600 hover:text-red-700"
-                                      onClick={() => {
-                                        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-                                          // TODO: Implémenter la suppression
-                                          console.log('Supprimer commande:', order.id);
-                                        }
-                                      }}
+                                      onClick={() => handleReceiveOrder(order.id)}
+                                      className="text-green-600 hover:text-green-700"
                                     >
-                                      Supprimer
+                                      Recevoir
                                     </Button>
-                                  </div>
-                               </td>
+                                  )}
+                                  {order.status === 'Reçue' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-blue-600 hover:text-blue-700"
+                                      onClick={() => generateInvoicePDF(order)}
+                                    >
+                                      Facturer
+                                    </Button>
+                                  )}
+
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => handleShowDeleteModal(order)}
+                                  >
+                                    Supprimer
+                                  </Button>
+                                </div>
+                              </td>
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <PaginationControls
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -369,20 +407,20 @@ export const PurchasesModule = () => {
                 <div className="grid gap-4">
                   {receivedThisMonth.map((order) => (
                     <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                       <div className="flex justify-between items-start mb-2">
-                         <div>
-                           <h4 className="font-medium text-green-600">{order.reference}</h4>
-                           <p className="text-sm text-gray-600">
-                             Reçu le {new Date(order.updated_at).toLocaleDateString('fr-FR')}
-                           </p>
-                           {order.notes && (
-                             <p className="text-xs text-gray-500 mt-1">Notes: {order.notes}</p>
-                           )}
-                         </div>
-                         <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                           Reçue
-                         </span>
-                       </div>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium text-green-600">{order.reference}</h4>
+                          <p className="text-sm text-gray-600">
+                            Reçu le {new Date(order.updated_at).toLocaleDateString('fr-FR')}
+                          </p>
+                          {order.notes && (
+                            <p className="text-xs text-gray-500 mt-1">Notes: {order.notes}</p>
+                          )}
+                        </div>
+                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                          Reçue
+                        </span>
+                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="font-medium">Fournisseur:</span>
@@ -415,11 +453,11 @@ export const PurchasesModule = () => {
       )}
 
       {showReceptionModal && (
-        <ReceptionModal 
+        <ReceptionModal
           onClose={() => {
             setShowReceptionModal(false);
             setSelectedOrderId(undefined);
-          }} 
+          }}
           orderId={selectedOrderId}
         />
       )}
@@ -432,6 +470,15 @@ export const PurchasesModule = () => {
           setSelectedOrder(null);
         }}
       />
+
+      {showDeleteModal && (
+        <ConfirmationModal
+          title="Confirmer la suppression"
+          description={`Êtes-vous sûr de vouloir supprimer la commande "${orderToDelete?.reference}" ? Cette action est irréversible.`}
+          onConfirm={handleDeleteOrder}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   );
 };
