@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PurchaseOrderModal } from '@/components/PurchaseOrderModal';
 import { ReceptionModal } from '@/components/ReceptionModal';
+import { PurchaseOrderDetailsModal } from '@/components/PurchaseOrderDetailsModal';
 import { MetricCard } from '@/components/MetricCard';
 import { EmptyState } from '@/components/EmptyState';
 import { PaginationControls } from '@/components/PaginationControls';
@@ -19,7 +20,9 @@ export const PurchasesModule = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showReceptionModal, setShowReceptionModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>();
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const { purchaseOrders, loading } = usePurchaseOrders();
   const { suppliers } = useApp();
@@ -264,39 +267,14 @@ export const PurchasesModule = () => {
                               </td>
                                <td className="py-3 px-4">
                                   <div className="flex space-x-2">
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={() => {
-                                        const orderModal = document.createElement('div');
-                                        orderModal.innerHTML = `
-                                          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                            <div class="bg-white p-6 rounded-lg max-w-2xl w-full m-4 max-h-96 overflow-y-auto">
-                                              <h3 class="text-lg font-semibold mb-4">Détails de la commande ${order.reference}</h3>
-                                              <div class="space-y-3">
-                                                <p><strong>Fournisseur:</strong> ${order.supplier?.name || 'N/A'}</p>
-                                                <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString('fr-FR')}</p>
-                                                <p><strong>Date prévue:</strong> ${order.expected_date ? new Date(order.expected_date).toLocaleDateString('fr-FR') : 'Non définie'}</p>
-                                                <p><strong>Statut:</strong> ${order.status}</p>
-                                                <p><strong>Total:</strong> ${order.total.toLocaleString()} CFA</p>
-                                                ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
-                                                <div class="mt-4">
-                                                  <h4 class="font-medium mb-2">Articles:</h4>
-                                                  ${order.purchase_order_items?.map(item => `
-                                                    <div class="border p-2 rounded mb-2">
-                                                      <p><strong>${item.products?.name || 'N/A'}</strong></p>
-                                                      <p>Quantité: ${item.quantity} × ${item.unit_price.toLocaleString()} CFA = ${item.total.toLocaleString()} CFA</p>
-                                                    </div>
-                                                  `).join('') || '<p>Aucun article</p>'}
-                                                </div>
-                                              </div>
-                                              <button onclick="this.closest('.fixed').remove()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Fermer</button>
-                                            </div>
-                                          </div>
-                                        `;
-                                        document.body.appendChild(orderModal);
-                                      }}
-                                    >
+                                     <Button 
+                                       variant="outline" 
+                                       size="sm"
+                                       onClick={() => {
+                                         setSelectedOrder(order);
+                                         setShowDetailsModal(true);
+                                       }}
+                                     >
                                       Voir
                                     </Button>
                                     {order.status === 'En cours' && (
@@ -445,6 +423,15 @@ export const PurchasesModule = () => {
           orderId={selectedOrderId}
         />
       )}
+
+      <PurchaseOrderDetailsModal
+        order={selectedOrder}
+        open={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedOrder(null);
+        }}
+      />
     </div>
   );
 };

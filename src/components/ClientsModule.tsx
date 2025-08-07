@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClientModal } from '@/components/ClientModal';
 import { PaymentModal } from '@/components/PaymentModal';
+import { ClientDetailsModal } from '@/components/ClientDetailsModal';
 import { useClientStats } from '@/hooks/useClientStats';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useApp } from '@/contexts/AppContext';
@@ -15,6 +16,8 @@ export const ClientsModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showClientModal, setShowClientModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,35 +141,15 @@ export const ClientsModule = () => {
                        : 'Aucun'}
                    </p>
                    <div className="flex flex-col sm:flex-row gap-2">
-                     <Button 
-                       variant="outline" 
-                       size="sm" 
-                       className="flex-1 text-xs"
-                       onClick={() => {
-                         const clientModal = document.createElement('div');
-                         clientModal.innerHTML = `
-                           <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                             <div class="bg-white p-6 rounded-lg max-w-md w-full m-4">
-                               <h3 class="text-lg font-semibold mb-4">Détails du client</h3>
-                               <div class="space-y-3">
-                                 <p><strong>Nom:</strong> ${client.name}</p>
-                                 <p><strong>Email:</strong> ${client.email || 'Non renseigné'}</p>
-                                 <p><strong>Téléphone:</strong> ${client.phone || 'Non renseigné'}</p>
-                                 <p><strong>Adresse:</strong> ${client.address || 'Non renseignée'}</p>
-                                 <p><strong>Statut:</strong> ${client.status}</p>
-                                 <p><strong>Total achats:</strong> ${(client.calculatedTotalAmount || 0).toLocaleString()} CFA</p>
-                                 <p><strong>Nombre de commandes:</strong> ${client.calculatedTotalOrders || 0}</p>
-                                 <p><strong>Dernier achat:</strong> ${client.calculatedLastOrder 
-                                   ? new Date(client.calculatedLastOrder).toLocaleDateString('fr-FR') 
-                                   : 'Aucun'}</p>
-                               </div>
-                               <button onclick="this.closest('.fixed').remove()" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Fermer</button>
-                             </div>
-                           </div>
-                         `;
-                         document.body.appendChild(clientModal);
-                       }}
-                     >
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 text-xs"
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setShowDetailsModal(true);
+                        }}
+                      >
                        Voir
                      </Button>
                      <Button 
@@ -203,6 +186,15 @@ export const ClientsModule = () => {
           type="client"
         />
       )}
+
+      <ClientDetailsModal
+        client={selectedClient}
+        open={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedClient(null);
+        }}
+      />
     </div>
   );
 };
