@@ -3,7 +3,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
-import { SaleModal } from '@/components/SaleModal';
+import { FunctionalSaleModal } from '@/components/FunctionalSaleModal';
 
 export const TopProducts = () => {
   const { products, sales } = useApp();
@@ -111,7 +111,7 @@ export const TopProducts = () => {
       </div>
       
       {showSaleModal && (
-        <SaleModal onClose={() => setShowSaleModal(false)} />
+        <FunctionalSaleModal onClose={() => setShowSaleModal(false)} />
       )}
     </>
   );

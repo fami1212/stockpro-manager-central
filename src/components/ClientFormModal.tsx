@@ -85,7 +85,6 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         address: formData.address.trim() || null,
-        city: formData.city.trim() || null,
         type: formData.type,
         status: formData.status
       };
