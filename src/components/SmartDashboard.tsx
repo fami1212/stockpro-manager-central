@@ -55,7 +55,7 @@ export const SmartDashboard = () => {
       {
         id: 'revenue-prediction',
         title: 'CA Prévu (30j)',
-        value: `€${predictedRevenue.toLocaleString()}`,
+        value: `CFA${predictedRevenue.toLocaleString()}`,
         trend: salesGrowth * 100,
         prediction: `+${Math.round(salesGrowth * 100)}% basé sur vos données`,
         confidence: sales.length > 5 ? 0.89 : 0.65,
