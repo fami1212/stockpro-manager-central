@@ -214,7 +214,56 @@ export const IntelligentReports = () => {
   };
 
   const downloadReport = (report: IntelligentReport) => {
-    const content = `
+    // Import jsPDF dynamically or use existing import
+    import('jspdf').then(({ default: jsPDF }) => {
+      import('jspdf-autotable').then((autoTable) => {
+        const doc = new jsPDF();
+        
+        // Configure PDF
+        doc.setFontSize(18);
+        doc.text(report.title, 20, 20);
+        
+        doc.setFontSize(12);
+        doc.text(report.description, 20, 35);
+        
+        // Add generation info
+        doc.setFontSize(10);
+        doc.text(`Généré le: ${report.lastGenerated}`, 20, 45);
+        doc.text(`Niveau de confiance: ${Math.round(report.confidence * 100)}%`, 20, 55);
+        
+        // Add insights
+        doc.setFontSize(14);
+        doc.text('Insights Clés', 20, 70);
+        doc.setFontSize(11);
+        let yPos = 80;
+        report.insights.forEach((insight, index) => {
+          const lines = doc.splitTextToSize(`• ${insight}`, 170);
+          lines.forEach((line: string) => {
+            doc.text(line, 20, yPos);
+            yPos += 7;
+          });
+        });
+        
+        // Add recommendations
+        yPos += 10;
+        doc.setFontSize(14);
+        doc.text('Recommandations', 20, yPos);
+        yPos += 10;
+        doc.setFontSize(11);
+        report.recommendations.forEach((rec, index) => {
+          const lines = doc.splitTextToSize(`• ${rec}`, 170);
+          lines.forEach((line: string) => {
+            doc.text(line, 20, yPos);
+            yPos += 7;
+          });
+        });
+        
+        // Save PDF
+        doc.save(`${report.title.replace(/\s+/g, '_')}.pdf`);
+      });
+    }).catch(() => {
+      // Fallback to text download
+      const content = `
 # ${report.title}
 ${report.description}
 
@@ -224,20 +273,18 @@ ${report.insights.map(insight => `• ${insight}`).join('\n')}
 ## Recommandations
 ${report.recommendations.map(rec => `• ${rec}`).join('\n')}
 
-## Données
-${JSON.stringify(report.data, null, 2)}
-
 Généré le: ${report.lastGenerated}
 Niveau de confiance: ${Math.round(report.confidence * 100)}%
-    `;
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${report.title.replace(/\s+/g, '_')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+      `;
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${report.title.replace(/\s+/g, '_')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   };
 
   const getTypeIcon = (type: string) => {
