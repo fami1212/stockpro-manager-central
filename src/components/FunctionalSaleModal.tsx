@@ -27,6 +27,7 @@ interface SaleItemForm {
 
 export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const { products, clients, addSale, updateSale } = useApp();
+  const [clientsList, setClientsList] = useState(clients);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -56,6 +57,11 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   });
 
   const paymentMethods = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Crédit client'];
+
+  // Synchroniser la liste des clients avec le contexte
+  useEffect(() => {
+    setClientsList(clients);
+  }, [clients]);
 
   // Calculate totals whenever items or discounts change
   useEffect(() => {
@@ -116,6 +122,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const handleClientCreated = (clientId: string) => {
     setFormData(prev => ({ ...prev, client_id: clientId }));
     setShowClientForm(false);
+    // Rafraîchir la liste des clients immédiatement
+    setClientsList(clients);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -216,7 +224,7 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients.map((client) => (
+                    {clientsList.map((client) => (
                       <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                     ))}
                   </SelectContent>

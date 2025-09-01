@@ -24,15 +24,56 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
     status: 'Actif' as 'Actif' | 'Inactif'
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateField = (field: string, value: string) => {
+    const newErrors = { ...errors };
+    
+    switch (field) {
+      case 'name':
+        if (!value.trim()) {
+          newErrors.name = 'Le nom du client est requis';
+        } else if (value.trim().length < 2) {
+          newErrors.name = 'Le nom doit contenir au moins 2 caractères';
+        } else {
+          delete newErrors.name;
+        }
+        break;
+      case 'email':
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          newErrors.email = 'Format d\'email invalide';
+        } else {
+          delete newErrors.email;
+        }
+        break;
+      case 'phone':
+        if (value && !/^[+]?[\d\s-()]{8,}$/.test(value)) {
+          newErrors.phone = 'Format de téléphone invalide';
+        } else {
+          delete newErrors.phone;
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    validateField(field, value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      alert('Le nom du client est requis');
+    // Validation complète avant soumission
+    validateField('name', formData.name);
+    validateField('email', formData.email);
+    validateField('phone', formData.phone);
+    
+    if (!formData.name.trim() || Object.keys(errors).length > 0) {
       return;
     }
 
@@ -54,7 +95,7 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
       onClose();
     } catch (error) {
       console.error('Erreur lors de la création du client:', error);
-      alert('Erreur lors de la création du client');
+      setErrors({ submit: 'Erreur lors de la création du client. Veuillez réessayer.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -87,9 +128,12 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Nom complet ou raison sociale"
               disabled={isSubmitting}
-              className="mt-1"
+              className={`mt-1 ${errors.name ? 'border-red-500' : ''}`}
               required
             />
+            {errors.name && (
+              <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -139,9 +183,12 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="email@exemple.com"
                 disabled={isSubmitting}
-                className="pl-10"
+                className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
               />
             </div>
+            {errors.email && (
+              <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -155,9 +202,12 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="+225 XX XX XX XX"
                 disabled={isSubmitting}
-                className="pl-10"
+                className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
               />
             </div>
+            {errors.phone && (
+              <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
+            )}
           </div>
 
           <div>
@@ -189,11 +239,17 @@ export function ClientFormModal({ onClose, onClientCreated }: ClientFormModalPro
             />
           </div>
 
+          {errors.submit && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{errors.submit}</p>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-4">
             <Button 
               type="submit" 
               className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={isSubmitting || !formData.name.trim()}
+              disabled={isSubmitting || !formData.name.trim() || Object.keys(errors).filter(k => k !== 'submit').length > 0}
             >
               {isSubmitting ? 'Création...' : 'Créer le client'}
             </Button>
