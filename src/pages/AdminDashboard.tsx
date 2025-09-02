@@ -5,12 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersManagement } from '@/components/admin/UsersManagement';
 import { SubscriptionsManagement } from '@/components/admin/SubscriptionsManagement';
 import { AdminStats } from '@/components/admin/AdminStats';
+import { AdminRoute } from '@/components/AdminRoute';
 import { Settings, Users, CreditCard, BarChart3 } from 'lucide-react';
 
 export default function AdminDashboard() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
+    <AdminRoute>
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Administration</h1>
           <p className="text-gray-600 mt-2">
@@ -66,7 +68,8 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </AdminRoute>
   );
 }

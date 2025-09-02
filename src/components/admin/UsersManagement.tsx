@@ -1,125 +1,273 @@
-
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, MoreVertical, UserPlus, Ban, CheckCircle, XCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Search, MoreHorizontal, UserPlus, Shield, ShieldCheck, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface User {
+interface UserData {
   id: string;
-  name: string;
   email: string;
-  company: string;
-  plan: string;
-  status: 'active' | 'suspended' | 'cancelled';
-  registrationDate: string;
-  lastLogin: string;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  phone: string | null;
+  role: 'admin' | 'manager' | 'user';
+  created_at: string;
+  last_login: string | null;
+  subscription_plan: string;
 }
 
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Jean Dupont',
-    email: 'jean.dupont@entreprise.com',
-    company: 'Entreprise SARL',
-    plan: 'Pro',
-    status: 'active',
-    registrationDate: '2024-01-15',
-    lastLogin: '2024-01-20'
-  },
-  {
-    id: '2',
-    name: 'Marie Martin',
-    email: 'marie.martin@startup.com',
-    company: 'Startup Inc',
-    plan: 'Basic',
-    status: 'active',
-    registrationDate: '2024-01-10',
-    lastLogin: '2024-01-19'
-  },
-  {
-    id: '3',
-    name: 'Pierre Dubois',
-    email: 'p.dubois@corporation.com',
-    company: 'Corporation Ltd',
-    plan: 'Enterprise',
-    status: 'suspended',
-    registrationDate: '2024-01-05',
-    lastLogin: '2024-01-18'
-  }
-];
-
 export function UsersManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<string>('all');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'admin' | 'manager' | 'user'>('user');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const { toast } = useToast();
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const getStatusBadge = (status: User['status']) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Actif</Badge>;
-      case 'suspended':
-        return <Badge className="bg-yellow-100 text-yellow-800">Suspendu</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-100 text-red-800">Annulé</Badge>;
-      default:
-        return <Badge variant="secondary">Inconnu</Badge>;
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch users with their profiles and roles
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          company,
+          phone,
+          created_at,
+          last_login,
+          subscription_plan,
+          user_roles!inner(role)
+        `);
+
+      if (usersError) throw usersError;
+
+      // Get auth users to get email addresses
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
+
+      const combinedUsers = usersData?.map((profile: any) => {
+        const authUser = authUsers.users.find(u => u.id === profile.id);
+        return {
+          ...profile,
+          email: authUser?.email || '',
+          role: profile.user_roles?.[0]?.role || 'user'
+        };
+      }) || [];
+
+      setUsers(combinedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les utilisateurs",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUserAction = (userId: string, action: string) => {
-    const user = users.find(u => u.id === userId);
+  const createUser = async () => {
+    try {
+      // Create auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: newUserEmail,
+        password: newUserPassword,
+        email_confirm: true
+      });
+
+      if (authError) throw authError;
+
+      // Assign role
+      if (authData.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: authData.user.id,
+            role: newUserRole,
+            granted_by: (await supabase.auth.getUser()).data.user?.id
+          });
+
+        if (roleError) throw roleError;
+      }
+
+      toast({
+        title: "Succès",
+        description: "Utilisateur créé avec succès",
+      });
+
+      setShowCreateDialog(false);
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserRole('user');
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de créer l'utilisateur",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'manager' | 'user') => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: userId,
+          role: newRole,
+          granted_by: (await supabase.auth.getUser()).data.user?.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Rôle mis à jour avec succès",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de mettre à jour le rôle",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Utilisateur supprimé avec succès",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer l'utilisateur",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.company?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    switch (action) {
-      case 'activate':
-        setUsers(prev => prev.map(u => 
-          u.id === userId ? { ...u, status: 'active' as const } : u
-        ));
-        toast({
-          title: 'Utilisateur activé',
-          description: `${user?.name} a été réactivé`
-        });
-        break;
-      case 'suspend':
-        setUsers(prev => prev.map(u => 
-          u.id === userId ? { ...u, status: 'suspended' as const } : u
-        ));
-        toast({
-          title: 'Utilisateur suspendu',
-          description: `${user?.name} a été suspendu`
-        });
-        break;
-      case 'delete':
-        setUsers(prev => prev.filter(u => u.id !== userId));
-        toast({
-          title: 'Utilisateur supprimé',
-          description: `${user?.name} a été supprimé`
-        });
-        break;
+    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+    
+    return matchesSearch && matchesRole;
+  });
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge variant="destructive" className="flex items-center gap-1"><Shield className="h-3 w-3" />Admin</Badge>;
+      case 'manager':
+        return <Badge variant="secondary" className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" />Manager</Badge>;
+      default:
+        return <Badge variant="outline" className="flex items-center gap-1"><User className="h-3 w-3" />Utilisateur</Badge>;
     }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-8">Chargement...</div>;
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestion des Utilisateurs</CardTitle>
-        <CardDescription>
-          Gérez les comptes utilisateurs et leurs permissions
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <CardTitle>Gestion des Utilisateurs</CardTitle>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Nouvel utilisateur
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    placeholder="email@exemple.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Mot de passe temporaire"
+                  />
+                </div>
+                <div>
+                  <Label>Rôle</Label>
+                  <Select value={newUserRole} onValueChange={(value: any) => setNewUserRole(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Utilisateur</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={createUser} className="w-full">
+                  Créer l'utilisateur
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Rechercher un utilisateur..."
               value={searchTerm}
@@ -127,23 +275,30 @@ export function UsersManagement() {
               className="pl-10"
             />
           </div>
-          <Button>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Nouvel utilisateur
-          </Button>
+          <Select value={selectedRole} onValueChange={setSelectedRole}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les rôles</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="manager">Manager</SelectItem>
+              <SelectItem value="user">Utilisateur</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="border rounded-lg">
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Utilisateur</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Entreprise</TableHead>
+                <TableHead>Rôle</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Inscription</TableHead>
                 <TableHead>Dernière connexion</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -151,43 +306,75 @@ export function UsersManagement() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
+                      <p className="font-medium">{user.first_name} {user.last_name}</p>
+                      <p className="text-sm text-muted-foreground">{user.phone}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{user.company}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.company || '-'}</TableCell>
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{user.plan}</Badge>
+                    <Badge variant="outline">{user.subscription_plan}</Badge>
                   </TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>{new Date(user.registrationDate).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>{new Date(user.lastLogin).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
+                    {user.last_login ? 
+                      new Date(user.last_login).toLocaleDateString('fr-FR') : 
+                      'Jamais'
+                    }
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {user.status === 'suspended' ? (
-                          <DropdownMenuItem onClick={() => handleUserAction(user.id, 'activate')}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Activer
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleUserAction(user.id, 'suspend')}>
-                            <Ban className="h-4 w-4 mr-2" />
-                            Suspendre
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem 
-                          onClick={() => handleUserAction(user.id, 'delete')}
-                          className="text-red-600"
+                          onClick={() => updateUserRole(user.id, 'admin')}
+                          disabled={user.role === 'admin'}
                         >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Supprimer
+                          Promouvoir Admin
                         </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => updateUserRole(user.id, 'manager')}
+                          disabled={user.role === 'manager'}
+                        >
+                          Promouvoir Manager
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => updateUserRole(user.id, 'user')}
+                          disabled={user.role === 'user'}
+                        >
+                          Rétrograder Utilisateur
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem 
+                              onSelect={(e) => e.preventDefault()}
+                              className="text-destructive"
+                            >
+                              Supprimer
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteUser(user.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

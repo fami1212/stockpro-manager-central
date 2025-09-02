@@ -8,6 +8,8 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
+  userRole: string | null
+  isAdmin: boolean
   signUp: (email: string, password: string, userData?: any) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -20,6 +22,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     // Get initial session
@@ -36,6 +40,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+
+      if (session?.user) {
+        // Get user role
+        setTimeout(async () => {
+          try {
+            const { data: roleData } = await supabase
+              .rpc('get_user_role', { _user_id: session.user.id });
+            
+            setUserRole(roleData);
+            setIsAdmin(roleData === 'admin');
+            
+            // Update last login
+            await supabase
+              .from('profiles')
+              .update({ last_login: new Date().toISOString() })
+              .eq('id', session.user.id);
+          } catch (error) {
+            console.error('Error fetching user role:', error);
+          }
+        }, 0);
+      } else {
+        setUserRole(null);
+        setIsAdmin(false);
+      }
 
       if (event === 'SIGNED_IN') {
         toast({
@@ -142,6 +170,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    userRole,
+    isAdmin,
     signUp,
     signIn,
     signOut,

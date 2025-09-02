@@ -1,129 +1,180 @@
-
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Users, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
+import { Users, ShoppingCart, Package, TrendingUp, Shield, ShieldCheck, User, Activity } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-const statsData = [
-  { name: 'Jan', users: 45, revenue: 2340 },
-  { name: 'Fév', users: 52, revenue: 2890 },
-  { name: 'Mar', users: 61, revenue: 3240 },
-  { name: 'Avr', users: 58, revenue: 3190 },
-  { name: 'Mai', users: 67, revenue: 3650 },
-  { name: 'Jun', users: 73, revenue: 3950 }
-];
-
-const subscriptionData = [
-  { name: 'Basic', value: 45, color: '#3B82F6' },
-  { name: 'Pro', value: 30, color: '#10B981' },
-  { name: 'Enterprise', value: 25, color: '#F59E0B' }
-];
+interface AdminStatsData {
+  total_users: number;
+  new_users_this_month: number;
+  active_users_week: number;
+  admin_count: number;
+  manager_count: number;
+  user_count: number;
+  total_sales: number;
+  total_products: number;
+  total_revenue: number;
+}
 
 export function AdminStats() {
+  const [stats, setStats] = useState<AdminStatsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Get user stats
+      const { data: userStats } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          created_at,
+          last_login,
+          user_roles(role)
+        `);
+
+      // Get sales stats
+      const { data: salesStats } = await supabase
+        .from('sales')
+        .select('total, created_at');
+
+      // Get products stats
+      const { data: productsStats } = await supabase
+        .from('products')
+        .select('id');
+
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const adminStats: AdminStatsData = {
+        total_users: userStats?.length || 0,
+        new_users_this_month: userStats?.filter(u => new Date(u.created_at) >= oneMonthAgo).length || 0,
+        active_users_week: userStats?.filter(u => u.last_login && new Date(u.last_login) >= oneWeekAgo).length || 0,
+        admin_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'admin').length || 0,
+        manager_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'manager').length || 0,
+        user_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'user').length || 0,
+        total_sales: salesStats?.length || 0,
+        total_products: productsStats?.length || 0,
+        total_revenue: salesStats?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0
+      };
+
+      setStats(adminStats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-8">Chargement des statistiques...</div>;
+  }
+
+  if (!stats) {
+    return <div className="text-center p-8">Erreur lors du chargement des statistiques</div>;
+  }
+
+  const mainStats = [
+    {
+      title: "Utilisateurs Total",
+      value: stats.total_users.toString(),
+      description: `+${stats.new_users_this_month} ce mois`,
+      icon: Users,
+    },
+    {
+      title: "Ventes Total",
+      value: stats.total_sales.toString(),
+      description: "Toutes les ventes",
+      icon: ShoppingCart,
+    },
+    {
+      title: "Produits",
+      value: stats.total_products.toString(),
+      description: "Dans la base de données",
+      icon: Package,
+    },
+    {
+      title: "Revenus Total",
+      value: `CFA${stats.total_revenue.toLocaleString()}`,
+      description: "Chiffre d'affaires total",
+      icon: TrendingUp,
+    },
+  ];
+
+  const roleStats = [
+    {
+      title: "Administrateurs",
+      value: stats.admin_count.toString(),
+      icon: Shield,
+      color: "text-red-600"
+    },
+    {
+      title: "Managers",
+      value: stats.manager_count.toString(),
+      icon: ShieldCheck,
+      color: "text-blue-600"
+    },
+    {
+      title: "Utilisateurs",
+      value: stats.user_count.toString(),
+      icon: User,
+      color: "text-green-600"
+    },
+    {
+      title: "Actifs (7j)",
+      value: stats.active_users_week.toString(),
+      icon: Activity,
+      color: "text-purple-600"
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilisateurs Actifs</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +12% par rapport au mois dernier
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenus Mensuels</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">€45,231</div>
-            <p className="text-xs text-muted-foreground">
-              +8% par rapport au mois dernier
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nouveaux Abonnements</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">
-              +23% par rapport au mois dernier
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux de Rétention</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">94.2%</div>
-            <p className="text-xs text-muted-foreground">
-              +2% par rapport au mois dernier
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {mainStats.map((stat, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">
+                {stat.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Évolution des Utilisateurs</CardTitle>
-            <CardDescription>Nombre d'utilisateurs actifs par mois</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={statsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="users" fill="#3B82F6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Répartition des Abonnements</CardTitle>
-            <CardDescription>Distribution des plans d'abonnement</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={subscriptionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {subscriptionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Répartition des Rôles</CardTitle>
+          <CardDescription>
+            Distribution des utilisateurs par rôle
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {roleStats.map((stat, index) => (
+              <div key={index} className="flex items-center space-x-2 p-3 rounded-lg border">
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                <div>
+                  <p className="text-sm font-medium">{stat.title}</p>
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
