@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { data: roleData } = await supabase
               .rpc('get_user_role', { _user_id: session.user.id });
             
+            console.log('User role fetched:', roleData);
             setUserRole(roleData);
             setIsAdmin(roleData === 'admin');
             
