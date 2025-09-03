@@ -70,9 +70,17 @@ export function UsersManagement() {
       const combinedUsers = usersData?.map((profile: any) => {
         const authUser = authUsers?.users?.find((u: any) => u.id === profile.id);
         return {
-          ...profile,
+          id: profile.id,
           email: authUser?.email || '',
-          role: profile.user_roles?.[0]?.role || 'user'
+          name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
+          company: profile.company || 'N/A',
+          role: profile.user_roles?.[0]?.role || 'user',
+          subscription_plan: profile.subscription_plan || 'basic',
+          last_login: profile.last_login,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          phone: profile.phone,
+          created_at: profile.created_at
         };
       }) || [];
 

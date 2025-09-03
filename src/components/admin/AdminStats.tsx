@@ -30,12 +30,12 @@ export function AdminStats() {
       // Get user stats
       const { data: userStats } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          created_at,
-          last_login,
-          user_roles(role)
-        `);
+        .select('id, created_at, last_login');
+
+      // Get user roles separately
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
 
       // Get sales stats
       const { data: salesStats } = await supabase
@@ -51,13 +51,18 @@ export function AdminStats() {
       const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+      // Count roles
+      const adminCount = userRoles?.filter(r => r.role === 'admin').length || 0;
+      const managerCount = userRoles?.filter(r => r.role === 'manager').length || 0;
+      const userCount = userRoles?.filter(r => r.role === 'user').length || 0;
+
       const adminStats: AdminStatsData = {
         total_users: userStats?.length || 0,
         new_users_this_month: userStats?.filter(u => new Date(u.created_at) >= oneMonthAgo).length || 0,
         active_users_week: userStats?.filter(u => u.last_login && new Date(u.last_login) >= oneWeekAgo).length || 0,
-        admin_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'admin').length || 0,
-        manager_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'manager').length || 0,
-        user_count: userStats?.filter(u => (u.user_roles as any)?.[0]?.role === 'user').length || 0,
+        admin_count: adminCount,
+        manager_count: managerCount,
+        user_count: userCount,
         total_sales: salesStats?.length || 0,
         total_products: productsStats?.length || 0,
         total_revenue: salesStats?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0
