@@ -68,7 +68,7 @@ export function UsersManagement() {
       if (authError) throw authError;
 
       const combinedUsers = usersData?.map((profile: any) => {
-        const authUser = authUsers.users.find(u => u.id === profile.id);
+        const authUser = authUsers?.users?.find((u: any) => u.id === profile.id);
         return {
           ...profile,
           email: authUser?.email || '',
