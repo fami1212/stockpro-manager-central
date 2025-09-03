@@ -45,36 +45,44 @@ export function UsersManagement() {
     try {
       setLoading(true);
       
-      // Fetch users with their profiles and roles
-      const { data: usersData, error: usersError } = await supabase
+      // Get profiles data separately
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          company,
-          phone,
-          created_at,
-          last_login,
-          subscription_plan,
-          user_roles!inner(role)
-        `);
+        .select('*');
 
-      if (usersError) throw usersError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
+      }
 
-      // Get auth users to get email addresses
+      // Get user roles separately
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        throw rolesError;
+      }
+
+      // Get auth users data
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Error fetching auth users:', authError);
+        throw authError;
+      }
 
-      const combinedUsers = usersData?.map((profile: any) => {
+      const combinedUsers = profiles?.map((profile: any) => {
         const authUser = authUsers?.users?.find((u: any) => u.id === profile.id);
+        const userRole = userRoles?.find(r => r.user_id === profile.id);
+        
         return {
           id: profile.id,
           email: authUser?.email || '',
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
-          role: profile.user_roles?.[0]?.role || 'user',
+          role: userRole?.role || 'user',
           subscription_plan: profile.subscription_plan || 'basic',
           last_login: profile.last_login,
           first_name: profile.first_name,

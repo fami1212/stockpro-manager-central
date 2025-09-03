@@ -12,14 +12,14 @@ import { Settings, Users, CreditCard, BarChart3 } from 'lucide-react';
 export default function AdminDashboard() {
   return (
     <AdminRoute>
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Administration</h1>
-          <p className="text-gray-600 mt-2">
-            Gérez les utilisateurs, abonnements et paramètres de StockPro Manager
-          </p>
-        </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Administration</h1>
+            <p className="text-muted-foreground mt-2">
+              Gérez les utilisateurs, abonnements et paramètres de StockPro Manager
+            </p>
+          </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
