@@ -58,14 +58,12 @@ export function UsersManagement() {
         throw profilesError;
       }
 
-      // Since we can't access auth.admin, we'll work with what we have
-      // The email will be retrieved from the current session when needed
       const combinedUsers = profilesWithRoles?.map((profile: any) => {
         const userRole = profile.user_roles?.[0];
         
         return {
           id: profile.id,
-          email: 'Email protégé', // We can't access emails without admin privileges
+          email: profile.email || 'Email non disponible',
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
           role: userRole?.role || 'user',
@@ -93,11 +91,28 @@ export function UsersManagement() {
 
   const createUser = async () => {
     try {
-      toast({
-        title: "Information",
-        description: "La création d'utilisateur nécessite des privilèges super admin",
-        variant: "destructive",
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: {
+          email: newUserEmail,
+          password: newUserPassword,
+          firstName: 'Nouvel',
+          lastName: 'Utilisateur',
+          company: 'Entreprise'
+        }
       });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Utilisateur créé avec succès",
+      });
+
+      setShowCreateDialog(false);
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserRole('user');
+      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Erreur",

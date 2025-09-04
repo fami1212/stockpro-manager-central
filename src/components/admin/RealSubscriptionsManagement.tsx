@@ -51,7 +51,7 @@ export function RealSubscriptionsManagement() {
         return {
           id: profile.id,
           user_id: profile.id,
-          email: 'Email protégé', // Can't access emails without admin privileges
+          email: profile.email || 'Email non disponible',
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
           subscription_plan: profile.subscription_plan || 'basic',
