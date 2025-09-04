@@ -45,41 +45,27 @@ export function UsersManagement() {
     try {
       setLoading(true);
       
-      // Get profiles data separately
-      const { data: profiles, error: profilesError } = await supabase
+      // Get profiles with user roles directly using join
+      const { data: profilesWithRoles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          *,
+          user_roles(role)
+        `);
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
         throw profilesError;
       }
 
-      // Get user roles separately
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) {
-        console.error('Error fetching user roles:', rolesError);
-        throw rolesError;
-      }
-
-      // Get auth users data
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error('Error fetching auth users:', authError);
-        throw authError;
-      }
-
-      const combinedUsers = profiles?.map((profile: any) => {
-        const authUser = authUsers?.users?.find((u: any) => u.id === profile.id);
-        const userRole = userRoles?.find(r => r.user_id === profile.id);
+      // Since we can't access auth.admin, we'll work with what we have
+      // The email will be retrieved from the current session when needed
+      const combinedUsers = profilesWithRoles?.map((profile: any) => {
+        const userRole = profile.user_roles?.[0];
         
         return {
           id: profile.id,
-          email: authUser?.email || '',
+          email: 'Email protégé', // We can't access emails without admin privileges
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
           role: userRole?.role || 'user',
@@ -107,38 +93,11 @@ export function UsersManagement() {
 
   const createUser = async () => {
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUserEmail,
-        password: newUserPassword,
-        email_confirm: true
-      });
-
-      if (authError) throw authError;
-
-      // Assign role
-      if (authData.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .upsert({
-            user_id: authData.user.id,
-            role: newUserRole,
-            granted_by: (await supabase.auth.getUser()).data.user?.id
-          });
-
-        if (roleError) throw roleError;
-      }
-
       toast({
-        title: "Succès",
-        description: "Utilisateur créé avec succès",
+        title: "Information",
+        description: "La création d'utilisateur nécessite des privilèges super admin",
+        variant: "destructive",
       });
-
-      setShowCreateDialog(false);
-      setNewUserEmail('');
-      setNewUserPassword('');
-      setNewUserRole('user');
-      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -177,16 +136,11 @@ export function UsersManagement() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      
-      if (error) throw error;
-
       toast({
-        title: "Succès",
-        description: "Utilisateur supprimé avec succès",
+        title: "Information",
+        description: "La suppression d'utilisateur nécessite des privilèges super admin",
+        variant: "destructive",
       });
-
-      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Erreur",

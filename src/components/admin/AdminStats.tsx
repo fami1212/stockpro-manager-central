@@ -27,25 +27,18 @@ export function AdminStats() {
     try {
       setLoading(true);
       
-      // Get user stats
-      const { data: userStats } = await supabase
-        .from('profiles')
-        .select('id, created_at, last_login');
+      // Get comprehensive stats from various tables
+      const [userStatsResult, userRolesResult, salesStatsResult, productsStatsResult] = await Promise.all([
+        supabase.from('profiles').select('id, created_at, last_login'),
+        supabase.from('user_roles').select('user_id, role'),
+        supabase.from('sales').select('total, created_at'),
+        supabase.from('products').select('id')
+      ]);
 
-      // Get user roles separately
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      // Get sales stats
-      const { data: salesStats } = await supabase
-        .from('sales')
-        .select('total, created_at');
-
-      // Get products stats
-      const { data: productsStats } = await supabase
-        .from('products')
-        .select('id');
+      const userStats = userStatsResult.data;
+      const userRoles = userRolesResult.data;
+      const salesStats = salesStatsResult.data;
+      const productsStats = productsStatsResult.data;
 
       const now = new Date();
       const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());

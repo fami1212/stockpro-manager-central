@@ -46,22 +46,12 @@ export function RealSubscriptionsManagement() {
         throw profilesError;
       }
 
-      // Get auth users data
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error('Error fetching auth users:', authError);
-        throw authError;
-      }
-
-      // Combine data
+      // Work with available profile data only
       const subscriptionsData: UserSubscription[] = profiles?.map((profile) => {
-        const authUser = authUsers?.users?.find((u: any) => u.id === profile.id);
-        
         return {
           id: profile.id,
           user_id: profile.id,
-          email: authUser?.email || '',
+          email: 'Email protégé', // Can't access emails without admin privileges
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
           subscription_plan: profile.subscription_plan || 'basic',
