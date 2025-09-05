@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { UserStatsModal } from './UserStatsModal';
 
 interface UserSubscription {
   id: string;
@@ -27,6 +28,8 @@ export function RealSubscriptionsManagement() {
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [showStatsModal, setShowStatsModal] = useState(false);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -132,6 +135,31 @@ export function RealSubscriptionsManagement() {
     }
   };
 
+  const restoreUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ account_status: 'active' })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setSubscriptions(prev => prev.map(s => s.user_id === userId ? { ...s, status: 'active' } : s));
+
+      toast({
+        title: 'Utilisateur restauré',
+        description: "L'accès de l'utilisateur a été restauré",
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible de restaurer l'utilisateur",
+        variant: 'destructive'
+      });
+    }
+  };
+
   const filteredSubscriptions = subscriptions.filter(sub =>
     sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sub.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,9 +195,19 @@ export function RealSubscriptionsManagement() {
     );
   };
 
-  // Calculate stats
+  // Calculate stats with real CFA prices
   const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length;
-  const totalRevenue = subscriptions.length * 29.99; // Example calculation
+  const planPrices = {
+    basic: 15000, // 15,000 CFA
+    premium: 25000, // 25,000 CFA  
+    enterprise: 50000 // 50,000 CFA
+  };
+  const totalRevenue = subscriptions.reduce((sum, sub) => {
+    if (sub.status === 'active') {
+      return sum + (planPrices[sub.subscription_plan as keyof typeof planPrices] || planPrices.basic);
+    }
+    return sum;
+  }, 0);
   const premiumUsers = subscriptions.filter(sub => sub.subscription_plan === 'premium').length;
 
   if (loading) {
@@ -199,7 +237,7 @@ export function RealSubscriptionsManagement() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{totalRevenue.toLocaleString()} CFA</div>
             <p className="text-xs text-muted-foreground">
               +12.5% par rapport au mois dernier
             </p>
@@ -303,11 +341,30 @@ export function RealSubscriptionsManagement() {
                         <DropdownMenuItem onClick={() => updateSubscriptionPlan(subscription.user_id, 'enterprise')}>
                           Passer en Enterprise
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => suspendUser(subscription.user_id)}
-                          className="text-red-600"
-                        >
-                          Suspendre
+                        {subscription.status === 'suspended' ? (
+                          <DropdownMenuItem 
+                            onClick={() => restoreUser(subscription.user_id)}
+                            className="text-green-600"
+                          >
+                            Restaurer
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            onClick={() => suspendUser(subscription.user_id)}
+                            className="text-red-600"
+                          >
+                            Suspendre
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedUser({
+                            id: subscription.user_id,
+                            name: subscription.name,
+                            email: subscription.email
+                          });
+                          setShowStatsModal(true);
+                        }}>
+                          Voir les statistiques
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -318,6 +375,17 @@ export function RealSubscriptionsManagement() {
           </Table>
         </CardContent>
       </Card>
+      
+      {/* User Stats Modal */}
+      {selectedUser && (
+        <UserStatsModal
+          open={showStatsModal}
+          onOpenChange={setShowStatsModal}
+          userId={selectedUser.id}
+          userName={selectedUser.name}
+          userEmail={selectedUser.email}
+        />
+      )}
     </div>
   );
 }
