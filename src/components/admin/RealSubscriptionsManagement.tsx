@@ -47,7 +47,8 @@ export function RealSubscriptionsManagement() {
       }
 
       // Work with available profile data only
-      const subscriptionsData: UserSubscription[] = profiles?.map((profile) => {
+      const subscriptionsData: UserSubscription[] = (profiles || []).map((profile: any) => {
+        const status = (profile.account_status as 'active' | 'inactive' | 'suspended') || (profile.last_login ? 'active' : 'inactive');
         return {
           id: profile.id,
           user_id: profile.id,
@@ -57,9 +58,9 @@ export function RealSubscriptionsManagement() {
           subscription_plan: profile.subscription_plan || 'basic',
           created_at: profile.created_at,
           last_login: profile.last_login,
-          status: profile.last_login ? 'active' : 'inactive'
-        };
-      }) || [];
+          status
+        } as UserSubscription;
+      });
 
       setSubscriptions(subscriptionsData);
     } catch (error) {
@@ -108,15 +109,24 @@ export function RealSubscriptionsManagement() {
 
   const suspendUser = async (userId: string) => {
     try {
-      // In a real implementation, you would update a status field
+      const { error } = await supabase
+        .from('profiles')
+        .update({ account_status: 'suspended' })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setSubscriptions(prev => prev.map(s => s.user_id === userId ? { ...s, status: 'suspended' } : s));
+
       toast({
         title: 'Utilisateur suspendu',
-        description: 'L\'accès de l\'utilisateur a été suspendu',
+        description: "L'accès de l'utilisateur a été suspendu",
       });
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Impossible de suspendre l\'utilisateur',
+        description: "Impossible de suspendre l'utilisateur",
         variant: 'destructive'
       });
     }

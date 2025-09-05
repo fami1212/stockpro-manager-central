@@ -51,6 +51,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('User role fetched:', roleData);
             setUserRole(roleData);
             setIsAdmin(roleData === 'admin');
+
+            // Check account status and block suspended users
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('account_status')
+              .eq('id', session.user.id)
+              .maybeSingle();
+
+            if (prof?.account_status === 'suspended') {
+              toast({
+                title: 'Compte suspendu',
+                description: "Veuillez contacter l'administrateur",
+                variant: 'destructive'
+              });
+              await supabase.auth.signOut();
+              return;
+            }
             
             // Update last login
             await supabase

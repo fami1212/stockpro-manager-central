@@ -228,6 +228,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           company: string | null
           created_at: string | null
           email: string | null
@@ -241,6 +242,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_status?: string | null
           company?: string | null
           created_at?: string | null
           email?: string | null
@@ -254,6 +256,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_status?: string | null
           company?: string | null
           created_at?: string | null
           email?: string | null

@@ -44,45 +44,47 @@ export function UsersManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
-      // Get profiles with user roles directly using join
-      const { data: profilesWithRoles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `);
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
+      // 1) Fetch profiles (RLS: admins can view all, users can view own)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name, company, phone, subscription_plan, created_at, last_login');
+      if (profilesError) throw profilesError;
+
+      // 2) Fetch roles separately to avoid PostgREST FK join requirement
+      const ids = (profiles || []).map((p: any) => p.id);
+      let rolesByUser: Record<string, 'admin' | 'manager' | 'user'> = {};
+      if (ids.length) {
+        const { data: roles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', ids);
+        if (rolesError) throw rolesError;
+        rolesByUser = Object.fromEntries(
+          (roles || []).map((r: any) => [r.user_id, r.role])
+        ) as Record<string, 'admin' | 'manager' | 'user'>;
       }
 
-      const combinedUsers = profilesWithRoles?.map((profile: any) => {
-        const userRole = profile.user_roles?.[0];
-        
-        return {
-          id: profile.id,
-          email: profile.email || 'Email non disponible',
-          name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
-          company: profile.company || 'N/A',
-          role: userRole?.role || 'user',
-          subscription_plan: profile.subscription_plan || 'basic',
-          last_login: profile.last_login,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          phone: profile.phone,
-          created_at: profile.created_at
-        };
-      }) || [];
+      const combinedUsers = (profiles || []).map((profile: any) => ({
+        id: profile.id,
+        email: profile.email || 'Email non disponible',
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        company: profile.company || 'N/A',
+        phone: profile.phone,
+        role: rolesByUser[profile.id] || 'user',
+        subscription_plan: profile.subscription_plan || 'basic',
+        last_login: profile.last_login,
+        created_at: profile.created_at,
+      }));
 
-      setUsers(combinedUsers);
+      setUsers(combinedUsers as any);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
-        title: "Erreur",
+        title: 'Erreur',
         description: "Impossible de charger les utilisateurs",
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -97,15 +99,16 @@ export function UsersManagement() {
           password: newUserPassword,
           firstName: 'Nouvel',
           lastName: 'Utilisateur',
-          company: 'Entreprise'
+          company: 'Entreprise',
+          role: newUserRole,
         }
       });
 
       if (error) throw error;
 
       toast({
-        title: "Succès",
-        description: "Utilisateur créé avec succès",
+        title: 'Succès',
+        description: 'Utilisateur créé avec succès',
       });
 
       setShowCreateDialog(false);
@@ -115,9 +118,9 @@ export function UsersManagement() {
       fetchUsers();
     } catch (error: any) {
       toast({
-        title: "Erreur",
+        title: 'Erreur',
         description: error.message || "Impossible de créer l'utilisateur",
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
