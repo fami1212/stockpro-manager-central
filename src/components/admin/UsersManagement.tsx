@@ -9,9 +9,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, MoreHorizontal, UserPlus, Shield, ShieldCheck, User } from 'lucide-react';
+import { Search, MoreHorizontal, UserPlus, Shield, ShieldCheck, User, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { UserStatsModal } from './UserStatsModal';
 
 interface UserData {
   id: string;
@@ -35,6 +36,8 @@ export function UsersManagement() {
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'manager' | 'user'>('user');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -195,6 +198,7 @@ export function UsersManagement() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -330,12 +334,21 @@ export function UsersManagement() {
                         >
                           Promouvoir Manager
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => updateUserRole(user.id, 'user')}
-                          disabled={user.role === 'user'}
-                        >
-                          Rétrograder Utilisateur
-                        </DropdownMenuItem>
+                         <DropdownMenuItem 
+                           onClick={() => updateUserRole(user.id, 'user')}
+                           disabled={user.role === 'user'}
+                         >
+                           Rétrograder Utilisateur
+                         </DropdownMenuItem>
+                         <DropdownMenuItem 
+                           onClick={() => {
+                             setSelectedUser(user);
+                             setShowStatsModal(true);
+                           }}
+                         >
+                           <BarChart3 className="mr-2 h-4 w-4" />
+                           Voir les stats
+                         </DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem 
@@ -373,5 +386,17 @@ export function UsersManagement() {
         </div>
       </CardContent>
     </Card>
+
+    {selectedUser && (
+      <UserStatsModal
+        open={showStatsModal}
+        onOpenChange={setShowStatsModal}
+        userId={selectedUser.id}
+        userName={`${selectedUser.first_name || ''} ${selectedUser.last_name || ''}`.trim()}
+        userEmail={selectedUser.email}
+        userPhone={selectedUser.phone || undefined}
+      />
+    )}
+    </>
   );
 }

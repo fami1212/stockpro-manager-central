@@ -18,6 +18,7 @@ interface UserStatsModalProps {
   userId: string;
   userName: string;
   userEmail: string;
+  userPhone?: string;
 }
 
 interface UserSalesStats {
@@ -28,7 +29,7 @@ interface UserSalesStats {
   salesByMonth: { month: string; count: number; amount: number }[];
 }
 
-export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail }: UserStatsModalProps) {
+export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail, userPhone }: UserStatsModalProps) {
   const [stats, setStats] = useState<UserSalesStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -44,18 +45,26 @@ export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail
     try {
       setLoading(true);
       
-      // Fetch user's sales
+      // Fetch user's sales with status validation
       const { data: sales, error } = await supabase
         .from('sales')
         .select('*')
         .eq('user_id', userId)
-        .neq('status', 'Brouillon');
+        .in('status', ['Confirmée', 'Payée', 'En cours']);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching sales:', error);
+        throw error;
+      }
+
+      console.log(`Found ${sales?.length || 0} sales for user ${userId}`, sales);
 
       // Calculate statistics
       const totalSales = sales?.length || 0;
-      const totalAmount = sales?.reduce((sum: number, sale: any) => sum + (sale.total || 0), 0) || 0;
+      const totalAmount = sales?.reduce((sum: number, sale: any) => {
+        const saleTotal = Number(sale.total) || 0;
+        return sum + saleTotal;
+      }, 0) || 0;
       const commission = totalAmount * 0.05; // 5% commission
       
       // Get last sale
@@ -65,24 +74,30 @@ export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail
 
       // Group by month for trends
       const salesByMonth = sales?.reduce((acc: any[], sale: any) => {
-        const month = format(new Date(sale.date), 'MMM yyyy', { locale: fr });
+        const saleDate = new Date(sale.date);
+        const month = format(saleDate, 'MMM yyyy', { locale: fr });
+        const saleAmount = Number(sale.total) || 0;
+        
         const existing = acc.find(item => item.month === month);
         if (existing) {
           existing.count += 1;
-          existing.amount += sale.total || 0;
+          existing.amount += saleAmount;
         } else {
-          acc.push({ month, count: 1, amount: sale.total || 0 });
+          acc.push({ month, count: 1, amount: saleAmount });
         }
         return acc;
       }, []) || [];
 
-      setStats({
+      const statsData = {
         totalSales,
         totalAmount,
         commission,
         lastSale,
         salesByMonth: salesByMonth.slice(-6) // Last 6 months
-      });
+      };
+
+      console.log('Calculated stats:', statsData);
+      setStats(statsData);
     } catch (error) {
       console.error('Error fetching user stats:', error);
       toast({
@@ -128,8 +143,21 @@ L'équipe StockPro Manager`;
     const messageContent = message || generateCommissionMessage();
     
     if (messageType === 'whatsapp') {
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageContent)}`;
-      window.open(whatsappUrl, '_blank');
+      if (userPhone) {
+        // Remove any non-digit characters and ensure it starts with country code
+        const cleanPhone = userPhone.replace(/\D/g, '');
+        const phoneNumber = cleanPhone.startsWith('22') ? cleanPhone : `221${cleanPhone}`;
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(messageContent)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageContent)}`;
+        window.open(whatsappUrl, '_blank');
+        toast({
+          title: 'Attention',
+          description: 'Numéro de téléphone non renseigné, message WhatsApp générique ouvert',
+          variant: 'destructive'
+        });
+      }
     } else {
       const emailUrl = `mailto:${userEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
       window.open(emailUrl, '_blank');
