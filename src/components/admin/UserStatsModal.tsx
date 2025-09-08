@@ -18,7 +18,13 @@ interface UserStatsModalProps {
   userId: string;
   userName: string;
   userEmail: string;
-  userPhone?: string;
+}
+
+interface UserProfile {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
 }
 
 interface UserSalesStats {
@@ -29,8 +35,9 @@ interface UserSalesStats {
   salesByMonth: { month: string; count: number; amount: number }[];
 }
 
-export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail, userPhone }: UserStatsModalProps) {
+export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail }: UserStatsModalProps) {
   const [stats, setStats] = useState<UserSalesStats | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'whatsapp' | 'email'>('email');
@@ -38,8 +45,28 @@ export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail
   useEffect(() => {
     if (open && userId) {
       fetchUserStats();
+      fetchUserProfile();
     }
   }, [open, userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, phone')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      setUserProfile(profile);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchUserStats = async () => {
     try {
@@ -141,11 +168,13 @@ L'équipe StockPro Manager`;
 
   const sendMessage = () => {
     const messageContent = message || generateCommissionMessage();
+    const actualUserEmail = userProfile?.email || userEmail;
+    const actualUserPhone = userProfile?.phone;
     
     if (messageType === 'whatsapp') {
-      if (userPhone) {
+      if (actualUserPhone) {
         // Remove any non-digit characters and ensure it starts with country code
-        const cleanPhone = userPhone.replace(/\D/g, '');
+        const cleanPhone = actualUserPhone.replace(/\D/g, '');
         const phoneNumber = cleanPhone.startsWith('22') ? cleanPhone : `221${cleanPhone}`;
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(messageContent)}`;
         window.open(whatsappUrl, '_blank');
@@ -159,7 +188,7 @@ L'équipe StockPro Manager`;
         });
       }
     } else {
-      const emailUrl = `mailto:${userEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
+      const emailUrl = `mailto:${actualUserEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
       window.open(emailUrl, '_blank');
     }
     

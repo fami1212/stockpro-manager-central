@@ -394,7 +394,6 @@ export function UsersManagement() {
         userId={selectedUser.id}
         userName={`${selectedUser.first_name || ''} ${selectedUser.last_name || ''}`.trim()}
         userEmail={selectedUser.email}
-        userPhone={selectedUser.phone || undefined}
       />
     )}
     </>
