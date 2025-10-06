@@ -18,6 +18,7 @@ interface UserStatsModalProps {
   userId: string;
   userName: string;
   userEmail: string;
+  userPhone?: string;
 }
 
 interface UserProfile {
@@ -35,7 +36,7 @@ interface UserSalesStats {
   salesByMonth: { month: string; count: number; amount: number }[];
 }
 
-export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail }: UserStatsModalProps) {
+export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail, userPhone }: UserStatsModalProps) {
   const [stats, setStats] = useState<UserSalesStats | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +56,7 @@ export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail
         .from('profiles')
         .select('first_name, last_name, email, phone')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
@@ -72,12 +73,11 @@ export function UserStatsModal({ open, onOpenChange, userId, userName, userEmail
     try {
       setLoading(true);
       
-      // Fetch user's sales with status validation
+      // Fetch user's sales without over-restrictive status filter
       const { data: sales, error } = await supabase
         .from('sales')
         .select('*')
-        .eq('user_id', userId)
-        .in('status', ['Confirmée', 'Payée', 'En cours']);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error fetching sales:', error);
@@ -169,17 +169,24 @@ L'équipe StockPro Manager`;
   const sendMessage = () => {
     const messageContent = message || generateCommissionMessage();
     const actualUserEmail = userProfile?.email || userEmail;
-    const actualUserPhone = userProfile?.phone;
+    const actualUserPhone = userProfile?.phone || userPhone;
     
     if (messageType === 'whatsapp') {
       if (actualUserPhone) {
-        // Remove any non-digit characters and ensure it starts with country code
-        const cleanPhone = actualUserPhone.replace(/\D/g, '');
-        const phoneNumber = cleanPhone.startsWith('22') ? cleanPhone : `221${cleanPhone}`;
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(messageContent)}`;
+        // Normalize phone to international format for Senegal (221)
+        const clean = actualUserPhone.replace(/\D/g, '');
+        let intl = clean;
+        if (intl.startsWith('221')) {
+          // already international
+        } else if (intl.startsWith('0')) {
+          intl = `221${intl.slice(1)}`;
+        } else {
+          intl = `221${intl}`;
+        }
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${intl}&text=${encodeURIComponent(messageContent)}`;
         window.open(whatsappUrl, '_blank');
       } else {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageContent)}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageContent)}`;
         window.open(whatsappUrl, '_blank');
         toast({
           title: 'Attention',
@@ -188,6 +195,10 @@ L'équipe StockPro Manager`;
         });
       }
     } else {
+      if (!actualUserEmail) {
+        toast({ title: 'Erreur', description: "Email indisponible pour cet utilisateur", variant: 'destructive' });
+        return;
+      }
       const emailUrl = `mailto:${actualUserEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
       window.open(emailUrl, '_blank');
     }
