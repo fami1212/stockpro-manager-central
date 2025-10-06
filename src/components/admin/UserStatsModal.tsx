@@ -171,27 +171,30 @@ L'équipe StockPro Manager`;
     const messageContent = message || generateCommissionMessage();
     const actualUserEmail = (userProfile?.email || userEmail || '').trim();
     const actualUserPhone = (userProfile?.phone || userPhone || '').toString().trim();
+
+    const normalizeSnPhone = (input: string): string | null => {
+      if (!input) return null;
+      let n = input.replace(/\D/g, ''); // keep digits only
+      if (!n) return null;
+      if (n.startsWith('00')) n = n.slice(2); // remove intl prefix 00
+      if (n.startsWith('221')) n = n.slice(3); // strip country code if present
+      if (n.startsWith('0')) n = n.slice(1); // strip leading 0 for local format
+      if (n.length > 9) n = n.slice(-9); // keep last 9 digits (Senegal numbers)
+      if (n.length !== 9) return null;
+      return `221${n}`; // final E.164 without +
+    };
     
     if (channel === 'whatsapp') {
-      if (actualUserPhone) {
-        // Normalize phone to international format for Senegal (221)
-        const clean = actualUserPhone.replace(/\D/g, '');
-        let intl = clean;
-        if (intl.startsWith('221')) {
-          // already international
-        } else if (intl.startsWith('0')) {
-          intl = `221${intl.slice(1)}`;
-        } else {
-          intl = `221${intl}`;
-        }
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${intl}&text=${encodeURIComponent(messageContent)}`;
-        window.open(whatsappUrl, '_blank');
+      const intl = normalizeSnPhone(actualUserPhone);
+      if (intl) {
+        const whatsappUrl = `https://wa.me/${intl}?text=${encodeURIComponent(messageContent)}`;
+        window.location.href = whatsappUrl; // less likely to be blocked than window.open
       } else {
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageContent)}`;
-        window.open(whatsappUrl, '_blank');
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageContent)}`;
+        window.location.href = whatsappUrl;
         toast({
           title: 'Attention',
-          description: 'Numéro de téléphone non renseigné, message WhatsApp générique ouvert',
+          description: 'Numéro invalide ou manquant. Message WhatsApp générique ouvert.',
           variant: 'destructive'
         });
       }
@@ -202,7 +205,7 @@ L'équipe StockPro Manager`;
         return;
       }
       const emailUrl = `mailto:${actualUserEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
-      window.open(emailUrl, '_blank');
+      window.location.href = emailUrl; // more reliable in sandboxed iframes
     }
     
     toast({
