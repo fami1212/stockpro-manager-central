@@ -70,7 +70,7 @@ export function UsersManagement() {
 
       const combinedUsers = (profiles || []).map((profile: any) => ({
         id: profile.id,
-        email: profile.email || 'Email non disponible',
+        email: profile.email,
         first_name: profile.first_name,
         last_name: profile.last_name,
         company: profile.company || 'N/A',
@@ -302,7 +302,7 @@ export function UsersManagement() {
                       <p className="text-sm text-muted-foreground">{user.phone}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.email || 'Email non disponible'}</TableCell>
                   <TableCell>{user.company || '-'}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>

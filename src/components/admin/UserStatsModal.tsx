@@ -166,12 +166,13 @@ Cordialement,
 L'équipe StockPro Manager`;
   };
 
-  const sendMessage = () => {
+  const sendMessage = (overrideType?: 'whatsapp' | 'email') => {
+    const channel = overrideType ?? messageType;
     const messageContent = message || generateCommissionMessage();
-    const actualUserEmail = userProfile?.email || userEmail;
-    const actualUserPhone = userProfile?.phone || userPhone;
+    const actualUserEmail = (userProfile?.email || userEmail || '').trim();
+    const actualUserPhone = (userProfile?.phone || userPhone || '').toString().trim();
     
-    if (messageType === 'whatsapp') {
+    if (channel === 'whatsapp') {
       if (actualUserPhone) {
         // Normalize phone to international format for Senegal (221)
         const clean = actualUserPhone.replace(/\D/g, '');
@@ -195,7 +196,8 @@ L'équipe StockPro Manager`;
         });
       }
     } else {
-      if (!actualUserEmail) {
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(actualUserEmail);
+      if (!isValidEmail) {
         toast({ title: 'Erreur', description: "Email indisponible pour cet utilisateur", variant: 'destructive' });
         return;
       }
@@ -205,7 +207,7 @@ L'équipe StockPro Manager`;
     
     toast({
       title: 'Message préparé',
-      description: `${messageType === 'whatsapp' ? 'WhatsApp' : 'Email'} ouvert avec le message`,
+      description: `${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} ouvert avec le message`,
     });
   };
 
@@ -363,10 +365,16 @@ L'équipe StockPro Manager`;
                     </p>
                   </div>
 
-                  <Button onClick={sendMessage} className="w-full">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Envoyer via {messageType === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                  </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button onClick={() => sendMessage('email')} className="w-full">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Envoyer via Email
+                    </Button>
+                    <Button onClick={() => sendMessage('whatsapp')} variant="secondary" className="w-full">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Envoyer via WhatsApp
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
