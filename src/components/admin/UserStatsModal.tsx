@@ -172,29 +172,53 @@ L'équipe StockPro Manager`;
     const actualUserEmail = (userProfile?.email || userEmail || '').trim();
     const actualUserPhone = (userProfile?.phone || userPhone || '').toString().trim();
 
-    const normalizeSnPhone = (input: string): string | null => {
+    const normalizeInternationalPhone = (input: string): string | null => {
       if (!input) return null;
-      let n = input.replace(/\D/g, ''); // keep digits only
-      if (!n) return null;
-      if (n.startsWith('00')) n = n.slice(2); // remove intl prefix 00
-      if (n.startsWith('221')) n = n.slice(3); // strip country code if present
-      if (n.startsWith('0')) n = n.slice(1); // strip leading 0 for local format
-      if (n.length > 9) n = n.slice(-9); // keep last 9 digits (Senegal numbers)
-      if (n.length !== 9) return null;
-      return `221${n}`; // final E.164 without +
+      const trimmed = input.trim();
+      // Case 1: starts with + (E.164) => keep digits after +
+      if (trimmed.startsWith('+')) {
+        const digits = trimmed.slice(1).replace(/\D/g, '');
+        return digits.length >= 8 && digits.length <= 15 ? digits : null;
+      }
+      // Case 2: starts with 00 (international prefix) => strip 00
+      let digits = trimmed.replace(/\D/g, '');
+      if (digits.startsWith('00')) digits = digits.slice(2);
+      // If we now have between 8 and 15 digits, assume includes country code already
+      if (digits.length >= 8 && digits.length <= 15) return digits;
+      // Otherwise it's likely a local number without country code (ambiguous)
+      return null;
+    };
+
+    const openInNewTab = (url: string) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    const openHere = (url: string) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_self';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     };
     
     if (channel === 'whatsapp') {
-      const intl = normalizeSnPhone(actualUserPhone);
+      const intl = normalizeInternationalPhone(actualUserPhone);
       if (intl) {
-        const whatsappUrl = `https://wa.me/${intl}?text=${encodeURIComponent(messageContent)}`;
-        window.location.href = whatsappUrl; // less likely to be blocked than window.open
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${intl}&text=${encodeURIComponent(messageContent)}`;
+        openInNewTab(whatsappUrl);
       } else {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageContent)}`;
-        window.location.href = whatsappUrl;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageContent)}`;
+        openInNewTab(whatsappUrl);
         toast({
           title: 'Attention',
-          description: 'Numéro invalide ou manquant. Message WhatsApp générique ouvert.',
+          description: "Numéro invalide ou manquant. Message WhatsApp générique ouvert.",
           variant: 'destructive'
         });
       }
@@ -205,7 +229,7 @@ L'équipe StockPro Manager`;
         return;
       }
       const emailUrl = `mailto:${actualUserEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
-      window.location.href = emailUrl; // more reliable in sandboxed iframes
+      openHere(emailUrl);
     }
     
     toast({
