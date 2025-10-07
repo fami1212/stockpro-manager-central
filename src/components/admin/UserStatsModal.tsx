@@ -175,19 +175,17 @@ L'équipe StockPro Manager`;
     const normalizeInternationalPhone = (input: string): string | null => {
       if (!input) return null;
       const trimmed = input.trim();
-      // Case 1: starts with + (E.164) => keep digits after +
       if (trimmed.startsWith('+')) {
         const digits = trimmed.slice(1).replace(/\D/g, '');
         return digits.length >= 8 && digits.length <= 15 ? digits : null;
       }
-      // Case 2: starts with 00 (international prefix) => strip 00
       let digits = trimmed.replace(/\D/g, '');
       if (digits.startsWith('00')) digits = digits.slice(2);
-      // If we now have between 8 and 15 digits, assume includes country code already
       if (digits.length >= 8 && digits.length <= 15) return digits;
-      // Otherwise it's likely a local number without country code (ambiguous)
       return null;
     };
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     const openInNewTab = (url: string) => {
       const a = document.createElement('a');
@@ -199,7 +197,7 @@ L'équipe StockPro Manager`;
       a.remove();
     };
 
-    const openHere = (url: string) => {
+    const openSelf = (url: string) => {
       const a = document.createElement('a');
       a.href = url;
       a.target = '_self';
@@ -207,19 +205,37 @@ L'équipe StockPro Manager`;
       a.click();
       a.remove();
     };
-    
+
     if (channel === 'whatsapp') {
       const intl = normalizeInternationalPhone(actualUserPhone);
-      if (intl) {
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${intl}&text=${encodeURIComponent(messageContent)}`;
-        openInNewTab(whatsappUrl);
+      const encoded = encodeURIComponent(messageContent);
+
+      // Prefer deep-link on mobile (opens native app), fallback to Web WhatsApp
+      if (isMobile) {
+        const appUrl = intl
+          ? `whatsapp://send?phone=${intl}&text=${encoded}`
+          : `whatsapp://send?text=${encoded}`;
+        // Try opening the app, then fallback to web after a short delay
+        openSelf(appUrl);
+        setTimeout(() => {
+          const webUrl = intl
+            ? `https://web.whatsapp.com/send?phone=${intl}&text=${encoded}`
+            : `https://web.whatsapp.com/send?text=${encoded}`;
+          openInNewTab(webUrl);
+        }, 1200);
       } else {
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageContent)}`;
-        openInNewTab(whatsappUrl);
+        // Desktop: open Web WhatsApp in new tab (api.whatsapp.com is often blocked)
+        const webUrl = intl
+          ? `https://web.whatsapp.com/send?phone=${intl}&text=${encoded}`
+          : `https://web.whatsapp.com/send?text=${encoded}`;
+        openInNewTab(webUrl);
+      }
+
+      if (!intl) {
         toast({
           title: 'Attention',
-          description: "Numéro invalide ou manquant. Message WhatsApp générique ouvert.",
-          variant: 'destructive'
+          description: "Numéro invalide ou manquant. Ouverture d'un message WhatsApp sans destinataire.",
+          variant: 'destructive',
         });
       }
     } else {
@@ -229,12 +245,13 @@ L'équipe StockPro Manager`;
         return;
       }
       const emailUrl = `mailto:${actualUserEmail}?subject=${encodeURIComponent('Commission StockPro Manager')}&body=${encodeURIComponent(messageContent)}`;
-      openHere(emailUrl);
+      // Open in new tab to avoid iframe navigation issues
+      openInNewTab(emailUrl);
     }
-    
+
     toast({
-      title: 'Message préparé',
-      description: `${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} ouvert avec le message`,
+      title: 'Action lancée',
+      description: `${channel === 'whatsapp' ? 'WhatsApp' : 'Email'} ouvert avec le message (selon votre appareil).`,
     });
   };
 
@@ -242,6 +259,9 @@ L'équipe StockPro Manager`;
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Chargement</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-center p-8">
             Chargement des statistiques...
           </div>
