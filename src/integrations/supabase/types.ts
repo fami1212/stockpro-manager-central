@@ -271,6 +271,60 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          min_amount: number | null
+          min_quantity: number | null
+          name: string
+          start_date: string | null
+          target_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          applies_to: string
+          created_at?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_amount?: number | null
+          min_quantity?: number | null
+          name: string
+          start_date?: string | null
+          target_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_amount?: number | null
+          min_quantity?: number | null
+          name?: string
+          start_date?: string | null
+          target_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       purchase_order_items: {
         Row: {
           created_at: string
@@ -630,10 +684,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_barcode: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_barcode: { Args: never; Returns: string }
       generate_product_reference: {
         Args: { category_name: string }
         Returns: string

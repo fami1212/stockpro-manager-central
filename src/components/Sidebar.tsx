@@ -14,7 +14,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Tag
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -64,6 +65,12 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       label: 'Achats',
       icon: Truck,
       badge: pendingOrdersCount > 0 ? { count: pendingOrdersCount, color: 'bg-orange-500', tooltip: 'Commandes en attente' } : null
+    },
+    {
+      id: 'promotions',
+      label: 'Promotions',
+      icon: Tag,
+      badge: null
     },
     {
       id: 'suppliers',

@@ -8,7 +8,8 @@ import {
   UserCheck, 
   FileText, 
   Settings,
-  AlertTriangle
+  AlertTriangle,
+  Tag
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -56,6 +57,12 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
       label: 'Achats',
       icon: Truck,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : null
+    },
+    {
+      id: 'promotions',
+      label: 'Promos',
+      icon: Tag,
+      badge: null
     },
     {
       id: 'suppliers',

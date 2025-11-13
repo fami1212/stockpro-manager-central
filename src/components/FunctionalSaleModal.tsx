@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus, Calculator, UserPlus } from 'lucide-react';
+import { X, Plus, Minus, Calculator, UserPlus, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { useApp, SaleItem as SaleItemType, Sale } from '@/contexts/AppContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ClientFormModal } from '@/components/ClientFormModal';
+import { PromotionSelector } from '@/components/PromotionSelector';
+import { usePromotions } from '@/hooks/usePromotions';
 
 interface SaleModalProps {
   sale?: Sale;
@@ -365,8 +367,15 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <div>
+                  <div className="flex items-center justify-between mb-2">
                     <Label htmlFor="globalDiscount">Remise globale (%)</Label>
+                    <PromotionSelector
+                      onSelectPromotion={(discount) => handleFormChange('globalDiscount', discount)}
+                      subtotal={calculatedTotals.subtotal}
+                      totalQuantity={items.reduce((acc, item) => acc + item.quantity, 0)}
+                    />
+                  </div>
+                  <div className="relative">
                     <Input
                       id="globalDiscount"
                       type="number"
@@ -376,7 +385,9 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                       max="100"
                       step="0.1"
                       disabled={isSubmitting}
+                      className="pr-8"
                     />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   </div>
                   
                   <div>
