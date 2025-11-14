@@ -165,14 +165,14 @@ export const PromotionModal = ({ promotion, onClose, onSave }: PromotionModalPro
               <div>
                 <Label htmlFor="target_id">Produit</Label>
                 <Select
-                  value={formData.target_id}
-                  onValueChange={(value) => handleChange('target_id', value)}
+                  value={formData.target_id || 'all'}
+                  onValueChange={(value) => handleChange('target_id', value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un produit" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les produits</SelectItem>
+                    <SelectItem value="all">Tous les produits</SelectItem>
                     {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name}
@@ -187,14 +187,14 @@ export const PromotionModal = ({ promotion, onClose, onSave }: PromotionModalPro
               <div>
                 <Label htmlFor="target_id">Catégorie</Label>
                 <Select
-                  value={formData.target_id}
-                  onValueChange={(value) => handleChange('target_id', value)}
+                  value={formData.target_id || 'all'}
+                  onValueChange={(value) => handleChange('target_id', value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    <SelectItem value="all">Toutes les catégories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

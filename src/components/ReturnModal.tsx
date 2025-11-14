@@ -59,14 +59,14 @@ export const ReturnModal = ({ returnData, onClose, onSave }: ReturnModalProps) =
             <div className="space-y-2">
               <Label htmlFor="sale_id">Vente (optionnel)</Label>
               <Select
-                value={formData.sale_id}
-                onValueChange={(value) => setFormData({ ...formData, sale_id: value })}
+                value={formData.sale_id || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, sale_id: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une vente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
+                  <SelectItem value="none">Aucune</SelectItem>
                   {sales.map((sale) => (
                     <SelectItem key={sale.id} value={sale.id}>
                       {sale.reference} - {new Date(sale.date).toLocaleDateString('fr-FR')}
