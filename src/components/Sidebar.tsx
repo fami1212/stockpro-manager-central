@@ -15,7 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
-  Tag
+  Tag,
+  PackageX,
+  Download
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -83,6 +85,18 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       label: 'Clients',
       icon: UserCheck,
       badge: activeClientsCount > 99 ? { count: '99+', color: 'bg-green-500', tooltip: 'Clients actifs' } : null
+    },
+    {
+      id: 'returns',
+      label: 'Retours',
+      icon: PackageX,
+      badge: null
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: Download,
+      badge: null
     },
     {
       id: 'reports',
