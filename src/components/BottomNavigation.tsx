@@ -9,7 +9,9 @@ import {
   FileText, 
   Settings,
   AlertTriangle,
-  Tag
+  Tag,
+  PackageX,
+  Download
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -74,6 +76,18 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
       id: 'clients',
       label: 'Clients',
       icon: UserCheck,
+      badge: null
+    },
+    {
+      id: 'returns',
+      label: 'Retours',
+      icon: PackageX,
+      badge: null
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: Download,
       badge: null
     },
     {
