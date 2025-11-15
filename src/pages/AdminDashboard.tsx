@@ -6,9 +6,12 @@ import { UsersManagement } from '@/components/admin/UsersManagement';
 import { RealSubscriptionsManagement } from '@/components/admin/RealSubscriptionsManagement';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { SystemSettings } from '@/components/admin/SystemSettings';
+import { PermissionsManagement } from '@/components/admin/PermissionsManagement';
+import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
+import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3 } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp } from 'lucide-react';
 
 export default function AdminDashboard() {
   return (
@@ -28,14 +31,26 @@ export default function AdminDashboard() {
           </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Statistiques
+              Stats
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Utilisateurs
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Permissions
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Audit
             </TabsTrigger>
             <TabsTrigger value="subscriptions" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
@@ -51,8 +66,20 @@ export default function AdminDashboard() {
             <AdminStats />
           </TabsContent>
 
+          <TabsContent value="analytics">
+            <AdvancedAnalytics />
+          </TabsContent>
+
           <TabsContent value="users">
             <UsersManagement />
+          </TabsContent>
+
+          <TabsContent value="permissions">
+            <PermissionsManagement />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditLogs />
           </TabsContent>
 
           <TabsContent value="subscriptions">
