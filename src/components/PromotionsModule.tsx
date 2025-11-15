@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Tag, Plus, Edit, Trash2, Percent, DollarSign, Calendar, Power } from 'lucide-react';
+import { Tag, Plus, Edit, Trash2, Percent, DollarSign, Calendar, Power, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PromotionModal } from '@/components/PromotionModal';
+import { PromotionsDashboard } from '@/components/PromotionsDashboard';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { usePromotions, Promotion } from '@/hooks/usePromotions';
 import { useApp } from '@/contexts/AppContext';
@@ -99,6 +101,23 @@ export const PromotionsModule = () => {
         </Button>
       </div>
 
+      <Tabs defaultValue="list" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="list" className="gap-2">
+            <Tag className="w-4 h-4" />
+            Liste
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Tableau de bord
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard">
+          <PromotionsDashboard promotions={promotions} />
+        </TabsContent>
+
+        <TabsContent value="list" className="space-y-6">
       {promotions.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -233,6 +252,8 @@ export const PromotionsModule = () => {
           })}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
 
       {showModal && (
         <PromotionModal

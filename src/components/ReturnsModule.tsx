@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PackageX, Plus, Edit, Trash2, TrendingDown, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ReturnModal } from '@/components/ReturnModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ReturnsFilters } from '@/components/ReturnsFilters';
+import { PaginationControls } from '@/components/PaginationControls';
 import { useProductReturns, ProductReturn } from '@/hooks/useProductReturns';
+import { usePagination } from '@/hooks/usePagination';
 import { useApp } from '@/contexts/AppContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -19,6 +22,61 @@ export const ReturnsModule = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({
     show: false,
     id: null
+  });
+
+  // Filters state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [productFilter, setProductFilter] = useState('all');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Apply custom filters
+  const filteredReturns = useMemo(() => {
+    return returns.filter((ret) => {
+      // Status filter
+      if (statusFilter !== 'all' && ret.status !== statusFilter) return false;
+
+      // Product filter
+      if (productFilter !== 'all' && ret.product_id !== productFilter) return false;
+
+      // Amount filters
+      const amount = Number(ret.refund_amount);
+      if (minAmount && amount < Number(minAmount)) return false;
+      if (maxAmount && amount > Number(maxAmount)) return false;
+
+      // Date filters
+      const returnDate = new Date(ret.created_at || '');
+      if (startDate && returnDate < new Date(startDate)) return false;
+      if (endDate && returnDate > new Date(endDate + 'T23:59:59')) return false;
+
+      // Search term (reason or notes)
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        return (
+          ret.reason?.toLowerCase().includes(term) ||
+          ret.notes?.toLowerCase().includes(term)
+        );
+      }
+
+      return true;
+    });
+  }, [returns, statusFilter, productFilter, minAmount, maxAmount, startDate, endDate, searchTerm]);
+
+  // Pagination
+  const {
+    currentData: paginatedReturns,
+    currentPage,
+    totalPages,
+    totalItems,
+    goToPage,
+    goToNextPage,
+    goToPreviousPage
+  } = usePagination({
+    data: filteredReturns,
+    itemsPerPage: 10
   });
 
   const stats = getReturnStats();
@@ -142,50 +200,93 @@ export const ReturnsModule = () => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des retours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {returns.map((returnData) => (
-                <div
-                  key={returnData.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-3">
-                      <h4 className="font-semibold">{getProductName(returnData.product_id)}</h4>
-                      {getStatusBadge(returnData.status)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{returnData.reason}</p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>Quantité: {returnData.quantity}</span>
-                      <span>Remboursement: {returnData.refund_amount.toLocaleString()} CFA</span>
-                      <span>{format(new Date(returnData.created_at), 'dd MMM yyyy', { locale: fr })}</span>
-                    </div>
+        <>
+          {/* Filters */}
+          <ReturnsFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            productFilter={productFilter}
+            onProductFilterChange={setProductFilter}
+            minAmount={minAmount}
+            onMinAmountChange={setMinAmount}
+            maxAmount={maxAmount}
+            onMaxAmountChange={setMaxAmount}
+            startDate={startDate}
+            onStartDateChange={setStartDate}
+            endDate={endDate}
+            onEndDateChange={setEndDate}
+            products={products}
+          />
+
+          {/* Returns List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Liste des Retours ({totalItems} {totalItems > 1 ? 'résultats' : 'résultat'})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {paginatedReturns.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucun retour trouvé avec ces critères
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(returnData)}
+                ) : (
+                  paginatedReturns.map((returnData) => (
+                    <div
+                      key={returnData.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                     >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteConfirm({ show: true, id: returnData.id })}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-semibold">{getProductName(returnData.product_id)}</h4>
+                          {getStatusBadge(returnData.status)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{returnData.reason}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>Quantité: {returnData.quantity}</span>
+                          <span>Remboursement: {returnData.refund_amount.toLocaleString()} DA</span>
+                          <span>{format(new Date(returnData.created_at), 'dd MMM yyyy', { locale: fr })}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(returnData)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeleteConfirm({ show: true, id: returnData.id })}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={10}
+              onPageChange={goToPage}
+              hasNextPage={currentPage < totalPages}
+              hasPreviousPage={currentPage > 1}
+            />
+          )}
+        </>
       )}
 
       {showModal && (
