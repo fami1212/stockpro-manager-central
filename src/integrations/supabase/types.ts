@@ -125,6 +125,72 @@ export type Database = {
         }
         Relationships: []
       }
+      product_returns: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          product_id: string | null
+          quantity: number
+          reason: string
+          refund_amount: number
+          refund_method: string | null
+          sale_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          product_id?: string | null
+          quantity: number
+          reason: string
+          refund_amount?: number
+          refund_method?: string | null
+          sale_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          product_id?: string | null
+          quantity?: number
+          reason?: string
+          refund_amount?: number
+          refund_method?: string | null
+          sale_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           color: string | null
@@ -684,6 +750,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_product_stock: {
+        Args: { p_product_id: string; p_quantity: number }
+        Returns: undefined
+      }
       generate_barcode: { Args: never; Returns: string }
       generate_product_reference: {
         Args: { category_name: string }
