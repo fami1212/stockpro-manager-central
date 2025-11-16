@@ -11,8 +11,10 @@ import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch } from 'lucide-react';
 import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
+import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
+import { VersionManagement } from '@/components/admin/VersionManagement';
 
 export default function AdminDashboard() {
   return (
@@ -32,7 +34,7 @@ export default function AdminDashboard() {
           </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Stats
@@ -41,9 +43,17 @@ export default function AdminDashboard() {
               <TrendingUp className="h-4 w-4" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2">
+              <LineChart className="h-4 w-4" />
+              Performance
+            </TabsTrigger>
             <TabsTrigger value="health" className="flex items-center gap-2">
               <Server className="h-4 w-4" />
               Santé
+            </TabsTrigger>
+            <TabsTrigger value="versions" className="flex items-center gap-2">
+              <GitBranch className="h-4 w-4" />
+              Versions
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -75,8 +85,16 @@ export default function AdminDashboard() {
             <AdvancedAnalytics />
           </TabsContent>
 
+          <TabsContent value="performance">
+            <PerformanceAnalytics />
+          </TabsContent>
+
           <TabsContent value="health">
             <SystemHealthMonitoring />
+          </TabsContent>
+
+          <TabsContent value="versions">
+            <VersionManagement />
           </TabsContent>
 
           <TabsContent value="users">
