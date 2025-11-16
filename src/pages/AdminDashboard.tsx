@@ -11,7 +11,8 @@ import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server } from 'lucide-react';
+import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
 
 export default function AdminDashboard() {
   return (
@@ -31,7 +32,7 @@ export default function AdminDashboard() {
           </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Stats
@@ -39,6 +40,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="health" className="flex items-center gap-2">
+              <Server className="h-4 w-4" />
+              Santé
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -68,6 +73,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="analytics">
             <AdvancedAnalytics />
+          </TabsContent>
+
+          <TabsContent value="health">
+            <SystemHealthMonitoring />
           </TabsContent>
 
           <TabsContent value="users">
