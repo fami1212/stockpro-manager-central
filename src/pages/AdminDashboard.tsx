@@ -15,6 +15,8 @@ import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, S
 import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
 import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
+import { CronJobsManagement } from '@/components/admin/CronJobsManagement';
+import { ApplicationLogs } from '@/components/admin/ApplicationLogs';
 
 export default function AdminDashboard() {
   return (
@@ -34,7 +36,7 @@ export default function AdminDashboard() {
           </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10">
+          <TabsList className="grid w-full grid-cols-12 gap-1">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Stats
@@ -74,6 +76,14 @@ export default function AdminDashboard() {
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Paramètres
+            </TabsTrigger>
+            <TabsTrigger value="cron" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Cron Jobs
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Logs
             </TabsTrigger>
           </TabsList>
 
@@ -115,6 +125,14 @@ export default function AdminDashboard() {
 
           <TabsContent value="settings">
             <SystemSettings />
+          </TabsContent>
+
+          <TabsContent value="cron">
+            <CronJobsManagement />
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <ApplicationLogs />
           </TabsContent>
         </Tabs>
         </div>
