@@ -26,13 +26,13 @@ interface AuditLog {
 
 export function AuditLogs() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const { toast } = useToast();
 
   const fetchLogs = async () => {
     try {
