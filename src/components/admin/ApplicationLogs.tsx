@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, Search, Filter, RefreshCw, AlertCircle, Info, AlertTriangle, Bug } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ApplicationLog {
   id: string;
@@ -22,64 +23,79 @@ interface ApplicationLog {
 }
 
 export function ApplicationLogs() {
-  const [logs, setLogs] = useState<ApplicationLog[]>([
-    {
-      id: '1',
-      timestamp: new Date(),
-      level: 'error',
-      category: 'API',
-      message: 'Failed to fetch products data',
-      details: 'Connection timeout after 30 seconds',
-      userId: 'user-123',
-      userEmail: 'user@example.com',
-      source: 'ProductsModule',
-    },
-    {
-      id: '2',
-      timestamp: new Date(Date.now() - 300000),
-      level: 'warning',
-      category: 'Authentication',
-      message: 'Multiple failed login attempts detected',
-      details: 'IP: 192.168.1.100, Attempts: 5',
-      userEmail: 'suspicious@example.com',
-      source: 'AuthService',
-    },
-    {
-      id: '3',
-      timestamp: new Date(Date.now() - 600000),
-      level: 'info',
-      category: 'System',
-      message: 'Database backup completed successfully',
-      details: 'Size: 245MB, Duration: 3.2s',
-      source: 'BackupService',
-    },
-    {
-      id: '4',
-      timestamp: new Date(Date.now() - 900000),
-      level: 'debug',
-      category: 'Performance',
-      message: 'Slow query detected',
-      details: 'Query execution time: 2.5s for SELECT * FROM sales',
-      source: 'DatabaseMonitor',
-    },
-    {
-      id: '5',
-      timestamp: new Date(Date.now() - 1200000),
-      level: 'error',
-      category: 'Payment',
-      message: 'Payment processing failed',
-      details: 'Transaction ID: TRX-12345, Error: Insufficient funds',
-      userId: 'user-456',
-      userEmail: 'customer@example.com',
-      source: 'PaymentGateway',
-    },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [logs, setLogs] = useState<ApplicationLog[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  useEffect(() => {
+    fetchLogs();
+  }, [levelFilter, categoryFilter, startDate, endDate]);
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (categoryFilter !== 'all') {
+        query = query.eq('action_category', categoryFilter);
+      }
+
+      if (startDate) {
+        query = query.gte('created_at', new Date(startDate).toISOString());
+      }
+
+      if (endDate) {
+        query = query.lte('created_at', new Date(endDate).toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Map audit logs to application logs format
+      const mappedLogs: ApplicationLog[] = (data || []).map(log => {
+        // Determine level based on action_type
+        let level: 'error' | 'warning' | 'info' | 'debug' = 'info';
+        const action = log.action_type.toLowerCase();
+        if (action.includes('error') || action.includes('fail') || action.includes('delete')) {
+          level = 'error';
+        } else if (action.includes('update') || action.includes('warning')) {
+          level = 'warning';
+        } else if (action.includes('create') || action.includes('read')) {
+          level = 'info';
+        } else {
+          level = 'debug';
+        }
+
+        return {
+          id: log.id,
+          timestamp: new Date(log.created_at),
+          level,
+          category: log.action_category,
+          message: log.action_type,
+          details: log.details ? JSON.stringify(log.details) : undefined,
+          userId: log.user_id,
+          userEmail: log.user_email || undefined,
+          source: log.resource_type || 'System',
+        };
+      });
+
+      setLogs(mappedLogs);
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+      toast.error('Impossible de charger les logs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getLevelBadge = (level: ApplicationLog['level']) => {
     switch (level) {
@@ -118,10 +134,10 @@ export function ApplicationLogs() {
 
   const filteredLogs = logs.filter(log => {
     const matchesSearch =
-      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.details?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.source.toLowerCase().includes(searchTerm.toLowerCase());
+      (log.message || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.details || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.source || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
     const matchesCategory = categoryFilter === 'all' || log.category === categoryFilter;
@@ -159,11 +175,8 @@ export function ApplicationLogs() {
   };
 
   const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Logs actualisés');
-    }, 1000);
+    fetchLogs();
+    toast.success('Logs actualisés');
   };
 
   const formatTimestamp = (date: Date) => {
