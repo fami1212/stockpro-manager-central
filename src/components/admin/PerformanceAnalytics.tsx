@@ -4,85 +4,244 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Activity, Users, ShoppingCart, Package, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, ShoppingCart, Package, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+
+interface PerformanceData {
+  date: string;
+  users: number;
+  sales: number;
+  revenue: number;
+  products: number;
+}
+
+interface UsageByFeature {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface ActivityByHour {
+  hour: string;
+  active: number;
+}
 
 export function PerformanceAnalytics() {
   const { toast } = useToast();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
+  const [usageByFeature, setUsageByFeature] = useState<UsageByFeature[]>([]);
+  const [userActivityData, setUserActivityData] = useState<ActivityByHour[]>([]);
+  const [metricsDisplay, setMetricsDisplay] = useState<Array<{
+    title: string;
+    value: string;
+    change: string;
+    trend: 'up' | 'down';
+    icon: any;
+    color: string;
+  }>>([]);
 
-  // Données de performance simulées (dans une vraie app, ces données viendraient de la base de données)
-  const performanceData = [
-    { date: '01/01', users: 120, sales: 45, revenue: 12500, products: 234 },
-    { date: '05/01', users: 145, sales: 52, revenue: 15200, products: 241 },
-    { date: '10/01', users: 168, sales: 61, revenue: 18900, products: 255 },
-    { date: '15/01', users: 192, sales: 73, revenue: 22100, products: 268 },
-    { date: '20/01', users: 215, sales: 85, revenue: 26800, products: 280 },
-    { date: '25/01', users: 238, sales: 94, revenue: 31500, products: 295 },
-    { date: '30/01', users: 265, sales: 108, revenue: 37200, products: 312 },
-  ];
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [timeRange]);
 
-  const usageByFeature = [
-    { name: 'Ventes', value: 35, color: '#8b5cf6' },
-    { name: 'Inventaire', value: 28, color: '#3b82f6' },
-    { name: 'Clients', value: 20, color: '#10b981' },
-    { name: 'Rapports', value: 12, color: '#f59e0b' },
-    { name: 'Autres', value: 5, color: '#6b7280' },
-  ];
+  const getDaysFromTimeRange = () => {
+    switch (timeRange) {
+      case '7d': return 7;
+      case '30d': return 30;
+      case '90d': return 90;
+      case '1y': return 365;
+      default: return 30;
+    }
+  };
 
-  const responseTimeData = [
-    { endpoint: '/api/sales', avg: 145, p95: 280, p99: 420 },
-    { endpoint: '/api/products', avg: 98, p95: 180, p99: 310 },
-    { endpoint: '/api/clients', avg: 112, p95: 220, p99: 380 },
-    { endpoint: '/api/reports', avg: 234, p95: 450, p99: 680 },
-  ];
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      const days = getDaysFromTimeRange();
+      const now = new Date();
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      const previousPeriodStart = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000);
 
-  const userActivityData = [
-    { hour: '00h', active: 12 },
-    { hour: '04h', active: 8 },
-    { hour: '08h', active: 45 },
-    { hour: '12h', active: 78 },
-    { hour: '16h', active: 92 },
-    { hour: '20h', active: 65 },
-    { hour: '23h', active: 28 },
-  ];
+      // Fetch current period data
+      const [profilesRes, salesRes, productsRes, auditLogsRes] = await Promise.all([
+        supabase.from('profiles').select('id, created_at, last_login').gte('created_at', startDate.toISOString()),
+        supabase.from('sales').select('id, total, created_at, status').gte('created_at', startDate.toISOString()).neq('status', 'Brouillon'),
+        supabase.from('products').select('id, created_at').gte('created_at', startDate.toISOString()),
+        supabase.from('audit_logs').select('action_category, created_at').gte('created_at', startDate.toISOString()),
+      ]);
 
-  const metrics = [
-    {
-      title: 'Utilisateurs Actifs',
-      value: '265',
-      change: '+12.5%',
-      trend: 'up',
-      icon: Users,
-      color: 'text-blue-500',
-    },
-    {
-      title: 'Ventes Totales',
-      value: '108',
-      change: '+8.3%',
-      trend: 'up',
-      icon: ShoppingCart,
-      color: 'text-green-500',
-    },
-    {
-      title: 'Revenus',
-      value: '37.2K DH',
-      change: '+15.7%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'text-purple-500',
-    },
-    {
-      title: 'Produits',
-      value: '312',
-      change: '+5.8%',
-      trend: 'up',
-      icon: Package,
-      color: 'text-orange-500',
-    },
-  ];
+      // Fetch previous period for comparison
+      const [prevSalesRes, prevProfilesRes] = await Promise.all([
+        supabase.from('sales').select('id, total').gte('created_at', previousPeriodStart.toISOString()).lt('created_at', startDate.toISOString()).neq('status', 'Brouillon'),
+        supabase.from('profiles').select('id, last_login').gte('created_at', previousPeriodStart.toISOString()).lt('created_at', startDate.toISOString()),
+      ]);
+
+      // Calculate active users
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const activeUsers = (profilesRes.data || []).filter(p => p.last_login && new Date(p.last_login) > sevenDaysAgo).length;
+      const prevActiveUsers = (prevProfilesRes.data || []).filter(p => p.last_login && new Date(p.last_login) > new Date(previousPeriodStart.getTime() + days * 24 * 60 * 60 * 1000 - 7 * 24 * 60 * 60 * 1000)).length;
+
+      // Calculate metrics
+      const totalSales = salesRes.data?.length || 0;
+      const prevTotalSales = prevSalesRes.data?.length || 0;
+      const revenue = salesRes.data?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0;
+      const prevRevenue = prevSalesRes.data?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0;
+      const totalProducts = productsRes.data?.length || 0;
+
+      const metricsData = {
+        activeUsers: {
+          value: activeUsers,
+          change: prevActiveUsers > 0 ? ((activeUsers - prevActiveUsers) / prevActiveUsers) * 100 : 0
+        },
+        totalSales: {
+          value: totalSales,
+          change: prevTotalSales > 0 ? ((totalSales - prevTotalSales) / prevTotalSales) * 100 : 0
+        },
+        revenue: {
+          value: revenue,
+          change: prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue) * 100 : 0
+        },
+        products: {
+          value: totalProducts,
+          change: 0
+        },
+      };
+
+      setMetricsDisplay([
+        {
+          title: 'Utilisateurs Actifs',
+          value: metricsData.activeUsers.value.toString(),
+          change: `${metricsData.activeUsers.change > 0 ? '+' : ''}${metricsData.activeUsers.change.toFixed(1)}%`,
+          trend: metricsData.activeUsers.change >= 0 ? 'up' : 'down',
+          icon: Users,
+          color: 'text-blue-500',
+        },
+        {
+          title: 'Ventes Totales',
+          value: metricsData.totalSales.value.toString(),
+          change: `${metricsData.totalSales.change > 0 ? '+' : ''}${metricsData.totalSales.change.toFixed(1)}%`,
+          trend: metricsData.totalSales.change >= 0 ? 'up' : 'down',
+          icon: ShoppingCart,
+          color: 'text-green-500',
+        },
+        {
+          title: 'Revenus',
+          value: `${(metricsData.revenue.value / 1000).toFixed(1)}K CFA`,
+          change: `${metricsData.revenue.change > 0 ? '+' : ''}${metricsData.revenue.change.toFixed(1)}%`,
+          trend: metricsData.revenue.change >= 0 ? 'up' : 'down',
+          icon: DollarSign,
+          color: 'text-purple-500',
+        },
+        {
+          title: 'Produits',
+          value: metricsData.products.value.toString(),
+          change: `${metricsData.products.change > 0 ? '+' : ''}${metricsData.products.change.toFixed(1)}%`,
+          trend: metricsData.products.change >= 0 ? 'up' : 'down',
+          icon: Package,
+          color: 'text-orange-500',
+        },
+      ]);
+
+      // Generate performance data by grouping by dates
+      const dataPoints = Math.min(days, 30);
+      const interval = Math.floor(days / dataPoints);
+      const perfData: PerformanceData[] = [];
+
+      for (let i = 0; i < dataPoints; i++) {
+        const dateEnd = new Date(startDate.getTime() + (i + 1) * interval * 24 * 60 * 60 * 1000);
+        const dateStart = new Date(startDate.getTime() + i * interval * 24 * 60 * 60 * 1000);
+        
+        const salesInPeriod = salesRes.data?.filter(s => {
+          const date = new Date(s.created_at);
+          return date >= dateStart && date < dateEnd;
+        }) || [];
+        
+        const usersInPeriod = profilesRes.data?.filter(p => {
+          const date = new Date(p.created_at);
+          return date >= dateStart && date < dateEnd;
+        }) || [];
+
+        const productsInPeriod = productsRes.data?.filter(p => {
+          const date = new Date(p.created_at);
+          return date >= dateStart && date < dateEnd;
+        }) || [];
+
+        perfData.push({
+          date: dateEnd.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }),
+          users: usersInPeriod.length,
+          sales: salesInPeriod.length,
+          revenue: salesInPeriod.reduce((sum, s) => sum + (s.total || 0), 0),
+          products: productsInPeriod.length,
+        });
+      }
+      setPerformanceData(perfData);
+
+      // Calculate usage by feature from audit logs
+      const actionCategories = auditLogsRes.data?.reduce((acc, log) => {
+        const category = log.action_category || 'Autres';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      const total = Object.values(actionCategories).reduce((sum, val) => sum + val, 0);
+      const colors = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#6b7280'];
+      
+      const usageData = Object.entries(actionCategories)
+        .map(([name, count], idx) => ({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          value: Math.round((count / total) * 100),
+          color: colors[idx % colors.length],
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
+      setUsageByFeature(usageData.length > 0 ? usageData : [
+        { name: 'Ventes', value: 35, color: 'hsl(var(--primary))' },
+        { name: 'Inventaire', value: 28, color: 'hsl(var(--secondary))' },
+        { name: 'Clients', value: 20, color: 'hsl(var(--accent))' },
+        { name: 'Rapports', value: 12, color: 'hsl(var(--muted))' },
+        { name: 'Autres', value: 5, color: '#6b7280' },
+      ]);
+
+      // Calculate activity by hour
+      const activityByHour = new Array(24).fill(0);
+      auditLogsRes.data?.forEach(log => {
+        const hour = new Date(log.created_at).getHours();
+        activityByHour[hour]++;
+      });
+
+      const hourlyData: ActivityByHour[] = [];
+      for (let i = 0; i < 24; i += 4) {
+        hourlyData.push({
+          hour: `${i.toString().padStart(2, '0')}h`,
+          active: activityByHour.slice(i, i + 4).reduce((sum, val) => sum + val, 0),
+        });
+      }
+      setUserActivityData(hourlyData);
+
+    } catch (error: any) {
+      console.error('Error fetching analytics:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les statistiques de performance',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -106,35 +265,30 @@ export function PerformanceAnalytics() {
         </Select>
       </div>
 
-      {/* Métriques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric, index) => {
+      {/* Cartes de métriques principales */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {metricsDisplay.map((metric, index) => {
           const Icon = metric.icon;
-          const TrendIcon = metric.trend === 'up' ? TrendingUp : TrendingDown;
           return (
             <Card key={index}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {metric.title}
-                  </CardTitle>
-                  <Icon className={`h-4 w-4 ${metric.color}`} />
-                </div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {metric.title}
+                </CardTitle>
+                <Icon className={`h-4 w-4 ${metric.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="flex items-baseline justify-between">
-                  <div className="text-2xl font-bold">{metric.value}</div>
-                  <Badge
-                    variant="secondary"
-                    className={`${
-                      metric.trend === 'up'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                    }`}
-                  >
-                    <TrendIcon className="h-3 w-3 mr-1" />
+                <div className="text-2xl font-bold">{metric.value}</div>
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                  {metric.trend === 'up' ? (
+                    <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="mr-1 h-3 w-3 text-red-500" />
+                  )}
+                  <span className={metric.trend === 'up' ? 'text-green-500' : 'text-red-500'}>
                     {metric.change}
-                  </Badge>
+                  </span>
+                  <span className="ml-1">vs période précédente</span>
                 </div>
               </CardContent>
             </Card>
@@ -147,7 +301,6 @@ export function PerformanceAnalytics() {
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="usage">Utilisation</TabsTrigger>
           <TabsTrigger value="activity">Activité</TabsTrigger>
-          <TabsTrigger value="response">Temps de Réponse</TabsTrigger>
         </TabsList>
 
         {/* Graphique de Performance */}
@@ -162,29 +315,29 @@ export function PerformanceAnalytics() {
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" className="text-muted-foreground" />
+                  <YAxis className="text-muted-foreground" />
                   <Tooltip />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="users"
-                    stroke="#3b82f6"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     name="Utilisateurs"
                   />
                   <Line
                     type="monotone"
                     dataKey="sales"
-                    stroke="#10b981"
+                    stroke="hsl(var(--secondary))"
                     strokeWidth={2}
                     name="Ventes"
                   />
                   <Line
                     type="monotone"
                     dataKey="products"
-                    stroke="#f59e0b"
+                    stroke="hsl(var(--accent))"
                     strokeWidth={2}
                     name="Produits"
                   />
@@ -195,23 +348,23 @@ export function PerformanceAnalytics() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenus</CardTitle>
-              <CardDescription>Évolution des revenus dans le temps</CardDescription>
+              <CardTitle>Évolution des Revenus</CardTitle>
+              <CardDescription>Chiffre d'affaires par période</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" className="text-muted-foreground" />
+                  <YAxis className="text-muted-foreground" />
                   <Tooltip />
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#8b5cf6"
-                    fill="#8b5cf6"
-                    fillOpacity={0.3}
-                    name="Revenus (DH)"
+                    stroke="hsl(var(--primary))"
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.6}
+                    name="Revenus (CFA)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -219,119 +372,70 @@ export function PerformanceAnalytics() {
           </Card>
         </TabsContent>
 
-        {/* Utilisation par Fonctionnalité */}
+        {/* Utilisation par fonctionnalité */}
         <TabsContent value="usage" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Utilisation par Fonctionnalité</CardTitle>
-                <CardDescription>
-                  Répartition de l'utilisation des différentes fonctionnalités
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={usageByFeature}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {usageByFeature.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistiques d'Utilisation</CardTitle>
-                <CardDescription>Détails par fonctionnalité</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {usageByFeature.map((feature, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: feature.color }}
-                          />
-                          <span className="font-medium">{feature.name}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">{feature.value}%</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full transition-all"
-                          style={{
-                            width: `${feature.value}%`,
-                            backgroundColor: feature.color,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Activité Utilisateur */}
-        <TabsContent value="activity">
           <Card>
             <CardHeader>
-              <CardTitle>Activité Utilisateur par Heure</CardTitle>
+              <CardTitle>Distribution de l'utilisation</CardTitle>
               <CardDescription>
-                Distribution de l'activité des utilisateurs au cours de la journée
+                Répartition de l'activité par fonctionnalité
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={usageByFeature}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name} (${value}%)`}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {usageByFeature.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                {usageByFeature.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded"
+                      style={{ backgroundColor: feature.color }}
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{feature.name}</p>
+                      <p className="text-xs text-muted-foreground">{feature.value}%</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Activité utilisateur */}
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activité par heure</CardTitle>
+              <CardDescription>
+                Nombre d'actions effectuées par tranche horaire
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={userActivityData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="hour" className="text-muted-foreground" />
+                  <YAxis className="text-muted-foreground" />
                   <Tooltip />
-                  <Legend />
-                  <Bar dataKey="active" fill="#3b82f6" name="Utilisateurs Actifs" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Temps de Réponse */}
-        <TabsContent value="response">
-          <Card>
-            <CardHeader>
-              <CardTitle>Temps de Réponse des API</CardTitle>
-              <CardDescription>
-                Performance des endpoints par percentile (en ms)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={responseTimeData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="endpoint" type="category" width={150} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="avg" fill="#10b981" name="Moyenne" />
-                  <Bar dataKey="p95" fill="#f59e0b" name="P95" />
-                  <Bar dataKey="p99" fill="#ef4444" name="P99" />
+                  <Bar dataKey="active" fill="hsl(var(--primary))" name="Actions" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

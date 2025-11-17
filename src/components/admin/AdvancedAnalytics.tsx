@@ -70,18 +70,45 @@ export function AdvancedAnalytics() {
         avgSessionTime: 0, // Would need additional tracking
       });
 
-      // Generate activity data (mock data for demonstration)
+      // Generate real activity data from database
+      const [salesByDateRes, productsByDateRes, auditLogsRes] = await Promise.all([
+        supabase.from('sales').select('created_at').gte('created_at', startDate.toISOString()).neq('status', 'Brouillon'),
+        supabase.from('products').select('created_at').gte('created_at', startDate.toISOString()),
+        supabase.from('audit_logs').select('created_at, action_type').gte('created_at', startDate.toISOString()),
+      ]);
+
       const generatedActivityData: ActivityData[] = [];
-      for (let i = daysAgo - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+      const dataPoints = Math.min(daysAgo, 30);
+      const interval = Math.floor(daysAgo / dataPoints);
+
+      for (let i = 0; i < dataPoints; i++) {
+        const dateEnd = new Date();
+        dateEnd.setDate(dateEnd.getDate() - (i * interval));
+        const dateStart = new Date(dateEnd);
+        dateStart.setDate(dateStart.getDate() - interval);
         
-        generatedActivityData.push({
+        const dateStr = dateEnd.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+        
+        const loginsInPeriod = (auditLogsRes.data || []).filter(log => {
+          const logDate = new Date(log.created_at);
+          return logDate >= dateStart && logDate < dateEnd && log.action_type === 'login';
+        }).length;
+
+        const salesInPeriod = (salesByDateRes.data || []).filter(sale => {
+          const saleDate = new Date(sale.created_at);
+          return saleDate >= dateStart && saleDate < dateEnd;
+        }).length;
+
+        const productsInPeriod = (productsByDateRes.data || []).filter(product => {
+          const productDate = new Date(product.created_at);
+          return productDate >= dateStart && productDate < dateEnd;
+        }).length;
+        
+        generatedActivityData.unshift({
           date: dateStr,
-          logins: Math.floor(Math.random() * activeUsers) + 1,
-          sales: Math.floor(Math.random() * 20) + 1,
-          products: Math.floor(Math.random() * 10) + 1,
+          logins: loginsInPeriod,
+          sales: salesInPeriod,
+          products: productsInPeriod,
         });
       }
       setActivityData(generatedActivityData);
