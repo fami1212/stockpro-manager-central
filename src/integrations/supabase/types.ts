@@ -357,6 +357,75 @@ export type Database = {
           },
         ]
       }
+      invoice_settings: {
+        Row: {
+          company_address: string | null
+          company_email: string | null
+          company_logo_url: string | null
+          company_name: string | null
+          company_phone: string | null
+          company_tax_id: string | null
+          created_at: string
+          footer_text: string | null
+          id: string
+          invoice_notes: string | null
+          invoice_prefix: string | null
+          logo_position: string | null
+          payment_terms: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          show_footer: boolean | null
+          show_header: boolean | null
+          text_color: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_tax_id?: string | null
+          created_at?: string
+          footer_text?: string | null
+          id?: string
+          invoice_notes?: string | null
+          invoice_prefix?: string | null
+          logo_position?: string | null
+          payment_terms?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_footer?: boolean | null
+          show_header?: boolean | null
+          text_color?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_tax_id?: string | null
+          created_at?: string
+          footer_text?: string | null
+          id?: string
+          invoice_notes?: string | null
+          invoice_prefix?: string | null
+          logo_position?: string | null
+          payment_terms?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_footer?: boolean | null
+          show_header?: boolean | null
+          text_color?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount_paid: number
