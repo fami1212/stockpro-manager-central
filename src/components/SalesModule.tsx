@@ -10,6 +10,9 @@ import { PaginationControls } from '@/components/PaginationControls';
 import { EmptyState } from '@/components/EmptyState';
 import { useApp } from '@/contexts/AppContext';
 import { usePagination } from '@/hooks/usePagination';
+import { supabase } from '@/integrations/supabase/client';
+import { downloadInvoicePDF } from '@/utils/invoicePdfGenerator';
+import { toast } from 'sonner';
 
 export const SalesModule = () => {
   const { state, deleteSale } = useApp();
@@ -60,6 +63,57 @@ export const SalesModule = () => {
   const handleCloseModal = () => {
     setShowSaleModal(false);
     setEditingSale(null);
+  };
+
+  const handleGenerateInvoice = async (sale: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté');
+        return;
+      }
+
+      // Fetch invoice settings
+      const { data: settings } = await supabase
+        .from('invoice_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      // Get client details if available
+      const client = state.clients.find(c => c.id === sale.client_id || c.name === sale.client);
+
+      // Transform sale data to invoice format
+      const invoiceData = {
+        invoice_number: `INV-${sale.reference}`,
+        invoice_date: sale.date,
+        due_date: undefined,
+        client: {
+          name: client?.name || sale.client || 'Client',
+          email: client?.email,
+          phone: client?.phone,
+          address: client?.address,
+        },
+        items: sale.items.map((item: any) => ({
+          description: item.name,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total: item.total,
+        })),
+        subtotal: sale.total - sale.tax,
+        tax: sale.tax || 0,
+        discount: sale.discount || 0,
+        total: sale.total,
+        amount_paid: 0,
+        notes: undefined,
+      };
+
+      await downloadInvoicePDF(invoiceData, settings || undefined);
+      toast.success('Facture générée avec succès');
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast.error('Erreur lors de la génération de la facture');
+    }
   };
 
   const totalRevenue = state.sales.reduce((acc, sale) => acc + sale.total, 0);
@@ -189,7 +243,7 @@ export const SalesModule = () => {
                           {sale.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
+                       <td className="py-3 px-4">
                         <div className="flex gap-2">
                           <Button 
                             variant="outline" 
@@ -200,6 +254,14 @@ export const SalesModule = () => {
                             }}
                           >
                             <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleGenerateInvoice(sale)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <FileText className="w-4 h-4" />
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(sale)}>
                             <Edit className="w-4 h-4" />
@@ -262,7 +324,7 @@ export const SalesModule = () => {
                   </div>
                   
                   <div className="flex flex-col gap-2 pt-2 border-t">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -275,6 +337,17 @@ export const SalesModule = () => {
                         <Eye className="w-3 h-3 mr-1" />
                         Voir
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700 text-xs"
+                        onClick={() => handleGenerateInvoice(sale)}
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        Facture
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEdit(sale)}>
                         <Edit className="w-3 h-3 mr-1" />
                         Modifier
