@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Search, Eye, Edit, Trash2, FileText, CreditCard, Package } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, FileText, CreditCard, Package, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import { FunctionalSaleModal } from '@/components/FunctionalSaleModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PaginationControls } from '@/components/PaginationControls';
 import { EmptyState } from '@/components/EmptyState';
+import { SendInvoiceModal } from '@/components/SendInvoiceModal';
 import { useApp } from '@/contexts/AppContext';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,9 @@ export const SalesModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; saleId?: string; saleName?: string }>({
+    open: false
+  });
+  const [sendEmailModal, setSendEmailModal] = useState<{ open: boolean; sale?: any; settings?: any }>({
     open: false
   });
 
@@ -113,6 +117,49 @@ export const SalesModule = () => {
     } catch (error) {
       console.error('Error generating invoice:', error);
       toast.error('Erreur lors de la génération de la facture');
+    }
+  };
+
+  const handleSendEmail = async (sale: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté');
+        return;
+      }
+
+      // Fetch invoice settings
+      const { data: settings } = await supabase
+        .from('invoice_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      // Get client details if available
+      const client = state.clients.find(c => c.id === sale.client_id || c.name === sale.client);
+
+      if (!client?.email) {
+        toast.error('Ce client n\'a pas d\'adresse email');
+        return;
+      }
+
+      setSendEmailModal({
+        open: true,
+        sale: {
+          id: sale.id,
+          invoice_number: `INV-${sale.reference}`,
+          total: sale.total,
+          due_date: undefined,
+          client: {
+            name: client?.name || sale.client,
+            email: client?.email
+          }
+        },
+        settings
+      });
+    } catch (error) {
+      console.error('Error preparing email:', error);
+      toast.error('Erreur lors de la préparation de l\'email');
     }
   };
 
@@ -263,6 +310,15 @@ export const SalesModule = () => {
                           >
                             <FileText className="w-4 h-4" />
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleSendEmail(sale)}
+                            className="text-green-600 hover:text-green-700"
+                            title="Envoyer par email"
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(sale)}>
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -348,10 +404,21 @@ export const SalesModule = () => {
                       </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-green-600 hover:text-green-700 text-xs"
+                        onClick={() => handleSendEmail(sale)}
+                      >
+                        <Send className="w-3 h-3 mr-1" />
+                        Email
+                      </Button>
                       <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEdit(sale)}>
                         <Edit className="w-3 h-3 mr-1" />
                         Modifier
                       </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -399,6 +466,15 @@ export const SalesModule = () => {
         confirmText="Supprimer"
         variant="destructive"
       />
+
+      {sendEmailModal.sale && (
+        <SendInvoiceModal
+          open={sendEmailModal.open}
+          onOpenChange={(open) => setSendEmailModal({ open })}
+          invoice={sendEmailModal.sale}
+          invoiceSettings={sendEmailModal.settings}
+        />
+      )}
     </div>
   );
 };

@@ -1,1 +1,7 @@
 project_id = "frkfrvbwhnvtvywgmvzz"
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.send-invoice-email]
+verify_jwt = true
