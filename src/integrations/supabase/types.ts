@@ -357,6 +357,42 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          template_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          template_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoice_settings: {
         Row: {
           company_address: string | null
@@ -376,6 +412,7 @@ export type Database = {
           secondary_color: string | null
           show_footer: boolean | null
           show_header: boolean | null
+          template_style: string | null
           text_color: string | null
           updated_at: string
           user_id: string
@@ -398,6 +435,7 @@ export type Database = {
           secondary_color?: string | null
           show_footer?: boolean | null
           show_header?: boolean | null
+          template_style?: string | null
           text_color?: string | null
           updated_at?: string
           user_id: string
@@ -420,6 +458,7 @@ export type Database = {
           secondary_color?: string | null
           show_footer?: boolean | null
           show_header?: boolean | null
+          template_style?: string | null
           text_color?: string | null
           updated_at?: string
           user_id?: string
@@ -1015,6 +1054,57 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sent_invoices: {
+        Row: {
+          created_at: string
+          email_template_id: string | null
+          error_message: string | null
+          id: string
+          invoice_id: string
+          sent_at: string
+          sent_to: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_template_id?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id: string
+          sent_at?: string
+          sent_to: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_template_id?: string | null
+          error_message?: string | null
+          id?: string
+          invoice_id?: string
+          sent_at?: string
+          sent_to?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sent_invoices_email_template_id_fkey"
+            columns: ["email_template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sent_invoices_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
