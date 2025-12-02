@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Image as ImageIcon, Palette, Layout, FileText, Save } from 'lucide-react';
+import { Upload, Image as ImageIcon, Palette, Layout, FileText, Save, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { InvoiceStyleSelector, InvoiceStyle, getInvoiceStyleSettings } from './InvoiceStyleSelector';
 
 interface InvoiceSettings {
   company_name: string;
@@ -28,6 +29,7 @@ interface InvoiceSettings {
   invoice_prefix: string;
   invoice_notes: string;
   payment_terms: string;
+  template_style: InvoiceStyle;
 }
 
 export const InvoiceTemplateSettings = () => {
@@ -52,7 +54,8 @@ export const InvoiceTemplateSettings = () => {
     footer_text: '',
     invoice_prefix: 'INV',
     invoice_notes: '',
-    payment_terms: 'Paiement dû à réception'
+    payment_terms: 'Paiement dû à réception',
+    template_style: 'modern' as InvoiceStyle
   });
 
   useEffect(() => {
@@ -74,7 +77,10 @@ export const InvoiceTemplateSettings = () => {
       }
 
       if (data) {
-        setSettings(data);
+        setSettings({
+          ...data,
+          template_style: (data.template_style as InvoiceStyle) || 'modern'
+        });
         setLogoPreview(data.company_logo_url || '');
       }
     } catch (error) {
@@ -361,6 +367,33 @@ export const InvoiceTemplateSettings = () => {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Predefined Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            Style de facture
+          </CardTitle>
+          <CardDescription>
+            Choisissez un style prédéfini pour vos factures
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InvoiceStyleSelector
+            value={settings.template_style}
+            onChange={(style) => {
+              const styleSettings = getInvoiceStyleSettings(style);
+              setSettings(prev => ({
+                ...prev,
+                template_style: style,
+                primary_color: styleSettings.primaryColor,
+                secondary_color: styleSettings.secondaryColor
+              }));
+            }}
+          />
         </CardContent>
       </Card>
 
