@@ -182,6 +182,40 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send(emailOptions);
 
+    console.log("Resend API response:", JSON.stringify(emailResponse));
+
+    // Check for Resend API errors
+    if ((emailResponse as any).error) {
+      const error = (emailResponse as any).error;
+      console.error("Resend API error:", error);
+      
+      // Record the failed attempt
+      await supabase
+        .from('sent_invoices')
+        .insert({
+          invoice_id: invoiceId,
+          sent_to: recipientEmail,
+          email_template_id: emailTemplateId || null,
+          status: 'failed',
+          error_message: error.message,
+          user_id: user.id
+        });
+      
+      // Provide helpful error message for common issues
+      let userMessage = error.message;
+      if (error.message?.includes('verify a domain') || error.message?.includes('can only send')) {
+        userMessage = "Pour envoyer des emails à d'autres destinataires, vous devez vérifier votre domaine sur resend.com/domains. L'email de test ne peut être envoyé qu'à l'adresse associée à votre compte Resend.";
+      }
+      
+      return new Response(
+        JSON.stringify({ success: false, error: userMessage }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     console.log("Email sent successfully:", emailResponse);
 
     // Record the sent invoice
