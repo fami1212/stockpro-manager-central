@@ -128,7 +128,7 @@ export const SendInvoiceModal = ({ open, onOpenChange, invoice, invoiceSettings 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="w-5 h-5" />
@@ -187,14 +187,14 @@ export const SendInvoiceModal = ({ open, onOpenChange, invoice, invoiceSettings 
             <div>
               <Label>Modèle d'email</Label>
               <Select
-                value={formData.templateId}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, templateId: value }))}
+                value={formData.templateId || 'default'}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, templateId: value === 'default' ? '' : value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Modèle par défaut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Modèle par défaut</SelectItem>
+                  <SelectItem value="default">Modèle par défaut</SelectItem>
                   {templates.map(template => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
@@ -231,13 +231,14 @@ export const SendInvoiceModal = ({ open, onOpenChange, invoice, invoiceSettings 
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Annuler
           </Button>
           <Button 
             onClick={handleSend} 
             disabled={sending || !formData.recipientEmail}
+            className="w-full sm:w-auto"
           >
             {sending ? (
               <>
