@@ -140,6 +140,17 @@ export const SendInvoiceModal = ({ open, onOpenChange, invoice, invoiceSettings 
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Info about Resend domain verification */}
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs">
+            <p className="text-amber-800 dark:text-amber-200">
+              <strong>Note:</strong> Sans domaine vérifié sur{' '}
+              <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="underline">
+                resend.com/domains
+              </a>
+              , les emails ne peuvent être envoyés qu'à l'adresse associée à votre compte Resend.
+            </p>
+          </div>
+
           <div>
             <Label htmlFor="recipient-email">Email du destinataire *</Label>
             <Input
