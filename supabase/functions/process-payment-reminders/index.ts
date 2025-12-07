@@ -161,18 +161,32 @@ const handler = async (req: Request): Promise<Response> => {
           }
         }
 
-        // Get company settings for the user
-        const { data: settings } = await supabase
-          .from('invoice_settings')
-          .select('company_name, company_email')
-          .eq('user_id', invoice.user_id)
-          .single();
+        // Get company settings and user profile for dynamic sender
+        const [{ data: settings }, { data: userProfile }] = await Promise.all([
+          supabase
+            .from('invoice_settings')
+            .select('company_name')
+            .eq('user_id', invoice.user_id)
+            .single(),
+          supabase
+            .from('profiles')
+            .select('first_name, last_name, company, email')
+            .eq('id', invoice.user_id)
+            .single()
+        ]);
 
-        const companyName = settings?.company_name || 'Votre entreprise';
-        const senderEmail = settings?.company_email || 'onboarding@resend.dev';
+        const senderName = userProfile?.company || 
+          settings?.company_name || 
+          `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim() || 
+          'StockPro';
+        
+        // Build sender email from user's email prefix
+        const senderEmailPrefix = userProfile?.email ? 
+          userProfile.email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') : 
+          'noreply';
 
         const placeholders = {
-          company_name: companyName,
+          company_name: senderName,
           client_name: client.name,
           invoice_number: invoice.invoice_number,
           invoice_total: invoice.total.toFixed(2),
@@ -184,8 +198,9 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log(`Sending reminder to ${client.email} for invoice ${invoice.invoice_number}`);
 
+        // Send with verified domain stockpro.com
         const emailResponse = await resend.emails.send({
-          from: `${companyName} <onboarding@resend.dev>`,
+          from: `${senderName} <${senderEmailPrefix}@stockpro.com>`,
           to: [client.email],
           subject: emailSubject,
           html: emailBody,
