@@ -150,9 +150,26 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Get user profile for dynamic sender
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, company, email')
+      .eq('id', user.id)
+      .single();
+
+    const senderName = userProfile?.company || 
+      companyName || 
+      `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim() || 
+      'StockPro';
+    
+    // Build sender email from user's email prefix
+    const senderEmailPrefix = userProfile?.email ? 
+      userProfile.email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') : 
+      'noreply';
+
     // Replace placeholders
     const placeholders = {
-      company_name: companyName,
+      company_name: senderName,
       client_name: recipientName,
       invoice_number: invoiceNumber,
       invoice_total: invoiceTotal.toFixed(2),
@@ -162,9 +179,9 @@ const handler = async (req: Request): Promise<Response> => {
     emailSubject = replacePlaceholders(emailSubject, placeholders);
     emailBody = replacePlaceholders(emailBody, placeholders);
 
-    // Prepare email options
+    // Prepare email options with verified domain stockpro.com
     const emailOptions: any = {
-      from: `${companyName} <onboarding@resend.dev>`,
+      from: `${senderName} <${senderEmailPrefix}@stockpro.com>`,
       to: [recipientEmail],
       subject: emailSubject,
       html: emailBody,
