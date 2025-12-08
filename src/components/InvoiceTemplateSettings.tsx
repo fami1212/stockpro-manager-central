@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Image as ImageIcon, Palette, Layout, FileText, Save, Sparkles } from 'lucide-react';
+import { Upload, Image as ImageIcon, Palette, Layout, FileText, Save, Sparkles, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { InvoiceStyleSelector, InvoiceStyle, getInvoiceStyleSettings } from './InvoiceStyleSelector';
+import { InvoicePreview } from './InvoicePreview';
 
 interface InvoiceSettings {
   company_name: string;
@@ -199,6 +200,11 @@ export const InvoiceTemplateSettings = () => {
           {loading ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
       </div>
+
+      {/* Main layout with preview */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Settings Column */}
+        <div className="xl:col-span-2 space-y-6">
 
       {/* Company Branding */}
       <Card>
@@ -517,6 +523,31 @@ export const InvoiceTemplateSettings = () => {
           </div>
         </CardContent>
       </Card>
+        </div>
+
+        {/* Preview Column */}
+        <div className="xl:col-span-1">
+          <div className="sticky top-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="w-5 h-5" />
+                  Aperçu en temps réel
+                </CardTitle>
+                <CardDescription>
+                  Prévisualisation de votre facture
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <InvoicePreview 
+                  settings={settings} 
+                  logoPreview={logoPreview}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
