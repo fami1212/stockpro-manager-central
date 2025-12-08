@@ -44,6 +44,28 @@ export interface InvoiceData {
   notes?: string;
 }
 
+// Helper function to load image as base64
+const loadImageAsBase64 = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = url;
+  });
+};
+
 export const generateInvoicePDF = async (
   invoiceData: InvoiceData,
   templateSettings?: InvoiceTemplateSettings
@@ -85,8 +107,12 @@ export const generateInvoicePDF = async (
           logoX = pageWidth - 54;
         }
         
-        // Note: In production, you'd need to load and embed the image
-        // For now, we'll skip the logo rendering
+        // Load and embed the logo
+        const logoBase64 = await loadImageAsBase64(templateSettings.company_logo_url);
+        const logoWidth = 40;
+        const logoHeight = 20;
+        doc.addImage(logoBase64, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+        yPosition += logoHeight + 5;
       } catch (error) {
         console.error('Error loading logo:', error);
       }
