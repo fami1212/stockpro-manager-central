@@ -14,7 +14,6 @@ import { SettingsModule } from '@/components/SettingsModule';
 import { PromotionsModule } from '@/components/PromotionsModule';
 import { ReturnsModule } from '@/components/ReturnsModule';
 import { ExportModule } from '@/components/ExportModule';
-import { PaymentRemindersModule } from '@/components/PaymentRemindersModule';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 
@@ -40,8 +39,6 @@ const Index = () => {
         return <PromotionsModule />;
       case 'returns':
         return <ReturnsModule />;
-      case 'reminders':
-        return <PaymentRemindersModule />;
       case 'export':
         return <ExportModule />;
       case 'reports':
