@@ -17,8 +17,7 @@ import {
   AlertTriangle,
   Tag,
   PackageX,
-  Download,
-  Bell
+  Download
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -91,12 +90,6 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       id: 'returns',
       label: 'Retours',
       icon: PackageX,
-      badge: null
-    },
-    {
-      id: 'reminders',
-      label: 'Relances',
-      icon: Bell,
       badge: null
     },
     {

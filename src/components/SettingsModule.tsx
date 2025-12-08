@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { Save, User, Building, Bell, Shield, Palette, Database, Download, FileText, Mail } from 'lucide-react';
+import { Save, User, Building, Bell, Shield, Palette, Database, Download, FileText } from 'lucide-react';
 import { InvoiceTemplateSettings } from './InvoiceTemplateSettings';
-import { EmailTemplateManager } from './EmailTemplateManager';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +44,6 @@ export const SettingsModule = () => {
   const tabs = [
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'invoice', label: 'Factures', icon: FileText },
-    { id: 'email', label: 'Emails', icon: Mail },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'appearance', label: 'Apparence', icon: Palette },
     { id: 'security', label: 'Sécurité', icon: Shield },
@@ -246,9 +244,6 @@ export const SettingsModule = () => {
             <InvoiceTemplateSettings />
           )}
 
-          {activeTab === 'email' && (
-            <EmailTemplateManager />
-          )}
 
           {activeTab === 'notifications' && (
             <div className="space-y-6">
