@@ -15,8 +15,12 @@ import {
   TrendingUp,
   DollarSign,
   CreditCard,
-  BarChart3
+  BarChart3,
+  Download
 } from 'lucide-react';
+import { exportToExcel, exportToCSV } from '@/utils/exportData';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { format, differenceInDays, isAfter, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -202,6 +206,86 @@ export const UnpaidInvoicesDashboard = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    const exportData = filteredInvoices.map(invoice => {
+      const status = getPaymentStatus(invoice);
+      const daysInfo = getDaysInfo(invoice);
+      return {
+        'Numéro': invoice.invoice_number,
+        'Client': invoice.clients?.name || 'Client inconnu',
+        'Téléphone': invoice.clients?.phone || '',
+        'Date facture': format(new Date(invoice.invoice_date), 'dd/MM/yyyy', { locale: fr }),
+        'Échéance': invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy', { locale: fr }) : '-',
+        'Montant': invoice.total,
+        'Payé': invoice.amount_paid,
+        'Reste': invoice.total - invoice.amount_paid,
+        'Statut': status.label,
+        'Délai': daysInfo.text
+      };
+    });
+
+    exportToExcel({
+      filename: `factures-impayees-${format(new Date(), 'yyyy-MM-dd')}`,
+      sheetName: 'Factures Impayées',
+      data: exportData
+    });
+    toast.success('Export Excel téléchargé');
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(30, 64, 175);
+    doc.text('Factures Impayées', 14, 22);
+    
+    // Date
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Généré le ${format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}`, 14, 30);
+    
+    // Stats
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.text(`Total impayé: ${totalUnpaid.toLocaleString()} CFA | En retard: ${overdueCount} | Paiements partiels: ${partialCount}`, 14, 40);
+    
+    // Table
+    const tableData = filteredInvoices.map(invoice => {
+      const status = getPaymentStatus(invoice);
+      return [
+        invoice.invoice_number,
+        invoice.clients?.name || 'Client inconnu',
+        invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yy', { locale: fr }) : '-',
+        `${invoice.total.toLocaleString()} CFA`,
+        `${invoice.amount_paid.toLocaleString()} CFA`,
+        `${(invoice.total - invoice.amount_paid).toLocaleString()} CFA`,
+        status.label
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 48,
+      head: [['Facture', 'Client', 'Échéance', 'Montant', 'Payé', 'Reste', 'Statut']],
+      body: tableData,
+      headStyles: { 
+        fillColor: [30, 64, 175],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        3: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'right' }
+      }
+    });
+
+    doc.save(`factures-impayees-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    toast.success('Export PDF téléchargé');
+  };
+
   // Filtrage des factures
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = 
@@ -241,6 +325,16 @@ export const UnpaidInvoicesDashboard = () => {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Factures Impayées</h2>
           <p className="text-muted-foreground">Suivi des paiements et relances</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF}>
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
         </div>
       </div>
 
