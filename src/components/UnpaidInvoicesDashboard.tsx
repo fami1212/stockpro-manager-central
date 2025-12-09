@@ -13,15 +13,22 @@ import {
   CheckCircle, 
   Search,
   TrendingUp,
-  Calendar,
   DollarSign,
-  Eye,
-  CreditCard
+  CreditCard,
+  BarChart3
 } from 'lucide-react';
-import { format, differenceInDays, isAfter } from 'date-fns';
+import { format, differenceInDays, isAfter, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { InvoicePaymentModal } from '@/components/InvoicePaymentModal';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface MonthlyData {
+  month: string;
+  total: number;
+  paid: number;
+  remaining: number;
+}
 
 interface Invoice {
   id: string;
@@ -46,17 +53,20 @@ interface Invoice {
 
 export const UnpaidInvoicesDashboard = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
 
   const fetchInvoices = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch unpaid invoices
       const { data, error } = await supabase
         .from('invoices')
         .select(`
@@ -73,6 +83,19 @@ export const UnpaidInvoicesDashboard = () => {
 
       if (error) throw error;
       setInvoices(data || []);
+
+      // Fetch all invoices for chart (last 12 months)
+      const twelveMonthsAgo = subMonths(new Date(), 12);
+      const { data: allData, error: allError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('invoice_date', twelveMonthsAgo.toISOString().split('T')[0])
+        .order('invoice_date', { ascending: true });
+
+      if (allError) throw allError;
+      setAllInvoices(allData || []);
+
     } catch (error) {
       console.error('Erreur lors du chargement des factures:', error);
       toast.error('Erreur lors du chargement des factures');
@@ -80,6 +103,35 @@ export const UnpaidInvoicesDashboard = () => {
       setLoading(false);
     }
   };
+
+  // Calculate monthly data for chart
+  useEffect(() => {
+    const months: MonthlyData[] = [];
+    const now = new Date();
+
+    for (let i = 11; i >= 0; i--) {
+      const monthDate = subMonths(now, i);
+      const monthStart = startOfMonth(monthDate);
+      const monthEnd = endOfMonth(monthDate);
+
+      const monthInvoices = allInvoices.filter(inv => {
+        const invDate = new Date(inv.invoice_date);
+        return invDate >= monthStart && invDate <= monthEnd;
+      });
+
+      const total = monthInvoices.reduce((acc, inv) => acc + inv.total, 0);
+      const paid = monthInvoices.reduce((acc, inv) => acc + inv.amount_paid, 0);
+
+      months.push({
+        month: format(monthDate, 'MMM yy', { locale: fr }),
+        total,
+        paid,
+        remaining: total - paid
+      });
+    }
+
+    setMonthlyData(months);
+  }, [allInvoices]);
 
   useEffect(() => {
     fetchInvoices();
@@ -242,6 +294,100 @@ export const UnpaidInvoicesDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Graphique d'évolution des créances */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Évolution des créances (12 derniers mois)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorRemaining" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <YAxis 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    color: 'hsl(var(--foreground))'
+                  }}
+                  formatter={(value: number) => [`${value.toLocaleString()} CFA`]}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="total" 
+                  name="Total facturé"
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorTotal)" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="paid" 
+                  name="Payé"
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorPaid)" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="remaining" 
+                  name="Créances"
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorRemaining)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-primary" />
+              <span className="text-sm text-muted-foreground">Total facturé</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span className="text-sm text-muted-foreground">Payé</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <span className="text-sm text-muted-foreground">Créances</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filtres */}
       <Card>
