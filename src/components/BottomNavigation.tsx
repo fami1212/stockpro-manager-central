@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -11,10 +12,12 @@ import {
   AlertTriangle,
   Tag,
   PackageX,
-  Download
+  Download,
+  Receipt
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BottomNavigationProps {
   activePage: string;
@@ -24,6 +27,25 @@ interface BottomNavigationProps {
 export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationProps) => {
   const { products, sales, clients } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
+  const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
+
+  // Fetch unpaid invoices count
+  useEffect(() => {
+    const fetchUnpaidCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count } = await supabase
+        .from('invoices')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .neq('status', 'Payée');
+
+      setUnpaidInvoicesCount(count || 0);
+    };
+
+    fetchUnpaidCount();
+  }, []);
 
   // Calculs dynamiques
   const lowStockCount = products.filter(p => p.stock <= p.alert_threshold && p.stock > 0).length;
@@ -46,6 +68,13 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
       label: 'Ventes',
       icon: ShoppingCart,
       badge: draftSalesCount > 0 ? draftSalesCount : null
+    },
+    {
+      id: 'invoices',
+      label: 'Factures',
+      icon: Receipt,
+      badge: unpaidInvoicesCount > 0 ? unpaidInvoicesCount : null,
+      isAlert: unpaidInvoicesCount > 0
     },
     {
       id: 'stock',
