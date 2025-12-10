@@ -11,9 +11,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useApp } from '@/contexts/AppContext';
+import { exportToExcel } from '@/utils/exportData';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const SETTINGS_KEY = 'stockpro_user_settings';
+
+interface UserSettings {
+  notifications: {
+    stock_alerts: boolean;
+    new_sales: boolean;
+    reports: boolean;
+    new_clients: boolean;
+  };
+  appearance: {
+    theme: string;
+    language: string;
+    date_format: string;
+  };
+  security: {
+    session_timeout: number;
+    two_factor: boolean;
+    audit_log: boolean;
+  };
+}
+
+const defaultSettings: UserSettings = {
+  notifications: {
+    stock_alerts: true,
+    new_sales: true,
+    reports: false,
+    new_clients: false
+  },
+  appearance: {
+    theme: 'light',
+    language: 'fr',
+    date_format: 'dd/mm/yyyy'
+  },
+  security: {
+    session_timeout: 30,
+    two_factor: false,
+    audit_log: true
+  }
+};
 
 export const SettingsModule = () => {
   const { user } = useAuth();
+  const { products, sales, clients } = useApp();
   const [activeTab, setActiveTab] = useState('profile');
   const [profile, setProfile] = useState({
     first_name: '',
@@ -21,24 +66,7 @@ export const SettingsModule = () => {
     company: '',
     phone: ''
   });
-  const [settings, setSettings] = useState({
-    notifications: {
-      stock_alerts: true,
-      new_sales: true,
-      reports: false,
-      new_clients: false
-    },
-    appearance: {
-      theme: 'light',
-      language: 'fr',
-      date_format: 'dd/mm/yyyy'
-    },
-    security: {
-      session_timeout: 30,
-      two_factor: false,
-      audit_log: true
-    }
-  });
+  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
 
   const tabs = [
@@ -49,6 +77,41 @@ export const SettingsModule = () => {
     { id: 'security', label: 'Sécurité', icon: Shield },
     { id: 'data', label: 'Données', icon: Database },
   ];
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem(SETTINGS_KEY);
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings({ ...defaultSettings, ...parsed });
+      } catch (e) {
+        console.error('Error parsing saved settings:', e);
+      }
+    }
+  }, []);
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }, [settings]);
+
+  // Apply theme when it changes
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.appearance.theme === 'dark') {
+      root.classList.add('dark');
+    } else if (settings.appearance.theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // Auto - check system preference
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  }, [settings.appearance.theme]);
 
   useEffect(() => {
     if (user) {
@@ -62,7 +125,7 @@ export const SettingsModule = () => {
         .from('profiles')
         .select('*')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -91,9 +154,12 @@ export const SettingsModule = () => {
 
       if (error) throw error;
 
+      // Also save settings
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
       toast({
-        title: 'Profil mis à jour',
-        description: 'Vos informations ont été sauvegardées avec succès.'
+        title: 'Paramètres sauvegardés',
+        description: 'Vos informations et préférences ont été sauvegardées avec succès.'
       });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -127,6 +193,85 @@ export const SettingsModule = () => {
     toast({
       title: 'Export réussi',
       description: 'Vos données ont été exportées avec succès.'
+    });
+  };
+
+  const handleExportAllData = async () => {
+    try {
+      // Export products
+      const productsData = products.map(p => ({
+        Nom: p.name,
+        Référence: p.reference,
+        'Code-barres': p.barcode,
+        Stock: p.stock,
+        'Prix achat': p.buy_price,
+        'Prix vente': p.sell_price,
+        Statut: p.status
+      }));
+
+      exportToExcel({
+        filename: `produits_${format(new Date(), 'yyyy-MM-dd')}`,
+        sheetName: 'Produits',
+        data: productsData
+      });
+
+      toast({
+        title: 'Export réussi',
+        description: 'Les produits ont été exportés avec succès.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'export.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleExportSales = () => {
+    const salesData = sales.map(s => ({
+      Référence: s.reference,
+      Date: s.date,
+      'Sous-total': s.subtotal,
+      Remise: s.discount,
+      Taxe: s.tax,
+      Total: s.total,
+      Statut: s.status,
+      Paiement: s.payment_method
+    }));
+
+    exportToExcel({
+      filename: `ventes_${format(new Date(), 'yyyy-MM-dd')}`,
+      sheetName: 'Ventes',
+      data: salesData
+    });
+
+    toast({
+      title: 'Export réussi',
+      description: 'Les ventes ont été exportées avec succès.'
+    });
+  };
+
+  const handleExportClients = () => {
+    const clientsData = clients.map(c => ({
+      Nom: c.name,
+      Email: c.email,
+      Téléphone: c.phone,
+      Adresse: c.address,
+      'Total commandes': c.total_orders,
+      'Montant total': c.total_amount,
+      Statut: c.status
+    }));
+
+    exportToExcel({
+      filename: `clients_${format(new Date(), 'yyyy-MM-dd')}`,
+      sheetName: 'Clients',
+      data: clientsData
+    });
+
+    toast({
+      title: 'Export réussi',
+      description: 'Les clients ont été exportés avec succès.'
     });
   };
 
@@ -483,24 +628,78 @@ export const SettingsModule = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Export des données</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">Export paramètres</h4>
                       <p className="text-sm text-gray-500 mb-4">
                         Exporter vos paramètres et données de profil
                       </p>
                       <Button variant="outline" onClick={handleExportData}>
                         <Download className="w-4 h-4 mr-2" />
-                        Exporter
+                        Paramètres
                       </Button>
                     </div>
 
                     <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Sauvegarde automatique</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">Export produits</h4>
                       <p className="text-sm text-gray-500 mb-4">
-                        Les données sont sauvegardées automatiquement
+                        Exporter tous vos produits en Excel ({products.length} produits)
                       </p>
-                      <Button variant="outline" disabled>
-                        Configuré
+                      <Button variant="outline" onClick={handleExportAllData}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Produits
                       </Button>
+                    </div>
+
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Export ventes</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Exporter toutes vos ventes en Excel ({sales.length} ventes)
+                      </p>
+                      <Button variant="outline" onClick={handleExportSales}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Ventes
+                      </Button>
+                    </div>
+
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Export clients</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Exporter tous vos clients en Excel ({clients.length} clients)
+                      </p>
+                      <Button variant="outline" onClick={handleExportClients}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Clients
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Statistiques des données</CardTitle>
+                  <CardDescription>
+                    Aperçu de vos données stockées
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">{products.length}</p>
+                      <p className="text-sm text-gray-600">Produits</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">{sales.length}</p>
+                      <p className="text-sm text-gray-600">Ventes</p>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <p className="text-2xl font-bold text-purple-600">{clients.length}</p>
+                      <p className="text-sm text-gray-600">Clients</p>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 rounded-lg">
+                      <p className="text-2xl font-bold text-orange-600">
+                        {sales.reduce((acc, s) => acc + s.total, 0).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-600">CA Total (CFA)</p>
                     </div>
                   </div>
                 </CardContent>
