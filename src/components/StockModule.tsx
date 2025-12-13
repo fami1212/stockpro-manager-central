@@ -105,25 +105,25 @@ export const StockModule = () => {
           title="Total produits"
           value={products.length.toString()}
           icon={Package}
-          color="blue"
+          color="info"
         />
         <MetricCard
           title="Valeur du stock"
           value={`${totalValue.toLocaleString()} CFA`}
           icon={TrendingUp}
-          color="green"
+          color="success"
         />
         <MetricCard
           title="Stock bas"
           value={lowStockCount.toString()}
           icon={AlertTriangle}
-          color="yellow"
+          color="warning"
         />
         <MetricCard
           title="Rupture"
           value={outOfStockCount.toString()}
           icon={AlertTriangle}
-          color="red"
+          color="destructive"
         />
       </div>
 

@@ -171,25 +171,25 @@ export const PurchasesModule = () => {
           title="Commandes en cours"
           value={pendingOrders.length.toString()}
           icon={Clock}
-          color="orange"
+          color="warning"
         />
         <MetricCard
           title="En attente"
           value={`${totalPendingAmount.toLocaleString()} CFA`}
           icon={AlertTriangle}
-          color="yellow"
+          color="warning"
         />
         <MetricCard
           title="Reçu ce mois"
           value={`${receivedAmount.toLocaleString()} CFA`}
           icon={CheckCircle}
-          color="green"
+          color="success"
         />
         <MetricCard
           title="En retard"
           value={overdueOrders.length.toString()}
           icon={TrendingUp}
-          color="red"
+          color="destructive"
         />
       </div>
 
