@@ -115,25 +115,25 @@ export const SuppliersModule = () => {
           title="Total fournisseurs"
           value={totalSuppliers.toString()}
           icon={Users}
-          color="blue"
+          color="info"
         />
         <MetricCard
           title="Fournisseurs actifs"
           value={activeSuppliers.toString()}
           icon={TrendingUp}
-          color="green"
+          color="success"
         />
-         <MetricCard
-           title="Montant total"
-           value={`${totalAmount.toLocaleString()} CFA`}
-           icon={DollarSign}
-           color="yellow"
-         />
+        <MetricCard
+          title="Montant total"
+          value={`${totalAmount.toLocaleString()} CFA`}
+          icon={DollarSign}
+          color="warning"
+        />
         <MetricCard
           title="Commandes totales"
           value={totalOrders.toString()}
           icon={Clock}
-          color="red"
+          color="primary"
         />
       </div>
 
