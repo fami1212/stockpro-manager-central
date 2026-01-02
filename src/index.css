@@ -70,6 +70,13 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 238 75% 58%;
+    
+    /* Chart colors */
+    --chart-1: 238 75% 58%;
+    --chart-2: 142 76% 36%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 199 89% 48%;
+    --chart-5: 262 83% 58%;
   }
 
   .dark {
@@ -128,6 +135,13 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 217 33% 17%;
     --sidebar-ring: 238 75% 65%;
+    
+    /* Chart colors - dark mode */
+    --chart-1: 238 75% 65%;
+    --chart-2: 142 76% 42%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 199 89% 55%;
+    --chart-5: 262 83% 65%;
   }
 }
 
@@ -143,14 +157,13 @@ All colors MUST be HSL.
 
 /* Dashboard specific styles */
 .dashboard-card {
-  @apply bg-card rounded-xl border border-border/50 transition-all duration-300;
+  @apply bg-card rounded-xl border border-border/50 transition-all duration-200;
   background: var(--gradient-card);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .dashboard-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .metric-card-gradient-primary {
@@ -179,22 +192,17 @@ All colors MUST be HSL.
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-pulse-slow {
   animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, hsl(0 0% 100% / 0.1) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Chart animation */
+.recharts-line-curve,
+.recharts-bar-rectangle {
+  transition: all 0.3s ease-out;
 }
 
 @layer base {
