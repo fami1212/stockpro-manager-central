@@ -147,25 +147,25 @@ export const Dashboard = () => {
         </TabsList>
 
         {/* Mobile tabs - horizontal scroll */}
-        <div className="lg:hidden">
-          <TabsList className="inline-flex h-10 w-full overflow-x-auto scrollbar-hide gap-1 rounded-lg bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3">
+        <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+          <TabsList className="inline-flex h-10 w-max min-w-full gap-1 rounded-lg bg-muted/50 p-1">
+            <TabsTrigger value="overview" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <LayoutDashboard className="mr-1.5 h-3.5 w-3.5" />
               Général
             </TabsTrigger>
-            <TabsTrigger value="smart" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3">
+            <TabsTrigger value="smart" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <Brain className="mr-1.5 h-3.5 w-3.5" />
               Smart
             </TabsTrigger>
-            <TabsTrigger value="ai-assistant" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3">
+            <TabsTrigger value="ai-assistant" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               IA
             </TabsTrigger>
-            <TabsTrigger value="predictions" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3">
+            <TabsTrigger value="predictions" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <TrendingUp className="mr-1.5 h-3.5 w-3.5" />
               Prédictions
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3">
+            <TabsTrigger value="reports" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <FileText className="mr-1.5 h-3.5 w-3.5" />
               Rapports
             </TabsTrigger>

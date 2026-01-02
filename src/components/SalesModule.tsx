@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Plus, Search, Eye, Edit, Trash2, FileText, CreditCard, Package } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, FileText, ShoppingCart, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +7,7 @@ import { FunctionalSaleModal } from '@/components/FunctionalSaleModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PaginationControls } from '@/components/PaginationControls';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,17 +73,14 @@ export const SalesModule = () => {
         return;
       }
 
-      // Fetch invoice settings
       const { data: settings } = await supabase
         .from('invoice_settings')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      // Get client details if available
       const client = state.clients.find(c => c.id === sale.client_id || c.name === sale.client);
 
-      // Transform sale data to invoice format
       const invoiceData = {
         invoice_number: `INV-${sale.reference}`,
         invoice_date: sale.date,
@@ -109,10 +106,10 @@ export const SalesModule = () => {
       };
 
       await downloadInvoicePDF(invoiceData, settings || undefined);
-      toast.success('Facture générée avec succès');
+      toast.success('Facture générée');
     } catch (error) {
       console.error('Error generating invoice:', error);
-      toast.error('Erreur lors de la génération de la facture');
+      toast.error('Erreur lors de la génération');
     }
   };
 
@@ -123,14 +120,33 @@ export const SalesModule = () => {
     return saleDate.getMonth() === currentDate.getMonth() && 
            saleDate.getFullYear() === currentDate.getFullYear();
   });
+  const thisMonthRevenue = thisMonthSales.reduce((acc, sale) => acc + sale.total, 0);
+  const averageBasket = state.sales.length > 0 ? totalRevenue / state.sales.length : 0;
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Confirmée':
+        return <Badge className="bg-success/10 text-success border-0">{status}</Badge>;
+      case 'Livrée':
+        return <Badge className="bg-info/10 text-info border-0">{status}</Badge>;
+      case 'Brouillon':
+        return <Badge className="bg-warning/10 text-warning border-0">{status}</Badge>;
+      default:
+        return <Badge className="bg-destructive/10 text-destructive border-0">{status}</Badge>;
+    }
+  };
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Gestion des Ventes</h2>
+    <div className="space-y-4 lg:space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div>
+          <h2 className="text-xl lg:text-2xl font-bold text-foreground">Gestion des Ventes</h2>
+          <p className="text-sm text-muted-foreground">Gérez vos transactions</p>
+        </div>
         <Button 
           onClick={() => setShowSaleModal(true)} 
-          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto" 
+          className="w-full sm:w-auto" 
           size="sm"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -138,50 +154,79 @@ export const SalesModule = () => {
         </Button>
       </div>
 
-      {/* Indicateurs clés */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Chiffre d'affaires</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-green-600">{totalRevenue.toLocaleString()} CFA</p>
-          <p className="text-xs lg:text-sm text-gray-500 mt-1">Total</p>
+      {/* Indicateurs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="dashboard-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+              <DollarSign className="h-5 w-5 text-success" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Chiffre d'affaires</p>
+              <p className="text-lg lg:text-xl font-bold text-foreground">{totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">CFA total</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Ventes ce mois</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{thisMonthSales.length}</p>
-          <p className="text-xs lg:text-sm text-gray-500 mt-1">Transactions</p>
+        
+        <div className="dashboard-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info/10">
+              <ShoppingCart className="h-5 w-5 text-info" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Ce mois</p>
+              <p className="text-lg lg:text-xl font-bold text-foreground">{thisMonthSales.length}</p>
+              <p className="text-xs text-muted-foreground">ventes</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Panier moyen</h3>
-           <p className="text-2xl lg:text-3xl font-bold text-purple-600">
-             {state.sales.length > 0 ? (totalRevenue / state.sales.length).toFixed(0) : '0'} CFA
-           </p>
-          <p className="text-xs lg:text-sm text-gray-500 mt-1">Par vente</p>
+        
+        <div className="dashboard-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Panier moyen</p>
+              <p className="text-lg lg:text-xl font-bold text-foreground">{Math.round(averageBasket).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">CFA</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Total ventes</h3>
-          <p className="text-2xl lg:text-3xl font-bold text-orange-600">{state.sales.length}</p>
-          <p className="text-xs lg:text-sm text-gray-500 mt-1">Enregistrées</p>
+        
+        <div className="dashboard-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+              <BarChart3 className="h-5 w-5 text-warning" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">Total ventes</p>
+              <p className="text-lg lg:text-xl font-bold text-foreground">{state.sales.length}</p>
+              <p className="text-xs text-muted-foreground">enregistrées</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="dashboard-card p-4 lg:p-6">
         {/* Filtres */}
-        <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="flex-1 relative">
-            <Search className="w-4 lg:w-5 h-4 lg:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Rechercher une vente..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-9"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full lg:w-48">
-              <SelectValue placeholder="Tous les statuts" />
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="Statut" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="all">Tous</SelectItem>
               <SelectItem value="Brouillon">Brouillon</SelectItem>
               <SelectItem value="Confirmée">Confirmée</SelectItem>
               <SelectItem value="Livrée">Livrée</SelectItem>
@@ -193,8 +238,8 @@ export const SalesModule = () => {
         {state.sales.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="Aucune vente enregistrée"
-            description="Commencez par créer votre première vente pour voir les données ici."
+            title="Aucune vente"
+            description="Créez votre première vente"
             actionText="Nouvelle vente"
             onAction={() => setShowSaleModal(true)}
           />
@@ -202,7 +247,7 @@ export const SalesModule = () => {
           <EmptyState
             icon={Search}
             title="Aucun résultat"
-            description="Aucune vente ne correspond à vos critères de recherche."
+            description="Aucune vente ne correspond à vos critères"
           />
         ) : (
           <>
@@ -210,69 +255,45 @@ export const SalesModule = () => {
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Référence</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Client</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Articles</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Total HT</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Total TTC</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Statut</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Référence</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Client</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Articles</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Total</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Statut</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedSales.map((sale) => (
-                    <tr key={sale.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-900">{sale.reference}</td>
-                      <td className="py-3 px-4 text-gray-600">{sale.client}</td>
-                      <td className="py-3 px-4 text-gray-600">{sale.date}</td>
-                      <td className="py-3 px-4 text-gray-600">{sale.items.length} article(s)</td>
-                      <td className="py-3 px-4 text-gray-900">{(sale.total - sale.tax).toLocaleString()} CFA</td>
-                      <td className="py-3 px-4 font-medium text-gray-900">{sale.total.toLocaleString()} CFA</td>
+                    <tr key={sale.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-4 font-medium text-foreground">{sale.reference}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{sale.client}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{sale.date}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{sale.items.length}</td>
+                      <td className="py-3 px-4 font-medium text-foreground">{sale.total.toLocaleString()} CFA</td>
+                      <td className="py-3 px-4">{getStatusBadge(sale.status)}</td>
                       <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          sale.status === 'Confirmée' 
-                            ? 'bg-green-100 text-green-700'
-                            : sale.status === 'Livrée'
-                            ? 'bg-blue-100 text-blue-700'
-                            : sale.status === 'Brouillon'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {sale.status}
-                        </span>
-                      </td>
-                       <td className="py-3 px-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              // Afficher les détails de la vente
-                              alert(`Détails de la vente ${sale.reference}:\n\nClient: ${sale.client}\nDate: ${sale.date}\nStatut: ${sale.status}\nTotal: ${sale.total.toLocaleString()} CFA\nArticles: ${sale.items.length}\n\nMode de paiement: ${sale.payment_method || 'Non spécifié'}`);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
+                            variant="ghost" 
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleGenerateInvoice(sale)}
-                            className="text-blue-600 hover:text-blue-700"
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText className="w-4 h-4 text-info" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(sale)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(sale)}>
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button 
-                            variant="outline" 
-                            size="sm" 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleDelete(sale)}
-                            className="text-red-600 hover:text-red-700"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </div>
                       </td>
@@ -283,92 +304,51 @@ export const SalesModule = () => {
             </div>
 
             {/* Mobile Cards */}
-            <div className="lg:hidden space-y-4">
+            <div className="lg:hidden space-y-3">
               {paginatedSales.map((sale) => (
-                <div key={sale.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                <div key={sale.id} className="border border-border rounded-lg p-4 space-y-3 bg-card/50">
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm">{sale.reference}</h3>
-                      <p className="text-xs text-gray-500">{sale.client}</p>
+                      <h3 className="font-medium text-foreground">{sale.reference}</h3>
+                      <p className="text-sm text-muted-foreground">{sale.client}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      sale.status === 'Confirmée' 
-                        ? 'bg-green-100 text-green-700'
-                        : sale.status === 'Livrée'
-                        ? 'bg-blue-100 text-blue-700'
-                        : sale.status === 'Brouillon'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {sale.status}
-                    </span>
+                    {getStatusBadge(sale.status)}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-gray-500">Date:</span>
-                      <p className="font-medium">{sale.date}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Articles:</span>
-                      <p className="font-medium">{sale.items.length}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Total HT:</span>
-                      <p className="font-medium">{(sale.total - sale.tax).toLocaleString()} CFA</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Total TTC:</span>
-                      <p className="font-medium text-green-600">{sale.total.toLocaleString()} CFA</p>
-                    </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{sale.date} • {sale.items.length} articles</span>
+                    <span className="font-bold text-foreground">{sale.total.toLocaleString()} CFA</span>
                   </div>
                   
-                  <div className="flex flex-col gap-2 pt-2 border-t">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs"
-                        onClick={() => {
-                          // Afficher les détails de la vente en mobile
-                          alert(`Détails de la vente ${sale.reference}:\n\nClient: ${sale.client}\nDate: ${sale.date}\nStatut: ${sale.status}\nTotal: ${sale.total.toLocaleString()} CFA\nArticles: ${sale.items.length}\n\nMode de paiement: ${sale.payment_method || 'Non spécifié'}`);
-                        }}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        Voir
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-blue-600 hover:text-blue-700 text-xs"
-                        onClick={() => handleGenerateInvoice(sale)}
-                      >
-                        <FileText className="w-3 h-3 mr-1" />
-                        Facture
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEdit(sale)}>
-                        <Edit className="w-3 h-3 mr-1" />
-                        Modifier
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-600 hover:text-red-700 text-xs"
-                        onClick={() => handleDelete(sale)}
-                      >
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        Supprimer
-                      </Button>
-                    </div>
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleGenerateInvoice(sale)}
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      Facture
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleEdit(sale)}>
+                      <Edit className="w-3 h-3 mr-1" />
+                      Modifier
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-destructive text-xs"
+                      onClick={() => handleDelete(sale)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Pagination */}
-            <div className="mt-6">
+            <div className="mt-4">
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -394,12 +374,11 @@ export const SalesModule = () => {
         open={deleteConfirm.open}
         onOpenChange={(open) => setDeleteConfirm({ open })}
         title="Supprimer la vente"
-        description={`Êtes-vous sûr de vouloir supprimer la vente ${deleteConfirm.saleName} ? Cette action est irréversible.`}
+        description={`Êtes-vous sûr de vouloir supprimer la vente ${deleteConfirm.saleName} ?`}
         onConfirm={confirmDelete}
         confirmText="Supprimer"
         variant="destructive"
       />
-
     </div>
   );
 };
