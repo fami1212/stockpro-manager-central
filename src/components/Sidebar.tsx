@@ -149,15 +149,15 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
 
   return (
     <div className={cn(
-      "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+      "bg-card border-r border-border transition-all duration-300 flex flex-col h-full overflow-y-auto",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
         {!collapsed && (
           <div>
-            <h1 className="text-xl font-bold text-gray-900">StockPro</h1>
-            <p className="text-xs text-gray-500">Gestion intelligente</p>
+            <h1 className="text-xl font-bold text-foreground">StockPro</h1>
+            <p className="text-xs text-muted-foreground">Gestion intelligente</p>
           </div>
         )}
         <Button
@@ -172,11 +172,11 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
 
       {/* Quick Stats */}
       {!collapsed && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border flex-shrink-0">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Chiffre du jour</span>
-              <span className="font-medium text-green-600">
+              <span className="text-muted-foreground">Chiffre du jour</span>
+              <span className="font-medium text-success">
                 {sales
                   .filter(sale => new Date(sale.date).toDateString() === new Date().toDateString())
                   .reduce((acc, sale) => acc + sale.total, 0)
@@ -184,18 +184,18 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Ventes du jour</span>
-              <span className="font-medium text-blue-600">
+              <span className="text-muted-foreground">Ventes du jour</span>
+              <span className="font-medium text-info">
                 {sales.filter(sale => new Date(sale.date).toDateString() === new Date().toDateString()).length}
               </span>
             </div>
             {(lowStockCount + outOfStockCount) > 0 && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 flex items-center">
-                  <AlertTriangle className="w-3 h-3 mr-1 text-red-500" />
+                <span className="text-muted-foreground flex items-center">
+                  <AlertTriangle className="w-3 h-3 mr-1 text-destructive" />
                   Alertes stock
                 </span>
-                <span className="font-medium text-red-600">{lowStockCount + outOfStockCount}</span>
+                <span className="font-medium text-destructive">{lowStockCount + outOfStockCount}</span>
               </div>
             )}
           </div>
@@ -203,30 +203,30 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 p-4 overflow-y-auto">
+        <ul className="space-y-1">
           {menuItems.map((item) => (
             <li key={item.id}>
               <button
                 onClick={() => onPageChange(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all duration-200",
+                  "w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg transition-all duration-200",
                   activePage === item.id
-                    ? "bg-blue-50 text-blue-700 border border-blue-200"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <item.icon className={cn(
                   "w-5 h-5 flex-shrink-0",
-                  activePage === item.id ? "text-blue-700" : "text-gray-400"
+                  activePage === item.id ? "text-primary" : "text-muted-foreground"
                 )} />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 font-medium">{item.label}</span>
+                    <span className="flex-1 font-medium text-sm">{item.label}</span>
                     {item.badge && (
                       <span 
                         className={cn(
-                          "text-xs text-white px-2 py-0.5 rounded-full font-medium min-w-[20px] text-center",
+                          "text-xs text-white px-1.5 py-0.5 rounded-full font-medium min-w-[18px] text-center",
                           item.badge.color
                         )}
                         title={item.badge.tooltip}
@@ -243,16 +243,16 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-border flex-shrink-0">
         {!collapsed && (
-          <div className="mb-3 text-xs text-gray-500 space-y-1">
+          <div className="mb-3 text-xs text-muted-foreground space-y-1">
             <div className="flex items-center justify-between">
               <span>Produits:</span>
-              <span className="font-medium">{products.length}</span>
+              <span className="font-medium text-foreground">{products.length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>Clients actifs:</span>
-              <span className="font-medium">{activeClientsCount}</span>
+              <span className="font-medium text-foreground">{activeClientsCount}</span>
             </div>
           </div>
         )}
@@ -261,7 +261,7 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
           size="sm"
           onClick={handleLogout}
           className={cn(
-            "w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50",
+            "w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             collapsed && "px-2"
           )}
         >

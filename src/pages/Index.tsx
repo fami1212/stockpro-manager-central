@@ -54,23 +54,23 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 w-full">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+    <div className="flex h-screen bg-background w-full overflow-hidden">
+      {/* Desktop Sidebar - Fixed */}
+      <div className="hidden lg:block h-screen sticky top-0 flex-shrink-0">
         <Sidebar activePage={activeModule} onPageChange={setActiveModule} />
       </div>
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Header - Hidden on mobile */}
-        <header className="hidden lg:block bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header className="hidden lg:block bg-card border-b border-border px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">StockPro Manager</h1>
-              <p className="text-sm text-gray-600">Tableau de bord intelligent - Données personnalisées</p>
+              <h1 className="text-2xl font-bold text-foreground">StockPro Manager</h1>
+              <p className="text-sm text-muted-foreground">Tableau de bord intelligent</p>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span>{user?.email}</span>
               </div>
@@ -87,8 +87,8 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 lg:p-6 pb-20 lg:pb-6">
+        {/* Main Content - Only this scrolls */}
+        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6 pb-20 lg:pb-6">
           <div className="max-w-7xl mx-auto">
             {renderActiveModule()}
           </div>
