@@ -15,6 +15,7 @@ import { PromotionsModule } from '@/components/PromotionsModule';
 import { ReturnsModule } from '@/components/ReturnsModule';
 import { ExportModule } from '@/components/ExportModule';
 import { UnpaidInvoicesDashboard } from '@/components/UnpaidInvoicesDashboard';
+import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Moon, Sun } from 'lucide-react';
 import { useEffect } from 'react';
@@ -42,6 +43,10 @@ const Index = () => {
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
+
+  const handleNewSale = () => setActiveModule('sales');
+  const handleNewProduct = () => setActiveModule('stock');
+  const handleNewClient = () => setActiveModule('clients');
 
   const renderActiveModule = () => {
     switch (activeModule) {
@@ -126,6 +131,13 @@ const Index = () => {
       
       {/* Mobile Bottom Navigation */}
       <BottomNavigation activePage={activeModule} onPageChange={setActiveModule} />
+      
+      {/* Floating Action Button - Mobile only */}
+      <FloatingActionButton
+        onNewSale={handleNewSale}
+        onNewProduct={handleNewProduct}
+        onNewClient={handleNewClient}
+      />
     </div>
   );
 };
