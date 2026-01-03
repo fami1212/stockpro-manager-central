@@ -16,11 +16,32 @@ import { ReturnsModule } from '@/components/ReturnsModule';
 import { ExportModule } from '@/components/ExportModule';
 import { UnpaidInvoicesDashboard } from '@/components/UnpaidInvoicesDashboard';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Moon, Sun } from 'lucide-react';
+import { useEffect } from 'react';
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
 
   const renderActiveModule = () => {
     switch (activeModule) {
@@ -75,6 +96,14 @@ const Index = () => {
                 <span>{user?.email}</span>
               </div>
               <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="h-9 w-9"
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={signOut}
@@ -89,7 +118,7 @@ const Index = () => {
 
         {/* Main Content - Only this scrolls */}
         <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6 pb-20 lg:pb-6">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto animate-fade-in" key={activeModule}>
             {renderActiveModule()}
           </div>
         </main>
