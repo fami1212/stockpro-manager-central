@@ -117,7 +117,7 @@ const Index = () => {
         </header>
 
         {/* Main Content - Only this scrolls */}
-        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6 pb-20 lg:pb-6">
+        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6 pb-28 lg:pb-6">
           <div className="max-w-7xl mx-auto animate-fade-in" key={activeModule}>
             {renderActiveModule()}
           </div>
