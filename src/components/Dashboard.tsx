@@ -7,11 +7,12 @@ import { SmartDashboard } from '@/components/SmartDashboard';
 import { AIAssistant } from '@/components/AIAssistant';
 import { PredictiveAnalytics } from '@/components/PredictiveAnalytics';
 import { IntelligentReports } from '@/components/IntelligentReports';
+import { StockTrendsChart } from '@/components/StockTrendsChart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, TrendingUp, FileText, DollarSign, ShoppingCart, 
   Package, Users, AlertTriangle, Clock, LayoutDashboard,
-  Sparkles
+  Sparkles, BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
@@ -128,6 +129,10 @@ export const Dashboard = () => {
             <LayoutDashboard className="mr-2 h-4 w-4" />
             Vue d'ensemble
           </TabsTrigger>
+          <TabsTrigger value="stock-trends" className="rounded-md text-sm data-[state=active]:bg-background">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Tendances Stock
+          </TabsTrigger>
           <TabsTrigger value="smart" className="rounded-md text-sm data-[state=active]:bg-background">
             <Brain className="mr-2 h-4 w-4" />
             Smart Dashboard
@@ -152,6 +157,10 @@ export const Dashboard = () => {
             <TabsTrigger value="overview" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <LayoutDashboard className="mr-1.5 h-3.5 w-3.5" />
               Général
+            </TabsTrigger>
+            <TabsTrigger value="stock-trends" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
+              <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
+              Stock
             </TabsTrigger>
             <TabsTrigger value="smart" className="flex-shrink-0 rounded-md text-xs data-[state=active]:bg-background px-3 whitespace-nowrap">
               <Brain className="mr-1.5 h-3.5 w-3.5" />
@@ -272,6 +281,10 @@ export const Dashboard = () => {
           <div className="dashboard-card overflow-hidden">
             <TopProducts />
           </div>
+        </TabsContent>
+
+        <TabsContent value="stock-trends" className="mt-4">
+          <StockTrendsChart />
         </TabsContent>
 
         <TabsContent value="smart" className="mt-4">

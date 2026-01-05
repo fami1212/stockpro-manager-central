@@ -1,38 +1,29 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Calendar, Package, Truck, TrendingUp, AlertTriangle, CheckCircle, Clock, X } from 'lucide-react';
+import { Plus, Search, Calendar, Package, Truck, TrendingUp, AlertTriangle, CheckCircle, Clock, X, Eye, FileText, Trash2, ShoppingBag } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { PurchaseOrderModal } from '@/components/PurchaseOrderModal';
 import { ReceptionModal } from '@/components/ReceptionModal';
 import { PurchaseOrderDetailsModal } from '@/components/PurchaseOrderDetailsModal';
-import { MetricCard } from '@/components/MetricCard';
 import { EmptyState } from '@/components/EmptyState';
 import { PaginationControls } from '@/components/PaginationControls';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { usePagination } from '@/hooks/usePagination';
 import { useApp } from '@/contexts/AppContext';
-
-// Simple confirmation modal component
-const ConfirmationModal = ({ title, description, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-xl p-6 w-96">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">{title}</h3>
-        <button onClick={onCancel}>
-          <X className="w-6 h-6 text-gray-500 hover:text-gray-700" />
-        </button>
-      </div>
-      <p className="text-gray-600 mb-6">{description}</p>
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={onConfirm} className="bg-red-600 hover:bg-red-700">Confirmer</Button>
-      </div>
-    </div>
-  </div>
-);
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const PurchasesModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,10 +32,10 @@ export const PurchasesModule = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showReceptionModal, setShowReceptionModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // New state for delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [orderToDelete, setOrderToDelete] = useState<any>(null); // New state for order to delete
+  const [orderToDelete, setOrderToDelete] = useState<any>(null);
 
   const { purchaseOrders, loading } = usePurchaseOrders();
   const { suppliers } = useApp();
@@ -76,14 +67,13 @@ export const PurchasesModule = () => {
     setShowReceptionModal(true);
   };
 
-  const handleShowDeleteModal = (order) => {
+  const handleShowDeleteModal = (order: any) => {
     setOrderToDelete(order);
     setShowDeleteModal(true);
   };
 
   const handleDeleteOrder = () => {
-    // TODO: Implémenter la suppression réelle
-    console.log('Supprimer commande:', orderToDelete.id);
+    console.log('Supprimer commande:', orderToDelete?.id);
     setShowDeleteModal(false);
     setOrderToDelete(null);
   };
@@ -111,17 +101,12 @@ export const PurchasesModule = () => {
 
   function generateInvoicePDF(order: any) {
     const doc = new jsPDF();
-
-    // Titre de la facture
     doc.setFontSize(18);
     doc.text(`Facture ${order.reference}`, 14, 20);
-
-    // Infos fournisseur et date
     doc.setFontSize(12);
     doc.text(`Fournisseur: ${order.supplier?.name || 'N/A'}`, 14, 30);
     doc.text(`Date: ${new Date(order.date).toLocaleDateString('fr-FR')}`, 14, 37);
 
-    // Articles
     autoTable(doc, {
       startY: 45,
       head: [['Article', 'Quantité', 'Prix unitaire', 'Total']],
@@ -133,85 +118,135 @@ export const PurchasesModule = () => {
       ]) || [],
     });
 
-    // Correction: Cast 'doc' to 'any' to access 'lastAutoTable' property
     const finalY = (doc as any).lastAutoTable.finalY;
-
-    // Total général
     doc.setFontSize(14);
     doc.text(`Total: ${order.total.toLocaleString()} CFA`, 14, finalY + 10);
-
-    // Sauvegarde ou ouverture du PDF
     doc.save(`Facture_${order.reference}.pdf`);
   }
+
+  const getStatusBadge = (status: string, isOverdue: boolean) => {
+    if (isOverdue) {
+      return <Badge variant="destructive" className="text-xs">En retard</Badge>;
+    }
+    switch (status) {
+      case 'Reçue':
+        return <Badge className="bg-success/10 text-success border-success/20 text-xs">Reçue</Badge>;
+      case 'En cours':
+        return <Badge className="bg-warning/10 text-warning border-warning/20 text-xs">En cours</Badge>;
+      case 'Annulée':
+        return <Badge variant="secondary" className="text-xs">Annulée</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-xs">{status}</Badge>;
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des achats...</p>
+        <div className="text-center space-y-4">
+          <div className="relative mx-auto h-10 w-10">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground text-sm">Chargement des achats...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Achats</h2>
-        <Button onClick={() => setShowOrderModal(true)} className="bg-orange-600 hover:bg-orange-700">
+    <div className="space-y-6 animate-fade-in">
+      {/* Header moderne */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-card border border-border/50">
+        <div>
+          <h1 className="text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
+            <ShoppingBag className="h-6 w-6 text-primary" />
+            Gestion des Achats
+          </h1>
+          <p className="text-sm text-muted-foreground">Gérez vos commandes fournisseurs</p>
+        </div>
+        <Button onClick={() => setShowOrderModal(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle commande
         </Button>
       </div>
 
-      {/* Métriques améliorées */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <MetricCard
-          title="Commandes en cours"
-          value={pendingOrders.length.toString()}
-          icon={Clock}
-          color="warning"
-        />
-        <MetricCard
-          title="En attente"
-          value={`${totalPendingAmount.toLocaleString()} CFA`}
-          icon={AlertTriangle}
-          color="warning"
-        />
-        <MetricCard
-          title="Reçu ce mois"
-          value={`${receivedAmount.toLocaleString()} CFA`}
-          icon={CheckCircle}
-          color="success"
-        />
-        <MetricCard
-          title="En retard"
-          value={overdueOrders.length.toString()}
-          icon={TrendingUp}
-          color="destructive"
-        />
+      {/* Métriques avec style moderne */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10">
+              <Clock className="h-5 w-5 text-warning" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">En cours</p>
+              <p className="text-xl font-bold text-foreground">{pendingOrders.length}</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="mt-2 text-xs">commandes</Badge>
+        </div>
+
+        <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <AlertTriangle className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">En attente</p>
+              <p className="text-lg font-bold text-foreground">{totalPendingAmount.toLocaleString()}</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="mt-2 text-xs">CFA</Badge>
+        </div>
+
+        <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10">
+              <CheckCircle className="h-5 w-5 text-success" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Reçu ce mois</p>
+              <p className="text-lg font-bold text-foreground">{receivedAmount.toLocaleString()}</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="mt-2 text-xs">CFA</Badge>
+        </div>
+
+        <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
+              <TrendingUp className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">En retard</p>
+              <p className="text-xl font-bold text-foreground">{overdueOrders.length}</p>
+            </div>
+          </div>
+          <Badge variant="destructive" className="mt-2 text-xs">urgent</Badge>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex px-6">
+      {/* Contenu principal */}
+      <div className="dashboard-card overflow-hidden">
+        {/* Onglets */}
+        <div className="border-b border-border/50">
+          <nav className="flex px-4 lg:px-6">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`py-4 px-4 border-b-2 font-medium text-sm ${activeTab === 'orders'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+              className={`py-4 px-4 border-b-2 font-medium text-sm transition-colors ${activeTab === 'orders'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
             >
               <Package className="w-4 h-4 inline mr-2" />
               Commandes ({purchaseOrders.length})
             </button>
             <button
               onClick={() => setActiveTab('receptions')}
-              className={`py-4 px-4 border-b-2 font-medium text-sm ${activeTab === 'receptions'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+              className={`py-4 px-4 border-b-2 font-medium text-sm transition-colors ${activeTab === 'receptions'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
             >
               <Truck className="w-4 h-4 inline mr-2" />
               Réceptions ({receivedThisMonth.length})
@@ -219,10 +254,11 @@ export const PurchasesModule = () => {
           </nav>
         </div>
 
-        <div className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4 mb-6">
+        <div className="p-4 lg:p-6">
+          {/* Filtres */}
+          <div className="flex flex-col lg:flex-row gap-3 mb-6">
             <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Rechercher une commande..."
                 value={searchTerm}
@@ -232,7 +268,7 @@ export const PurchasesModule = () => {
             </div>
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full lg:w-40">
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,7 +278,7 @@ export const PurchasesModule = () => {
                   <SelectItem value="Annulée">Annulée</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className="hidden lg:flex">
                 <Calendar className="w-4 h-4 mr-2" />
                 Filtrer par date
               </Button>
@@ -264,113 +300,110 @@ export const PurchasesModule = () => {
                 />
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  {/* Table Desktop */}
+                  <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Référence</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Fournisseur</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Articles</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Total</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Statut</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Livraison</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
+                        <tr className="border-b border-border/50">
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Référence</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Date</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Fournisseur</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Articles</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Total</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Statut</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Livraison</th>
+                          <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedOrders.map((order) => {
+                        {paginatedOrders.map((order, index) => {
                           const isOverdue = order.status === 'En cours' && order.expected_date &&
                             new Date(order.expected_date) < new Date();
 
                           return (
-                            <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <tr 
+                              key={order.id} 
+                              className="border-b border-border/30 hover:bg-muted/30 transition-colors animate-fade-in"
+                              style={{ animationDelay: `${index * 0.05}s` }}
+                            >
                               <td className="py-3 px-4">
                                 <div>
-                                  <p className="font-medium text-orange-600">{order.reference}</p>
+                                  <p className="font-medium text-primary">{order.reference}</p>
                                   {order.notes && (
-                                    <p className="text-xs text-gray-500 mt-1">{order.notes}</p>
+                                    <p className="text-xs text-muted-foreground mt-1 truncate max-w-[150px]">{order.notes}</p>
                                   )}
                                 </div>
                               </td>
-                              <td className="py-3 px-4 text-gray-600">
+                              <td className="py-3 px-4 text-muted-foreground text-sm">
                                 {new Date(order.date).toLocaleDateString('fr-FR')}
                               </td>
                               <td className="py-3 px-4">
-                                <div>
-                                  <p className="font-medium text-gray-900">{order.supplier?.name || 'N/A'}</p>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-gray-600">
-                                {order.purchase_order_items?.length || 0} article(s)
+                                <p className="font-medium text-foreground">{order.supplier?.name || 'N/A'}</p>
                               </td>
                               <td className="py-3 px-4">
-                                <p className="font-medium text-gray-900">{order.total.toLocaleString()} CFA</p>
+                                <Badge variant="secondary" className="text-xs">
+                                  {order.purchase_order_items?.length || 0} article(s)
+                                </Badge>
                               </td>
                               <td className="py-3 px-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === 'Reçue'
-                                  ? 'bg-green-100 text-green-700'
-                                  : order.status === 'En cours'
-                                    ? (isOverdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')
-                                    : 'bg-gray-100 text-gray-700'
-                                  }`}>
-                                  {isOverdue ? 'En retard' : order.status}
-                                </span>
+                                <p className="font-semibold text-foreground">{order.total.toLocaleString()} CFA</p>
+                              </td>
+                              <td className="py-3 px-4">
+                                {getStatusBadge(order.status, !!isOverdue)}
                               </td>
                               <td className="py-3 px-4">
                                 {order.expected_date ? (
                                   <div>
-                                    <p className="text-gray-900">
+                                    <p className="text-sm text-foreground">
                                       {new Date(order.expected_date).toLocaleDateString('fr-FR')}
                                     </p>
                                     {isOverdue && (
-                                      <p className="text-xs text-red-600">En retard</p>
+                                      <p className="text-xs text-destructive">En retard</p>
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-gray-500">Non définie</span>
+                                  <span className="text-muted-foreground text-sm">Non définie</span>
                                 )}
                               </td>
                               <td className="py-3 px-4">
-                                <div className="flex space-x-2">
+                                <div className="flex gap-1">
                                   <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                       setSelectedOrder(order);
                                       setShowDetailsModal(true);
                                     }}
                                   >
-                                    Voir
+                                    <Eye className="h-4 w-4" />
                                   </Button>
                                   {order.status === 'En cours' && (
                                     <Button
-                                      variant="outline"
+                                      variant="ghost"
                                       size="sm"
                                       onClick={() => handleReceiveOrder(order.id)}
-                                      className="text-green-600 hover:text-green-700"
+                                      className="text-success hover:text-success"
                                     >
-                                      Recevoir
+                                      <CheckCircle className="h-4 w-4" />
                                     </Button>
                                   )}
                                   {order.status === 'Reçue' && (
                                     <Button
-                                      variant="outline"
+                                      variant="ghost"
                                       size="sm"
-                                      className="text-blue-600 hover:text-blue-700"
                                       onClick={() => generateInvoicePDF(order)}
+                                      className="text-info hover:text-info"
                                     >
-                                      Facturer
+                                      <FileText className="h-4 w-4" />
                                     </Button>
                                   )}
-
                                   <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
-                                    className="text-red-600 hover:text-red-700"
                                     onClick={() => handleShowDeleteModal(order)}
+                                    className="text-destructive hover:text-destructive"
                                   >
-                                    Supprimer
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </td>
@@ -381,15 +414,103 @@ export const PurchasesModule = () => {
                     </table>
                   </div>
 
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    itemsPerPage={10}
-                    onPageChange={goToPage}
-                    hasNextPage={hasNextPage}
-                    hasPreviousPage={hasPreviousPage}
-                  />
+                  {/* Cards Mobile */}
+                  <div className="lg:hidden space-y-3">
+                    {paginatedOrders.map((order, index) => {
+                      const isOverdue = order.status === 'En cours' && order.expected_date &&
+                        new Date(order.expected_date) < new Date();
+
+                      return (
+                        <div 
+                          key={order.id} 
+                          className="p-4 rounded-lg border border-border/50 bg-card/50 animate-fade-in"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <p className="font-semibold text-primary">{order.reference}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(order.date).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                            {getStatusBadge(order.status, !!isOverdue)}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                            <div>
+                              <p className="text-muted-foreground text-xs">Fournisseur</p>
+                              <p className="font-medium text-foreground">{order.supplier?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Total</p>
+                              <p className="font-semibold text-foreground">{order.total.toLocaleString()} CFA</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Articles</p>
+                              <p className="text-foreground">{order.purchase_order_items?.length || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Livraison</p>
+                              <p className="text-foreground">
+                                {order.expected_date 
+                                  ? new Date(order.expected_date).toLocaleDateString('fr-FR')
+                                  : 'Non définie'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowDetailsModal(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
+                            {order.status === 'En cours' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 text-success border-success/20 hover:bg-success/10"
+                                onClick={() => handleReceiveOrder(order.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Recevoir
+                              </Button>
+                            )}
+                            {order.status === 'Reçue' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => generateInvoicePDF(order)}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Facturer
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4">
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={totalItems}
+                      itemsPerPage={10}
+                      onPageChange={goToPage}
+                      hasNextPage={hasNextPage}
+                      hasPreviousPage={hasPreviousPage}
+                    />
+                  </div>
                 </>
               )}
             </>
@@ -404,39 +525,40 @@ export const PurchasesModule = () => {
                   description="Les commandes reçues ce mois apparaîtront ici."
                 />
               ) : (
-                <div className="grid gap-4">
-                  {receivedThisMonth.map((order) => (
-                    <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
+                <div className="grid gap-3">
+                  {receivedThisMonth.map((order, index) => (
+                    <div 
+                      key={order.id} 
+                      className="p-4 rounded-lg border border-border/50 bg-card/50 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-medium text-green-600">{order.reference}</h4>
-                          <p className="text-sm text-gray-600">
+                          <h4 className="font-semibold text-success">{order.reference}</h4>
+                          <p className="text-sm text-muted-foreground">
                             Reçu le {new Date(order.updated_at).toLocaleDateString('fr-FR')}
                           </p>
-                          {order.notes && (
-                            <p className="text-xs text-gray-500 mt-1">Notes: {order.notes}</p>
-                          )}
                         </div>
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                        <Badge className="bg-success/10 text-success border-success/20">
                           Reçue
-                        </span>
+                        </Badge>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="font-medium">Fournisseur:</span>
-                          <p className="text-gray-600">{order.supplier?.name || 'N/A'}</p>
+                          <span className="text-muted-foreground text-xs">Fournisseur</span>
+                          <p className="font-medium text-foreground">{order.supplier?.name || 'N/A'}</p>
                         </div>
                         <div>
-                          <span className="font-medium">Articles:</span>
-                          <p className="text-gray-600">{order.purchase_order_items?.length || 0}</p>
+                          <span className="text-muted-foreground text-xs">Articles</span>
+                          <p className="font-medium text-foreground">{order.purchase_order_items?.length || 0}</p>
                         </div>
                         <div>
-                          <span className="font-medium">Total:</span>
-                          <p className="text-gray-600">{order.total.toLocaleString()} CFA</p>
+                          <span className="text-muted-foreground text-xs">Total</span>
+                          <p className="font-semibold text-foreground">{order.total.toLocaleString()} CFA</p>
                         </div>
                         <div>
-                          <span className="font-medium">Statut:</span>
-                          <p className="text-green-600">Complète</p>
+                          <span className="text-muted-foreground text-xs">Statut</span>
+                          <p className="text-success">Complète</p>
                         </div>
                       </div>
                     </div>
@@ -471,14 +593,23 @@ export const PurchasesModule = () => {
         }}
       />
 
-      {showDeleteModal && (
-        <ConfirmationModal
-          title="Confirmer la suppression"
-          description={`Êtes-vous sûr de vouloir supprimer la commande "${orderToDelete?.reference}" ? Cette action est irréversible.`}
-          onConfirm={handleDeleteOrder}
-          onCancel={() => setShowDeleteModal(false)}
-        />
-      )}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer la commande "{orderToDelete?.reference}" ? 
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteOrder} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
