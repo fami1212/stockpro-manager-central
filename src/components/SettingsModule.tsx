@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Save, User, Building, Bell, Shield, Palette, Database, Download, FileText } from 'lucide-react';
+import { Save, User, Building2, Bell, Shield, Palette, Database, Download, FileText, Settings, Mail, Phone, Moon, Sun, Globe, Clock, X } from 'lucide-react';
 import { InvoiceTemplateSettings } from './InvoiceTemplateSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,6 @@ import { toast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
 import { exportToExcel } from '@/utils/exportData';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 const SETTINGS_KEY = 'stockpro_user_settings';
 
@@ -276,437 +275,462 @@ export const SettingsModule = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Paramètres</h2>
-        <Button onClick={handleSaveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-          <Save className="w-4 h-4 mr-2" />
-          {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-        </Button>
+    <div className="space-y-6 animate-fade-in">
+      {/* En-tête moderne */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-6">
+        <div className="absolute inset-0 bg-grid-white/5" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm">
+              <Settings className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
+              <p className="text-muted-foreground">Gérez votre profil et vos préférences</p>
+            </div>
+          </div>
+          <Button onClick={handleSaveProfile} disabled={loading} className="shadow-lg">
+            <Save className="w-4 h-4 mr-2" />
+            {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+          </Button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6 overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 inline mr-2" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+      {/* Navigation par onglets */}
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab, index) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 animate-fade-in ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'bg-card hover:bg-accent text-muted-foreground hover:text-foreground border border-border'
+              }`}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="p-6">
-          {activeTab === 'profile' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations personnelles</CardTitle>
-                  <CardDescription>
-                    Gérez vos informations de profil et de contact
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="first_name">Prénom</Label>
-                      <Input 
-                        id="first_name" 
-                        value={profile.first_name}
-                        onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
-                        placeholder="Votre prénom"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="last_name">Nom</Label>
-                      <Input 
-                        id="last_name" 
-                        value={profile.last_name}
-                        onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
-                        placeholder="Votre nom"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="company">Entreprise</Label>
-                      <Input 
-                        id="company" 
-                        value={profile.company}
-                        onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
-                        placeholder="Nom de votre entreprise"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Téléphone</Label>
-                      <Input 
-                        id="phone" 
-                        value={profile.phone}
-                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="Votre numéro de téléphone"
-                      />
-                    </div>
+      {/* Contenu des onglets */}
+      <div className="animate-fade-in">
+        {activeTab === 'profile' && (
+          <div className="space-y-6">
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader className="border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Compte</CardTitle>
-                  <CardDescription>
-                    Informations de votre compte utilisateur
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
                   <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      value={user?.email || ''}
-                      disabled
-                      className="bg-gray-100"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      L'email ne peut pas être modifié depuis cette interface
-                    </p>
+                    <CardTitle>Informations personnelles</CardTitle>
+                    <CardDescription>
+                      Gérez vos informations de profil et de contact
+                    </CardDescription>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '50ms' }}>
+                    <Label htmlFor="first_name" className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Prénom
+                    </Label>
+                    <Input 
+                      id="first_name" 
+                      value={profile.first_name}
+                      onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                      placeholder="Votre prénom"
+                      className="bg-background/50"
+                    />
+                  </div>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                    <Label htmlFor="last_name" className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Nom
+                    </Label>
+                    <Input 
+                      id="last_name" 
+                      value={profile.last_name}
+                      onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
+                      placeholder="Votre nom"
+                      className="bg-background/50"
+                    />
+                  </div>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '150ms' }}>
+                    <Label htmlFor="company" className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      Entreprise
+                    </Label>
+                    <Input 
+                      id="company" 
+                      value={profile.company}
+                      onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                      placeholder="Nom de votre entreprise"
+                      className="bg-background/50"
+                    />
+                  </div>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <Label htmlFor="phone" className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      Téléphone
+                    </Label>
+                    <Input 
+                      id="phone" 
+                      value={profile.phone}
+                      onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Votre numéro de téléphone"
+                      className="bg-background/50"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          {activeTab === 'invoice' && (
-            <InvoiceTemplateSettings />
-          )}
+            <Card className="border-border/50 shadow-lg animate-fade-in" style={{ animationDelay: '250ms' }}>
+              <CardHeader className="border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Compte</CardTitle>
+                    <CardDescription>
+                      Informations de votre compte utilisateur
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    Email
+                  </Label>
+                  <Input 
+                    id="email" 
+                    value={user?.email || ''}
+                    disabled
+                    className="bg-muted/50"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    L'email ne peut pas être modifié depuis cette interface
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
+        {activeTab === 'invoice' && (
+          <InvoiceTemplateSettings />
+        )}
 
-          {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
+        {activeTab === 'notifications' && (
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Bell className="h-5 w-5 text-primary" />
+                </div>
+                <div>
                   <CardTitle>Préférences de notification</CardTitle>
                   <CardDescription>
                     Configurez les notifications que vous souhaitez recevoir
                   </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Alertes de stock bas</h4>
-                        <p className="text-sm text-gray-500">Recevoir une notification quand le stock est faible</p>
-                      </div>
-                      <Switch 
-                        checked={settings.notifications.stock_alerts}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            notifications: { ...prev.notifications, stock_alerts: checked }
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Nouvelles ventes</h4>
-                        <p className="text-sm text-gray-500">Notification à chaque nouvelle vente</p>
-                      </div>
-                      <Switch 
-                        checked={settings.notifications.new_sales}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            notifications: { ...prev.notifications, new_sales: checked }
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Rapports automatiques</h4>
-                        <p className="text-sm text-gray-500">Recevoir les rapports hebdomadaires par email</p>
-                      </div>
-                      <Switch 
-                        checked={settings.notifications.reports}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            notifications: { ...prev.notifications, reports: checked }
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Nouveaux clients</h4>
-                        <p className="text-sm text-gray-500">Notification lors de l'ajout d'un nouveau client</p>
-                      </div>
-                      <Switch 
-                        checked={settings.notifications.new_clients}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            notifications: { ...prev.notifications, new_clients: checked }
-                          }))
-                        }
-                      />
-                    </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              {[
+                { key: 'stock_alerts', label: 'Alertes de stock bas', description: 'Recevoir une notification quand le stock est faible' },
+                { key: 'new_sales', label: 'Nouvelles ventes', description: 'Notification à chaque nouvelle vente' },
+                { key: 'reports', label: 'Rapports automatiques', description: 'Recevoir les rapports hebdomadaires par email' },
+                { key: 'new_clients', label: 'Nouveaux clients', description: 'Notification lors de l\'ajout d\'un nouveau client' },
+              ].map((item, index) => (
+                <div 
+                  key={item.key}
+                  className="flex items-center justify-between p-4 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div>
+                    <h4 className="font-medium text-foreground">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  <Switch 
+                    checked={settings.notifications[item.key as keyof typeof settings.notifications]}
+                    onCheckedChange={(checked) => 
+                      setSettings(prev => ({
+                        ...prev,
+                        notifications: { ...prev.notifications, [item.key]: checked }
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
-          {activeTab === 'appearance' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Apparence</CardTitle>
+        {activeTab === 'appearance' && (
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Palette className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Personnalisation de l'apparence</CardTitle>
                   <CardDescription>
                     Personnalisez l'apparence de l'application
                   </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Thème</Label>
-                      <Select 
-                        value={settings.appearance.theme}
-                        onValueChange={(value) => 
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Thème */}
+              <div className="space-y-3 animate-fade-in">
+                <Label className="flex items-center gap-2">
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  Thème
+                </Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: 'light', label: 'Clair', icon: Sun },
+                    { value: 'dark', label: 'Sombre', icon: Moon },
+                    { value: 'auto', label: 'Automatique', icon: Settings },
+                  ].map((theme) => {
+                    const Icon = theme.icon;
+                    const isSelected = settings.appearance.theme === theme.value;
+                    return (
+                      <button
+                        key={theme.value}
+                        onClick={() =>
                           setSettings(prev => ({
                             ...prev,
-                            appearance: { ...prev.appearance, theme: value }
+                            appearance: { ...prev.appearance, theme: theme.value }
                           }))
                         }
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border hover:border-primary/50 text-muted-foreground hover:text-foreground'
+                        }`}
                       >
-                        <SelectTrigger className="w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">Clair</SelectItem>
-                          <SelectItem value="dark">Sombre</SelectItem>
-                          <SelectItem value="auto">Automatique</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                        <Icon className="h-6 w-6" />
+                        <span className="font-medium">{theme.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                    <div>
-                      <Label>Langue</Label>
-                      <Select 
-                        value={settings.appearance.language}
-                        onValueChange={(value) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            appearance: { ...prev.appearance, language: value }
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fr">Français</SelectItem>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Español</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+              {/* Langue */}
+              <div className="space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <Label className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  Langue
+                </Label>
+                <Select 
+                  value={settings.appearance.language}
+                  onValueChange={(value) => 
+                    setSettings(prev => ({
+                      ...prev,
+                      appearance: { ...prev.appearance, language: value }
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full md:w-48 bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <div>
-                      <Label>Format de date</Label>
-                      <Select 
-                        value={settings.appearance.date_format}
-                        onValueChange={(value) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            appearance: { ...prev.appearance, date_format: value }
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
-                          <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
-                          <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+              {/* Format de date */}
+              <div className="space-y-3 animate-fade-in" style={{ animationDelay: '150ms' }}>
+                <Label className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Format de date
+                </Label>
+                <Select 
+                  value={settings.appearance.date_format}
+                  onValueChange={(value) => 
+                    setSettings(prev => ({
+                      ...prev,
+                      appearance: { ...prev.appearance, date_format: value }
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full md:w-48 bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
+                    <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
+                    <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
+        {activeTab === 'security' && (
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div>
                   <CardTitle>Sécurité et accès</CardTitle>
                   <CardDescription>
                     Configurez les paramètres de sécurité de votre compte
                   </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="session-timeout">Délai d'expiration de session (minutes)</Label>
-                      <Input 
-                        id="session-timeout" 
-                        type="number" 
-                        value={settings.security.session_timeout}
-                        onChange={(e) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            security: { ...prev.security, session_timeout: parseInt(e.target.value) || 30 }
-                          }))
-                        }
-                        className="w-32" 
-                      />
-                    </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Timeout de session */}
+              <div className="space-y-3 animate-fade-in">
+                <Label className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Délai d'expiration de session
+                </Label>
+                <Select
+                  value={settings.security.session_timeout.toString()}
+                  onValueChange={(value) =>
+                    setSettings(prev => ({
+                      ...prev,
+                      security: { ...prev.security, session_timeout: parseInt(value) }
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full md:w-48 bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 heure</SelectItem>
+                    <SelectItem value="120">2 heures</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Authentification à deux facteurs</h4>
-                        <p className="text-sm text-gray-500">Sécurité renforcée pour les connexions</p>
+              {[
+                { key: 'two_factor', label: 'Authentification à deux facteurs', description: 'Sécurité renforcée pour les connexions' },
+                { key: 'audit_log', label: 'Journalisation des actions', description: 'Enregistrer toutes les actions des utilisateurs' },
+              ].map((item, index) => (
+                <div 
+                  key={item.key}
+                  className="flex items-center justify-between p-4 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors animate-fade-in"
+                  style={{ animationDelay: `${(index + 1) * 50}ms` }}
+                >
+                  <div>
+                    <h4 className="font-medium text-foreground">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                  <Switch 
+                    checked={settings.security[item.key as keyof typeof settings.security] as boolean}
+                    onCheckedChange={(checked) => 
+                      setSettings(prev => ({
+                        ...prev,
+                        security: { ...prev.security, [item.key]: checked }
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'data' && (
+          <div className="space-y-6">
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader className="border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Database className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Gestion des données</CardTitle>
+                    <CardDescription>
+                      Sauvegarde, export et gestion de vos données
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: 'Export paramètres', description: 'Exporter vos paramètres et données de profil', action: handleExportData },
+                    { label: 'Export produits', description: `Exporter tous vos produits en Excel (${products.length} produits)`, action: handleExportAllData },
+                    { label: 'Export ventes', description: `Exporter toutes vos ventes en Excel (${sales.length} ventes)`, action: handleExportSales },
+                    { label: 'Export clients', description: `Exporter tous vos clients en Excel (${clients.length} clients)`, action: handleExportClients },
+                  ].map((item, index) => (
+                    <button
+                      key={item.label}
+                      onClick={item.action}
+                      className="flex items-start gap-4 p-4 rounded-xl bg-accent/30 hover:bg-accent/50 transition-all duration-300 text-left group animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <Download className="h-5 w-5 text-primary" />
                       </div>
-                      <Switch 
-                        checked={settings.security.two_factor}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            security: { ...prev.security, two_factor: checked }
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
-                        <h4 className="font-medium text-gray-900">Journalisation des actions</h4>
-                        <p className="text-sm text-gray-500">Enregistrer toutes les actions des utilisateurs</p>
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">{item.label}</p>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
                       </div>
-                      <Switch 
-                        checked={settings.security.audit_log}
-                        onCheckedChange={(checked) => 
-                          setSettings(prev => ({
-                            ...prev,
-                            security: { ...prev.security, audit_log: checked }
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-          {activeTab === 'data' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des données</CardTitle>
-                  <CardDescription>
-                    Sauvegarde, export et gestion de vos données
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Export paramètres</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Exporter vos paramètres et données de profil
-                      </p>
-                      <Button variant="outline" onClick={handleExportData}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Paramètres
-                      </Button>
+            <Card className="border-border/50 shadow-lg animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <CardHeader className="border-b border-border/50">
+                <CardTitle>Statistiques des données</CardTitle>
+                <CardDescription>
+                  Aperçu de vos données stockées
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { value: products.length, label: 'Produits', color: 'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400' },
+                    { value: sales.length, label: 'Ventes', color: 'from-emerald-500/20 to-emerald-600/10 text-emerald-600 dark:text-emerald-400' },
+                    { value: clients.length, label: 'Clients', color: 'from-purple-500/20 to-purple-600/10 text-purple-600 dark:text-purple-400' },
+                    { value: sales.reduce((acc, s) => acc + (s.total || 0), 0).toLocaleString(), label: 'CA Total (CFA)', color: 'from-orange-500/20 to-orange-600/10 text-orange-600 dark:text-orange-400' },
+                  ].map((stat, index) => (
+                    <div 
+                      key={stat.label}
+                      className={`text-center p-4 rounded-xl bg-gradient-to-br ${stat.color} animate-fade-in`}
+                      style={{ animationDelay: `${(index + 4) * 50}ms` }}
+                    >
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
                     </div>
-
-                    <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Export produits</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Exporter tous vos produits en Excel ({products.length} produits)
-                      </p>
-                      <Button variant="outline" onClick={handleExportAllData}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Produits
-                      </Button>
-                    </div>
-
-                    <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Export ventes</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Exporter toutes vos ventes en Excel ({sales.length} ventes)
-                      </p>
-                      <Button variant="outline" onClick={handleExportSales}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Ventes
-                      </Button>
-                    </div>
-
-                    <div className="p-4 border border-gray-200 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-2">Export clients</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Exporter tous vos clients en Excel ({clients.length} clients)
-                      </p>
-                      <Button variant="outline" onClick={handleExportClients}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Clients
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Statistiques des données</CardTitle>
-                  <CardDescription>
-                    Aperçu de vos données stockées
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{products.length}</p>
-                      <p className="text-sm text-gray-600">Produits</p>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{sales.length}</p>
-                      <p className="text-sm text-gray-600">Ventes</p>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">{clients.length}</p>
-                      <p className="text-sm text-gray-600">Clients</p>
-                    </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <p className="text-2xl font-bold text-orange-600">
-                        {sales.reduce((acc, s) => acc + s.total, 0).toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-600">CA Total (CFA)</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
