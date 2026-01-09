@@ -1,17 +1,50 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Monitor, X } from 'lucide-react';
+import { Moon, Sun, Palette, Monitor, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type ThemeMode = 'light' | 'dark' | 'auto';
 
+interface AccentColor {
+  name: string;
+  hue: number;
+  saturation: number;
+  lightness: number;
+  preview: string;
+}
+
+const accentColors: AccentColor[] = [
+  { name: 'Indigo', hue: 238, saturation: 75, lightness: 58, preview: 'bg-[hsl(238,75%,58%)]' },
+  { name: 'Violet', hue: 262, saturation: 83, lightness: 58, preview: 'bg-[hsl(262,83%,58%)]' },
+  { name: 'Rose', hue: 350, saturation: 89, lightness: 60, preview: 'bg-[hsl(350,89%,60%)]' },
+  { name: 'Orange', hue: 25, saturation: 95, lightness: 53, preview: 'bg-[hsl(25,95%,53%)]' },
+  { name: 'Emerald', hue: 158, saturation: 64, lightness: 42, preview: 'bg-[hsl(158,64%,42%)]' },
+  { name: 'Cyan', hue: 190, saturation: 95, lightness: 45, preview: 'bg-[hsl(190,95%,45%)]' },
+  { name: 'Bleu', hue: 217, saturation: 91, lightness: 60, preview: 'bg-[hsl(217,91%,60%)]' },
+  { name: 'Ambre', hue: 38, saturation: 92, lightness: 50, preview: 'bg-[hsl(38,92%,50%)]' },
+];
+
 export const ThemeFloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showColors, setShowColors] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme-mode') as ThemeMode) || 'auto';
     }
     return 'auto';
+  });
+  const [accentColor, setAccentColor] = useState<AccentColor>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('accent-color');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return accentColors[0];
+        }
+      }
+    }
+    return accentColors[0];
   });
 
   const applyTheme = (mode: ThemeMode) => {
@@ -30,6 +63,28 @@ export const ThemeFloatingButton = () => {
     }
   };
 
+  const applyAccentColor = (color: AccentColor) => {
+    const root = document.documentElement;
+    const isDark = root.classList.contains('dark');
+    
+    // Apply primary color
+    const lightness = isDark ? color.lightness + 7 : color.lightness;
+    root.style.setProperty('--primary', `${color.hue} ${color.saturation}% ${lightness}%`);
+    root.style.setProperty('--ring', `${color.hue} ${color.saturation}% ${lightness}%`);
+    
+    // Apply accent color (slightly shifted hue)
+    const accentHue = (color.hue + 24) % 360;
+    root.style.setProperty('--accent', `${accentHue} ${color.saturation}% ${lightness}%`);
+    
+    // Update sidebar colors
+    root.style.setProperty('--sidebar-primary', `${color.hue} ${color.saturation}% ${lightness}%`);
+    root.style.setProperty('--sidebar-ring', `${color.hue} ${color.saturation}% ${lightness}%`);
+    
+    // Update chart color
+    root.style.setProperty('--chart-1', `${color.hue} ${color.saturation}% ${lightness}%`);
+    root.style.setProperty('--chart-5', `${accentHue} ${color.saturation}% ${lightness}%`);
+  };
+
   useEffect(() => {
     applyTheme(theme);
     localStorage.setItem('theme-mode', theme);
@@ -37,15 +92,26 @@ export const ThemeFloatingButton = () => {
     // Listen for system theme changes when in auto mode
     if (theme === 'auto') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('auto');
+      const handleChange = () => {
+        applyTheme('auto');
+        applyAccentColor(accentColor);
+      };
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
-  }, [theme]);
+  }, [theme, accentColor]);
+
+  useEffect(() => {
+    applyAccentColor(accentColor);
+    localStorage.setItem('accent-color', JSON.stringify(accentColor));
+  }, [accentColor]);
 
   const handleThemeChange = (newTheme: ThemeMode) => {
     setTheme(newTheme);
-    setIsOpen(false);
+  };
+
+  const handleColorChange = (color: AccentColor) => {
+    setAccentColor(color);
   };
 
   const themeOptions = [
@@ -65,7 +131,7 @@ export const ThemeFloatingButton = () => {
       mode: 'auto' as ThemeMode, 
       icon: Monitor, 
       label: 'Auto',
-      color: 'bg-accent/20 hover:bg-accent/30 text-accent'
+      color: 'bg-muted hover:bg-muted/80 text-muted-foreground'
     },
   ];
 
@@ -74,6 +140,34 @@ export const ThemeFloatingButton = () => {
 
   return (
     <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50">
+      {/* Color palette panel */}
+      <div className={cn(
+        "absolute right-16 top-1/2 -translate-y-1/2 transition-all duration-300",
+        showColors && isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+      )}>
+        <div className="bg-card border border-border/50 rounded-2xl shadow-xl p-4 animate-scale-in">
+          <p className="text-sm font-semibold text-foreground mb-3">Couleur d'accent</p>
+          <div className="grid grid-cols-4 gap-2">
+            {accentColors.map((color) => (
+              <button
+                key={color.name}
+                className={cn(
+                  "w-9 h-9 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center",
+                  color.preview,
+                  accentColor.name === color.name && "ring-2 ring-offset-2 ring-offset-card ring-foreground"
+                )}
+                onClick={() => handleColorChange(color)}
+                title={color.name}
+              >
+                {accentColor.name === color.name && (
+                  <Check className="w-4 h-4 text-white" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Theme options panel */}
       <div className={cn(
         "flex flex-col gap-2 mb-3 transition-all duration-300",
@@ -102,6 +196,29 @@ export const ThemeFloatingButton = () => {
             </Button>
           </div>
         ))}
+        
+        {/* Color picker toggle */}
+        <div 
+          className="flex items-center gap-2 animate-scale-in"
+          style={{ animationDelay: '150ms' }}
+        >
+          <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+            Couleurs
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              "w-11 h-11 rounded-full shadow-lg transition-all duration-200 hover:scale-110 border border-border/50",
+              showColors 
+                ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background" 
+                : "bg-muted/50 hover:bg-muted text-muted-foreground"
+            )}
+            onClick={() => setShowColors(!showColors)}
+          >
+            <Palette className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Main FAB button */}
@@ -118,7 +235,10 @@ export const ThemeFloatingButton = () => {
             ? undefined 
             : '0 4px 20px hsl(var(--primary) / 0.3)' 
         }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (isOpen) setShowColors(false);
+        }}
       >
         {isOpen ? (
           <X className="w-5 h-5 text-destructive-foreground" />
@@ -131,7 +251,10 @@ export const ThemeFloatingButton = () => {
       {isOpen && (
         <div 
           className="fixed inset-0 bg-background/40 backdrop-blur-sm -z-10"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            setShowColors(false);
+          }}
         />
       )}
     </div>
