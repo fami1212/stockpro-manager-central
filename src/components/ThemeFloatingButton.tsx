@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Monitor, X, Check } from 'lucide-react';
+import { Moon, Sun, Palette, Monitor, X, Check, Save, Trash2, BookMarked } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 type ThemeMode = 'light' | 'dark' | 'auto';
@@ -11,6 +12,13 @@ interface AccentColor {
   saturation: number;
   lightness: number;
   preview: string;
+}
+
+interface SavedTheme {
+  id: string;
+  name: string;
+  mode: ThemeMode;
+  accentColor: AccentColor;
 }
 
 const accentColors: AccentColor[] = [
@@ -27,6 +35,9 @@ const accentColors: AccentColor[] = [
 export const ThemeFloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showColors, setShowColors] = useState(false);
+  const [showSavedThemes, setShowSavedThemes] = useState(false);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [newThemeName, setNewThemeName] = useState('');
   const [theme, setTheme] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme-mode') as ThemeMode) || 'auto';
@@ -45,6 +56,19 @@ export const ThemeFloatingButton = () => {
       }
     }
     return accentColors[0];
+  });
+  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('saved-themes');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
   });
 
   const applyTheme = (mode: ThemeMode) => {
@@ -112,6 +136,34 @@ export const ThemeFloatingButton = () => {
 
   const handleColorChange = (color: AccentColor) => {
     setAccentColor(color);
+  };
+
+  const handleSaveTheme = () => {
+    if (!newThemeName.trim()) return;
+    
+    const newTheme: SavedTheme = {
+      id: Date.now().toString(),
+      name: newThemeName.trim(),
+      mode: theme,
+      accentColor: accentColor,
+    };
+    
+    const updated = [...savedThemes, newTheme];
+    setSavedThemes(updated);
+    localStorage.setItem('saved-themes', JSON.stringify(updated));
+    setNewThemeName('');
+    setShowSaveForm(false);
+  };
+
+  const handleDeleteTheme = (id: string) => {
+    const updated = savedThemes.filter(t => t.id !== id);
+    setSavedThemes(updated);
+    localStorage.setItem('saved-themes', JSON.stringify(updated));
+  };
+
+  const handleApplyTheme = (savedTheme: SavedTheme) => {
+    setTheme(savedTheme.mode);
+    setAccentColor(savedTheme.accentColor);
   };
 
   const themeOptions = [
@@ -215,10 +267,154 @@ export const ThemeFloatingButton = () => {
                 ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background" 
                 : "bg-muted/50 hover:bg-muted text-muted-foreground"
             )}
-            onClick={() => setShowColors(!showColors)}
+            onClick={() => {
+              setShowColors(!showColors);
+              setShowSavedThemes(false);
+              setShowSaveForm(false);
+            }}
           >
             <Palette className="w-5 h-5" />
           </Button>
+        </div>
+
+        {/* Saved themes toggle */}
+        <div 
+          className="flex items-center gap-2 animate-scale-in"
+          style={{ animationDelay: '200ms' }}
+        >
+          <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+            Thèmes
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              "w-11 h-11 rounded-full shadow-lg transition-all duration-200 hover:scale-110 border border-border/50",
+              showSavedThemes 
+                ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background" 
+                : "bg-muted/50 hover:bg-muted text-muted-foreground"
+            )}
+            onClick={() => {
+              setShowSavedThemes(!showSavedThemes);
+              setShowColors(false);
+              setShowSaveForm(false);
+            }}
+          >
+            <BookMarked className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Save current theme button */}
+        <div 
+          className="flex items-center gap-2 animate-scale-in"
+          style={{ animationDelay: '250ms' }}
+        >
+          <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+            Sauver
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              "w-11 h-11 rounded-full shadow-lg transition-all duration-200 hover:scale-110 border border-border/50",
+              showSaveForm 
+                ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background" 
+                : "bg-muted/50 hover:bg-muted text-muted-foreground"
+            )}
+            onClick={() => {
+              setShowSaveForm(!showSaveForm);
+              setShowColors(false);
+              setShowSavedThemes(false);
+            }}
+          >
+            <Save className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Saved themes panel */}
+      <div className={cn(
+        "absolute bottom-full right-0 mb-4 transition-all duration-300",
+        showSavedThemes && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}>
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[240px] max-h-[300px] overflow-y-auto">
+          <p className="text-sm font-semibold text-foreground mb-3 text-center">Thèmes sauvegardés</p>
+          {savedThemes.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Aucun thème sauvegardé</p>
+          ) : (
+            <div className="space-y-2">
+              {savedThemes.map((savedTheme) => (
+                <div
+                  key={savedTheme.id}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-full flex-shrink-0",
+                      savedTheme.accentColor.preview
+                    )}
+                  />
+                  <button
+                    className="flex-1 text-left text-sm text-foreground hover:text-primary transition-colors truncate"
+                    onClick={() => handleApplyTheme(savedTheme)}
+                  >
+                    {savedTheme.name}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {savedTheme.mode === 'light' ? '☀️' : savedTheme.mode === 'dark' ? '🌙' : '🖥️'}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="w-7 h-7 text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDeleteTheme(savedTheme.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Save theme form panel */}
+      <div className={cn(
+        "absolute bottom-full right-0 mb-4 transition-all duration-300",
+        showSaveForm && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}>
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[240px]">
+          <p className="text-sm font-semibold text-foreground mb-3 text-center">Sauvegarder le thème</p>
+          <div className="flex items-center gap-2 mb-3">
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex-shrink-0",
+                accentColor.preview
+              )}
+            />
+            <div className="text-xs text-muted-foreground">
+              <span>{accentColor.name}</span>
+              <span className="mx-1">•</span>
+              <span>{theme === 'light' ? 'Clair' : theme === 'dark' ? 'Sombre' : 'Auto'}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Nom du thème..."
+              value={newThemeName}
+              onChange={(e) => setNewThemeName(e.target.value)}
+              className="h-9 text-sm"
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveTheme()}
+            />
+            <Button
+              size="icon"
+              className="h-9 w-9 flex-shrink-0"
+              onClick={handleSaveTheme}
+              disabled={!newThemeName.trim()}
+            >
+              <Check className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -238,7 +434,11 @@ export const ThemeFloatingButton = () => {
         }}
         onClick={() => {
           setIsOpen(!isOpen);
-          if (isOpen) setShowColors(false);
+          if (isOpen) {
+            setShowColors(false);
+            setShowSavedThemes(false);
+            setShowSaveForm(false);
+          }
         }}
       >
         {isOpen ? (
@@ -255,6 +455,8 @@ export const ThemeFloatingButton = () => {
           onClick={() => {
             setIsOpen(false);
             setShowColors(false);
+            setShowSavedThemes(false);
+            setShowSaveForm(false);
           }}
         />
       )}
