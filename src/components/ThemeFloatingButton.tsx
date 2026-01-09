@@ -140,31 +140,32 @@ export const ThemeFloatingButton = () => {
 
   return (
     <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50">
-      {/* Color palette panel */}
+      {/* Color palette panel - positioned above the buttons */}
       <div className={cn(
-        "absolute right-16 top-1/2 -translate-y-1/2 transition-all duration-300",
-        showColors && isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+        "absolute bottom-full right-0 mb-4 transition-all duration-300",
+        showColors && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}>
-        <div className="bg-card border border-border/50 rounded-2xl shadow-xl p-4 animate-scale-in">
-          <p className="text-sm font-semibold text-foreground mb-3">Couleur d'accent</p>
-          <div className="grid grid-cols-4 gap-2">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[200px]">
+          <p className="text-sm font-semibold text-foreground mb-3 text-center">Couleur d'accent</p>
+          <div className="grid grid-cols-4 gap-3">
             {accentColors.map((color) => (
               <button
                 key={color.name}
                 className={cn(
-                  "w-9 h-9 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center",
+                  "w-10 h-10 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center shadow-md",
                   color.preview,
-                  accentColor.name === color.name && "ring-2 ring-offset-2 ring-offset-card ring-foreground"
+                  accentColor.name === color.name && "ring-2 ring-offset-2 ring-offset-card ring-foreground scale-110"
                 )}
                 onClick={() => handleColorChange(color)}
                 title={color.name}
               >
                 {accentColor.name === color.name && (
-                  <Check className="w-4 h-4 text-white" />
+                  <Check className="w-5 h-5 text-white drop-shadow-md" />
                 )}
               </button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">{accentColor.name}</p>
         </div>
       </div>
 
