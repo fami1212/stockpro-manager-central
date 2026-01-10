@@ -253,20 +253,20 @@ export const ThemeFloatingButton = () => {
   const CurrentIcon = currentTheme?.icon || Palette;
 
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40">
+    <div className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 max-w-[calc(100vw-1rem)]">
       {/* Color palette panel - positioned above the buttons */}
       <div className={cn(
         "absolute bottom-full right-0 mb-4 transition-all duration-300",
         showColors && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}>
-        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[200px]">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center">Couleur d'accent</p>
-          <div className="grid grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-3 sm:p-4 animate-scale-in w-[180px] sm:w-[200px] max-w-[calc(100vw-2rem)]">
+          <p className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3 text-center">Couleur d'accent</p>
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {accentColors.map((color) => (
               <button
                 key={color.name}
                 className={cn(
-                  "w-10 h-10 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center shadow-md",
+                  "w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center shadow-md",
                   color.preview,
                   accentColor.name === color.name && "ring-2 ring-offset-2 ring-offset-card ring-foreground scale-110"
                 )}
@@ -274,12 +274,12 @@ export const ThemeFloatingButton = () => {
                 title={color.name}
               >
                 {accentColor.name === color.name && (
-                  <Check className="w-5 h-5 text-white drop-shadow-md" />
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-md" />
                 )}
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-3 text-center">{accentColor.name}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 sm:mt-3 text-center">{accentColor.name}</p>
         </div>
       </div>
 
@@ -430,28 +430,28 @@ export const ThemeFloatingButton = () => {
         "absolute bottom-full right-0 mb-4 transition-all duration-300",
         showPresetThemes && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}>
-        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[260px] max-h-[350px] overflow-y-auto">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-3 sm:p-4 animate-scale-in w-[200px] sm:w-[260px] max-w-[calc(100vw-2rem)] max-h-[280px] sm:max-h-[350px] overflow-y-auto">
+          <p className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3 text-center flex items-center justify-center gap-2">
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
             Thèmes prédéfinis
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             {presetThemes.map((preset) => (
               <button
                 key={preset.id}
-                className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-all hover:scale-[1.02] text-left"
+                className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/50 hover:bg-muted transition-all hover:scale-[1.02] text-left"
                 onClick={() => handleApplyTheme(preset)}
               >
                 <div
                   className={cn(
-                    "w-6 h-6 rounded-full flex-shrink-0 shadow-sm",
+                    "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex-shrink-0 shadow-sm",
                     preset.accentColor.preview
                   )}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{preset.name}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {preset.mode === 'light' ? '☀️ Clair' : preset.mode === 'dark' ? '🌙 Sombre' : '🖥️ Auto'}
+                  <p className="text-xs sm:text-sm font-medium text-foreground truncate">{preset.name}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground">
+                    {preset.mode === 'light' ? '☀️' : preset.mode === 'dark' ? '🌙' : '🖥️'}
                   </p>
                 </div>
               </button>
@@ -465,10 +465,10 @@ export const ThemeFloatingButton = () => {
         "absolute bottom-full right-0 mb-4 transition-all duration-300",
         showSavedThemes && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}>
-        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[240px] max-h-[300px] overflow-y-auto">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center">Thèmes sauvegardés</p>
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-3 sm:p-4 animate-scale-in w-[200px] sm:w-[240px] max-w-[calc(100vw-2rem)] max-h-[250px] sm:max-h-[300px] overflow-y-auto">
+          <p className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3 text-center">Thèmes sauvegardés</p>
           {savedThemes.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">Aucun thème sauvegardé</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground text-center py-3 sm:py-4">Aucun thème sauvegardé</p>
           ) : (
             <div className="space-y-2">
               {savedThemes.map((savedTheme) => (
@@ -511,16 +511,16 @@ export const ThemeFloatingButton = () => {
         "absolute bottom-full right-0 mb-4 transition-all duration-300",
         showSaveForm && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}>
-        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[240px]">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center">Sauvegarder le thème</p>
-          <div className="flex items-center gap-2 mb-3">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-3 sm:p-4 animate-scale-in w-[200px] sm:w-[240px] max-w-[calc(100vw-2rem)]">
+          <p className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3 text-center">Sauvegarder le thème</p>
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <div
               className={cn(
-                "w-8 h-8 rounded-full flex-shrink-0",
+                "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex-shrink-0",
                 accentColor.preview
               )}
             />
-            <div className="text-xs text-muted-foreground">
+            <div className="text-[10px] sm:text-xs text-muted-foreground">
               <span>{accentColor.name}</span>
               <span className="mx-1">•</span>
               <span>{theme === 'light' ? 'Clair' : theme === 'dark' ? 'Sombre' : 'Auto'}</span>
@@ -531,16 +531,16 @@ export const ThemeFloatingButton = () => {
               placeholder="Nom du thème..."
               value={newThemeName}
               onChange={(e) => setNewThemeName(e.target.value)}
-              className="h-9 text-sm"
+              className="h-8 sm:h-9 text-xs sm:text-sm"
               onKeyDown={(e) => e.key === 'Enter' && handleSaveTheme()}
             />
             <Button
               size="icon"
-              className="h-9 w-9 flex-shrink-0"
+              className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
               onClick={handleSaveTheme}
               disabled={!newThemeName.trim()}
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>
