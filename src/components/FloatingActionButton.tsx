@@ -39,7 +39,7 @@ export const FloatingActionButton = ({
   ];
 
   return (
-    <div className="fixed bottom-24 right-4 z-50 md:hidden">
+    <div className="fixed bottom-24 right-4 z-50 flex md:hidden">
       {/* Action buttons */}
       <div className={cn(
         "flex flex-col-reverse gap-3 mb-3 transition-all duration-300",

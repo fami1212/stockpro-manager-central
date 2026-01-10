@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Monitor, X, Check, Save, Trash2, BookMarked } from 'lucide-react';
+import { Moon, Sun, Palette, Monitor, X, Check, Save, Trash2, BookMarked, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ interface SavedTheme {
   name: string;
   mode: ThemeMode;
   accentColor: AccentColor;
+  isPreset?: boolean;
 }
 
 const accentColors: AccentColor[] = [
@@ -32,10 +33,71 @@ const accentColors: AccentColor[] = [
   { name: 'Ambre', hue: 38, saturation: 92, lightness: 50, preview: 'bg-[hsl(38,92%,50%)]' },
 ];
 
+// Thèmes prédéfinis populaires
+const presetThemes: SavedTheme[] = [
+  {
+    id: 'preset-material',
+    name: 'Material',
+    mode: 'light',
+    accentColor: { name: 'Material Blue', hue: 210, saturation: 79, lightness: 46, preview: 'bg-[hsl(210,79%,46%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-material-dark',
+    name: 'Material Dark',
+    mode: 'dark',
+    accentColor: { name: 'Material Teal', hue: 174, saturation: 100, lightness: 29, preview: 'bg-[hsl(174,100%,29%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-nord',
+    name: 'Nord',
+    mode: 'dark',
+    accentColor: { name: 'Nord Frost', hue: 193, saturation: 43, lightness: 67, preview: 'bg-[hsl(193,43%,67%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-dracula',
+    name: 'Dracula',
+    mode: 'dark',
+    accentColor: { name: 'Dracula Purple', hue: 265, saturation: 89, lightness: 78, preview: 'bg-[hsl(265,89%,78%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-solarized',
+    name: 'Solarized',
+    mode: 'light',
+    accentColor: { name: 'Solarized Blue', hue: 205, saturation: 69, lightness: 49, preview: 'bg-[hsl(205,69%,49%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-monokai',
+    name: 'Monokai',
+    mode: 'dark',
+    accentColor: { name: 'Monokai Yellow', hue: 54, saturation: 70, lightness: 68, preview: 'bg-[hsl(54,70%,68%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-github',
+    name: 'GitHub',
+    mode: 'light',
+    accentColor: { name: 'GitHub Blue', hue: 215, saturation: 50, lightness: 50, preview: 'bg-[hsl(215,50%,50%)]' },
+    isPreset: true,
+  },
+  {
+    id: 'preset-catppuccin',
+    name: 'Catppuccin',
+    mode: 'dark',
+    accentColor: { name: 'Catppuccin Mauve', hue: 267, saturation: 84, lightness: 81, preview: 'bg-[hsl(267,84%,81%)]' },
+    isPreset: true,
+  },
+];
+
 export const ThemeFloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showColors, setShowColors] = useState(false);
   const [showSavedThemes, setShowSavedThemes] = useState(false);
+  const [showPresetThemes, setShowPresetThemes] = useState(false);
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [newThemeName, setNewThemeName] = useState('');
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -191,7 +253,7 @@ export const ThemeFloatingButton = () => {
   const CurrentIcon = currentTheme?.icon || Palette;
 
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50">
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40">
       {/* Color palette panel - positioned above the buttons */}
       <div className={cn(
         "absolute bottom-full right-0 mb-4 transition-all duration-300",
@@ -270,6 +332,7 @@ export const ThemeFloatingButton = () => {
             onClick={() => {
               setShowColors(!showColors);
               setShowSavedThemes(false);
+              setShowPresetThemes(false);
               setShowSaveForm(false);
             }}
           >
@@ -277,13 +340,41 @@ export const ThemeFloatingButton = () => {
           </Button>
         </div>
 
-        {/* Saved themes toggle */}
+        {/* Preset themes toggle */}
         <div 
           className="flex items-center gap-2 animate-scale-in"
           style={{ animationDelay: '200ms' }}
         >
           <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
-            Thèmes
+            Présets
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              "w-11 h-11 rounded-full shadow-lg transition-all duration-200 hover:scale-110 border border-border/50",
+              showPresetThemes 
+                ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background" 
+                : "bg-muted/50 hover:bg-muted text-muted-foreground"
+            )}
+            onClick={() => {
+              setShowPresetThemes(!showPresetThemes);
+              setShowColors(false);
+              setShowSavedThemes(false);
+              setShowSaveForm(false);
+            }}
+          >
+            <Sparkles className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Saved themes toggle */}
+        <div 
+          className="flex items-center gap-2 animate-scale-in"
+          style={{ animationDelay: '250ms' }}
+        >
+          <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+            Mes thèmes
           </span>
           <Button
             size="icon"
@@ -297,6 +388,7 @@ export const ThemeFloatingButton = () => {
             onClick={() => {
               setShowSavedThemes(!showSavedThemes);
               setShowColors(false);
+              setShowPresetThemes(false);
               setShowSaveForm(false);
             }}
           >
@@ -307,7 +399,7 @@ export const ThemeFloatingButton = () => {
         {/* Save current theme button */}
         <div 
           className="flex items-center gap-2 animate-scale-in"
-          style={{ animationDelay: '250ms' }}
+          style={{ animationDelay: '300ms' }}
         >
           <span className="bg-card text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
             Sauver
@@ -325,10 +417,46 @@ export const ThemeFloatingButton = () => {
               setShowSaveForm(!showSaveForm);
               setShowColors(false);
               setShowSavedThemes(false);
+              setShowPresetThemes(false);
             }}
           >
             <Save className="w-5 h-5" />
           </Button>
+        </div>
+      </div>
+
+      {/* Preset themes panel */}
+      <div className={cn(
+        "absolute bottom-full right-0 mb-4 transition-all duration-300",
+        showPresetThemes && isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      )}>
+        <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 animate-scale-in min-w-[260px] max-h-[350px] overflow-y-auto">
+          <p className="text-sm font-semibold text-foreground mb-3 text-center flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Thèmes prédéfinis
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {presetThemes.map((preset) => (
+              <button
+                key={preset.id}
+                className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-all hover:scale-[1.02] text-left"
+                onClick={() => handleApplyTheme(preset)}
+              >
+                <div
+                  className={cn(
+                    "w-6 h-6 rounded-full flex-shrink-0 shadow-sm",
+                    preset.accentColor.preview
+                  )}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{preset.name}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {preset.mode === 'light' ? '☀️ Clair' : preset.mode === 'dark' ? '🌙 Sombre' : '🖥️ Auto'}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -437,6 +565,7 @@ export const ThemeFloatingButton = () => {
           if (isOpen) {
             setShowColors(false);
             setShowSavedThemes(false);
+            setShowPresetThemes(false);
             setShowSaveForm(false);
           }
         }}
@@ -456,6 +585,7 @@ export const ThemeFloatingButton = () => {
             setIsOpen(false);
             setShowColors(false);
             setShowSavedThemes(false);
+            setShowPresetThemes(false);
             setShowSaveForm(false);
           }}
         />
