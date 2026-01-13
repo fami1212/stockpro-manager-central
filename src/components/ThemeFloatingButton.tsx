@@ -254,10 +254,10 @@ export const ThemeFloatingButton = () => {
 
   return (
     <div className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 max-w-[calc(100vw-1rem)]">
-      {/* Color palette panel - positioned above the buttons */}
+      {/* Color palette panel - positioned to the left */}
       <div className={cn(
-        "absolute bottom-full right-0 mb-4 transition-all duration-500 ease-out",
-        showColors && isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+        "absolute right-full top-1/2 -translate-y-1/2 mr-4 transition-all duration-500 ease-out",
+        showColors && isOpen ? "opacity-100 translate-x-0 scale-100" : "opacity-0 translate-x-4 scale-95 pointer-events-none"
       )}>
         <div className="relative bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] p-4 sm:p-5 animate-scale-in w-[200px] sm:w-[240px] max-w-[calc(100vw-2rem)] overflow-hidden">
           {/* Decorative gradient orb */}
@@ -456,10 +456,10 @@ export const ThemeFloatingButton = () => {
         </div>
       </div>
 
-      {/* Preset themes panel */}
+      {/* Preset themes panel - positioned to the left */}
       <div className={cn(
-        "absolute bottom-full right-0 mb-4 transition-all duration-500 ease-out",
-        showPresetThemes && isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+        "absolute right-full top-1/2 -translate-y-1/2 mr-4 transition-all duration-500 ease-out",
+        showPresetThemes && isOpen ? "opacity-100 translate-x-0 scale-100" : "opacity-0 translate-x-4 scale-95 pointer-events-none"
       )}>
         <div className="relative bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] p-4 sm:p-5 animate-scale-in w-[220px] sm:w-[280px] max-w-[calc(100vw-2rem)] max-h-[320px] sm:max-h-[380px] overflow-hidden">
           {/* Decorative gradient orbs */}
@@ -522,10 +522,10 @@ export const ThemeFloatingButton = () => {
         </div>
       </div>
 
-      {/* Saved themes panel */}
+      {/* Saved themes panel - positioned to the left */}
       <div className={cn(
-        "absolute bottom-full right-0 mb-4 transition-all duration-500 ease-out",
-        showSavedThemes && isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+        "absolute right-full top-1/2 -translate-y-1/2 mr-4 transition-all duration-500 ease-out",
+        showSavedThemes && isOpen ? "opacity-100 translate-x-0 scale-100" : "opacity-0 translate-x-4 scale-95 pointer-events-none"
       )}>
         <div className="relative bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] p-4 sm:p-5 animate-scale-in w-[220px] sm:w-[280px] max-w-[calc(100vw-2rem)] max-h-[280px] sm:max-h-[340px] overflow-hidden">
           {/* Decorative gradient orbs */}
@@ -594,10 +594,10 @@ export const ThemeFloatingButton = () => {
         </div>
       </div>
 
-      {/* Save theme form panel */}
+      {/* Save theme form panel - positioned to the left */}
       <div className={cn(
-        "absolute bottom-full right-0 mb-4 transition-all duration-500 ease-out",
-        showSaveForm && isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+        "absolute right-full top-1/2 -translate-y-1/2 mr-4 transition-all duration-500 ease-out",
+        showSaveForm && isOpen ? "opacity-100 translate-x-0 scale-100" : "opacity-0 translate-x-4 scale-95 pointer-events-none"
       )}>
         <div className="relative bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] p-4 sm:p-5 animate-scale-in w-[240px] sm:w-[280px] max-w-[calc(100vw-2rem)] overflow-hidden">
           {/* Decorative gradient orbs */}
