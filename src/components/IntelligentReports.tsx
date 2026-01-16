@@ -21,7 +21,7 @@ interface IntelligentReport {
 }
 
 export const IntelligentReports = () => {
-  const { state } = useApp();
+  const { products, sales, clients } = useApp();
   const [reports, setReports] = useState<IntelligentReport[]>([]);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
