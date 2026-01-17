@@ -28,17 +28,17 @@ export const IntelligentReports = () => {
 
   // Générateur de rapport de performance
   const generatePerformanceReport = (): IntelligentReport => {
-    const totalRevenue = state.sales.reduce((acc, sale) => acc + sale.total, 0);
-    const totalProducts = state.products.length;
-    const activeClients = state.clients.filter(c => c.status === 'Actif').length;
-    const lowStockProducts = state.products.filter(p => p.stock <= p.alertThreshold).length;
+    const totalRevenue = sales.reduce((acc, sale) => acc + (sale.total || 0), 0);
+    const totalProducts = products.length;
+    const activeClients = clients.filter(c => c.status === 'Actif').length;
+    const lowStockProducts = products.filter(p => (p.stock || 0) <= (p.alert_threshold || 0)).length;
 
     const insights = [
       `Chiffre d'affaires total: ${totalRevenue.toLocaleString()} CFA`,
       `${totalProducts} produits dans le catalogue`,
       `${activeClients} clients actifs`,
       `${lowStockProducts} produits en stock critique`,
-      `Marge moyenne: ${((state.products.reduce((acc, p) => acc + ((p.sellPrice - p.buyPrice) / p.sellPrice), 0) / totalProducts) * 100).toFixed(1)}%`
+      `Marge moyenne: ${((products.reduce((acc, p) => acc + (((p.sell_price || 0) - (p.buy_price || 0)) / (p.sell_price || 1)), 0) / (totalProducts || 1)) * 100).toFixed(1)}%`
     ];
 
     const recommendations = [
@@ -63,7 +63,7 @@ export const IntelligentReports = () => {
 
   // Générateur de rapport prédictif
   const generatePredictionReport = (): IntelligentReport => {
-    const currentRevenue = state.sales.reduce((acc, sale) => acc + sale.total, 0);
+    const currentRevenue = sales.reduce((acc, sale) => acc + (sale.total || 0), 0);
     const predictedGrowth = Math.random() * 0.15 + 0.05; // 5-20%
     const predictedRevenue = currentRevenue * (1 + predictedGrowth);
 
@@ -97,12 +97,12 @@ export const IntelligentReports = () => {
 
   // Générateur de rapport d'optimisation
   const generateOptimizationReport = (): IntelligentReport => {
-    const lowMarginProducts = state.products.filter(p => {
-      const margin = (p.sellPrice - p.buyPrice) / p.sellPrice;
+    const lowMarginProducts = products.filter(p => {
+      const margin = ((p.sell_price || 0) - (p.buy_price || 0)) / (p.sell_price || 1);
       return margin < 0.2;
     });
 
-    const overStockedProducts = state.products.filter(p => p.stock > p.alertThreshold * 3);
+    const overStockedProducts = products.filter(p => (p.stock || 0) > (p.alert_threshold || 0) * 3);
 
     const insights = [
       `${lowMarginProducts.length} produits avec marges < 20%`,
@@ -138,9 +138,9 @@ export const IntelligentReports = () => {
     const anomalies = [];
     
     // Détection d'anomalies dans les prix
-    const priceAnomalies = state.products.filter(p => {
-      const expectedPrice = p.buyPrice * 1.4; // 40% margin expected
-      const deviation = Math.abs(p.sellPrice - expectedPrice) / expectedPrice;
+    const priceAnomalies = products.filter(p => {
+      const expectedPrice = (p.buy_price || 0) * 1.4; // 40% margin expected
+      const deviation = Math.abs((p.sell_price || 0) - expectedPrice) / (expectedPrice || 1);
       return deviation > 0.3;
     });
 
@@ -149,7 +149,7 @@ export const IntelligentReports = () => {
     }
 
     // Anomalies de stock
-    const stockAnomalies = state.products.filter(p => p.stock > p.alertThreshold * 5);
+    const stockAnomalies = products.filter(p => (p.stock || 0) > (p.alert_threshold || 0) * 5);
     if (stockAnomalies.length > 0) {
       anomalies.push(`${stockAnomalies.length} produits avec stock anormalement élevé`);
     }
