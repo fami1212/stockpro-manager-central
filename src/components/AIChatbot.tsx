@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
+import { ChatCharts, detectChartType } from '@/components/ChatCharts';
 import { 
   MessageCircle, 
   Send, 
@@ -15,22 +16,24 @@ import {
   Lightbulb,
   TrendingUp,
   Package,
-  Users
+  Users,
+  BarChart3
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  chartType?: string | null;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
 const quickQuestions = [
-  { icon: TrendingUp, text: "Comment vont mes ventes ?", color: "text-green-500" },
-  { icon: Package, text: "Quels produits commander ?", color: "text-orange-500" },
-  { icon: Users, text: "Mes meilleurs clients ?", color: "text-blue-500" },
-  { icon: Lightbulb, text: "Conseils pour améliorer mes marges", color: "text-purple-500" },
+  { icon: TrendingUp, text: "Comment vont mes ventes ?", color: "text-green-500", chart: 'sales-trend' },
+  { icon: Package, text: "Quels produits commander ?", color: "text-orange-500", chart: 'stock-levels' },
+  { icon: Users, text: "Mes meilleurs clients ?", color: "text-blue-500", chart: 'client-distribution' },
+  { icon: BarChart3, text: "Analyse de mes marges", color: "text-purple-500", chart: 'margin-analysis' },
 ];
 
 export function AIChatbot() {
@@ -72,7 +75,10 @@ export function AIChatbot() {
     };
   };
 
-  const streamChat = async (userMessage: string) => {
+  const streamChat = async (userMessage: string, presetChartType?: string) => {
+    // Detect chart type from user message
+    const chartType = presetChartType || detectChartType(userMessage);
+    
     const userMsg: Message = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
@@ -85,7 +91,7 @@ export function AIChatbot() {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: [...messages, userMsg],
+          messages: [...messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: userMessage }],
           data: prepareBusinessData()
         }),
       });
@@ -112,8 +118,8 @@ export function AIChatbot() {
       let assistantContent = '';
       let streamDone = false;
 
-      // Create assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      // Create assistant message with chart type
+      setMessages(prev => [...prev, { role: 'assistant', content: '', chartType }]);
 
       while (!streamDone) {
         const { done, value } = await reader.read();
@@ -145,7 +151,8 @@ export function AIChatbot() {
                 if (newMessages.length > 0) {
                   newMessages[newMessages.length - 1] = { 
                     role: 'assistant', 
-                    content: assistantContent 
+                    content: assistantContent,
+                    chartType
                   };
                 }
                 return newMessages;
@@ -177,7 +184,8 @@ export function AIChatbot() {
                 if (newMessages.length > 0) {
                   newMessages[newMessages.length - 1] = { 
                     role: 'assistant', 
-                    content: assistantContent 
+                    content: assistantContent,
+                    chartType
                   };
                 }
                 return newMessages;
@@ -202,9 +210,9 @@ export function AIChatbot() {
     setInput('');
   };
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = (question: string, chartType?: string) => {
     if (isLoading) return;
-    streamChat(question);
+    streamChat(question, chartType);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -229,7 +237,7 @@ export function AIChatbot() {
 
       {/* Chat window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
+        <Card className="fixed bottom-24 right-4 z-50 w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -241,7 +249,7 @@ export function AIChatbot() {
                     Assistant IA
                     <Sparkles className="h-4 w-4 text-yellow-500" />
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground">Posez vos questions business</p>
+                  <p className="text-xs text-muted-foreground">Analyse avec graphiques interactifs</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
@@ -251,13 +259,13 @@ export function AIChatbot() {
           </CardHeader>
 
           <CardContent className="p-0">
-            <ScrollArea className="h-[350px] p-4" ref={scrollRef}>
+            <ScrollArea className="h-[400px] p-4" ref={scrollRef}>
               {messages.length === 0 ? (
                 <div className="space-y-4">
                   <div className="text-center py-4">
                     <Bot className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      Bonjour ! Je peux analyser vos données business en temps réel.
+                      Bonjour ! Je peux analyser vos données avec des graphiques interactifs.
                     </p>
                   </div>
                   
@@ -269,7 +277,7 @@ export function AIChatbot() {
                         variant="outline"
                         size="sm"
                         className="w-full justify-start text-left h-auto py-2 px-3"
-                        onClick={() => handleQuickQuestion(q.text)}
+                        onClick={() => handleQuickQuestion(q.text, q.chart)}
                         disabled={isLoading}
                       >
                         <q.icon className={`h-4 w-4 mr-2 ${q.color}`} />
@@ -281,32 +289,45 @@ export function AIChatbot() {
               ) : (
                 <div className="space-y-4">
                   {messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {msg.role === 'assistant' && (
-                        <div className="p-1.5 rounded-full bg-primary/10 h-7 w-7 flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
+                    <div key={i}>
                       <div
-                        className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
+                        className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
-                        {msg.content || (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            <span className="text-xs">Réflexion...</span>
+                        {msg.role === 'assistant' && (
+                          <div className="p-1.5 rounded-full bg-primary/10 h-7 w-7 flex items-center justify-center flex-shrink-0">
+                            <Bot className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-lg px-3 py-2 max-w-[85%] text-sm ${
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          {msg.content || (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span className="text-xs">Analyse en cours...</span>
+                            </div>
+                          )}
+                        </div>
+                        {msg.role === 'user' && (
+                          <div className="p-1.5 rounded-full bg-primary h-7 w-7 flex items-center justify-center flex-shrink-0">
+                            <User className="h-4 w-4 text-primary-foreground" />
                           </div>
                         )}
                       </div>
-                      {msg.role === 'user' && (
-                        <div className="p-1.5 rounded-full bg-primary h-7 w-7 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-primary-foreground" />
+                      
+                      {/* Render chart if applicable */}
+                      {msg.role === 'assistant' && msg.chartType && msg.content && (
+                        <div className="ml-9 mr-2">
+                          <ChatCharts 
+                            chartType={msg.chartType}
+                            products={products}
+                            sales={sales}
+                            clients={clients}
+                          />
                         </div>
                       )}
                     </div>
@@ -338,7 +359,7 @@ export function AIChatbot() {
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground text-center mt-2">
-                Propulsé par Lovable AI • Données en temps réel
+                Propulsé par Lovable AI • Graphiques en temps réel
               </p>
             </div>
           </CardContent>
