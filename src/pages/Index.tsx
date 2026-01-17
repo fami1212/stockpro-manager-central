@@ -16,6 +16,7 @@ import { ExportModule } from '@/components/ExportModule';
 import { UnpaidInvoicesDashboard } from '@/components/UnpaidInvoicesDashboard';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { ThemeFloatingButton } from '@/components/ThemeFloatingButton';
+import { AIChatbot } from '@/components/AIChatbot';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 
@@ -110,6 +111,9 @@ const Index = () => {
       
       {/* Theme Floating Button - Always visible */}
       <ThemeFloatingButton />
+      
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 };
