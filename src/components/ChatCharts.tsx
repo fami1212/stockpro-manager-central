@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -11,36 +11,28 @@ import {
   YAxis, 
   Tooltip, 
   ResponsiveContainer,
-  CartesianGrid,
-  Legend
+  CartesianGrid
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Package, Users, DollarSign } from 'lucide-react';
-
-interface ChartData {
-  type: 'sales-trend' | 'stock-levels' | 'top-products' | 'client-distribution' | 'revenue-by-category' | 'margin-analysis';
-  title: string;
-  data: any[];
-}
+import { Button } from '@/components/ui/button';
+import { TrendingUp, Package, Users, DollarSign, Download, Image } from 'lucide-react';
+import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ChatChartsProps {
   chartType: string;
   products: any[];
   sales: any[];
   clients: any[];
+  showExportButtons?: boolean;
 }
-
-const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-];
 
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', '#00C49F'];
 
-export function ChatCharts({ chartType, products, sales, clients }: ChatChartsProps) {
+export function ChatCharts({ chartType, products, sales, clients, showExportButtons = true }: ChatChartsProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  
   const chartData = useMemo(() => {
     switch (chartType) {
       case 'sales-trend': {
@@ -338,17 +330,86 @@ export function ChatCharts({ chartType, products, sales, clients }: ChatChartsPr
     }
   };
 
+  const exportToPNG = async () => {
+    if (!chartRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2
+      });
+      
+      const link = document.createElement('a');
+      link.download = `chart-${chartType}-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      toast.success('Graphique exporté en PNG');
+    } catch {
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (!chartRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`chart-${chartType}-${Date.now()}.pdf`);
+      
+      toast.success('Graphique exporté en PDF');
+    } catch {
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
   if (chartData.length === 0) return null;
 
   return (
     <Card className="mt-2 bg-background/50 border-primary/10">
       <CardHeader className="py-2 px-3">
-        <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
-          {getChartIcon()}
-          {getChartTitle()}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+            {getChartIcon()}
+            {getChartTitle()}
+          </CardTitle>
+          {showExportButtons && (
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={exportToPNG}
+                title="Exporter en PNG"
+              >
+                <Image className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={exportToPDF}
+                title="Exporter en PDF"
+              >
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="p-2 pt-0">
+      <CardContent className="p-2 pt-0" ref={chartRef}>
         {renderChart()}
       </CardContent>
     </Card>
