@@ -17,8 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Package, Users, DollarSign, Download, Image } from 'lucide-react';
 import { toast } from 'sonner';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 interface ChatChartsProps {
   chartType: string;
@@ -28,8 +26,15 @@ interface ChatChartsProps {
   showExportButtons?: boolean;
 }
 
-// Chart color palette for visualizations
-const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', '#00C49F'] as const;
+// Chart color palette for visualizations (design tokens)
+const CHART_COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+  'hsl(var(--primary))',
+] as const;
 
 export function ChatCharts({ chartType, products, sales, clients, showExportButtons = true }: ChatChartsProps) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -333,46 +338,53 @@ export function ChatCharts({ chartType, products, sales, clients, showExportButt
 
   const exportToPNG = async () => {
     if (!chartRef.current) return;
-    
+
     try {
+      const { default: html2canvas } = await import('html2canvas');
+
       const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2
+        backgroundColor: 'hsl(var(--background))',
+        scale: 2,
       });
-      
+
       const link = document.createElement('a');
       link.download = `chart-${chartType}-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-      
+
       toast.success('Graphique exporté en PNG');
     } catch {
-      toast.error('Erreur lors de l\'export');
+      toast.error("Erreur lors de l'export");
     }
   };
 
   const exportToPDF = async () => {
     if (!chartRef.current) return;
-    
+
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
       const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2
+        backgroundColor: 'hsl(var(--background))',
+        scale: 2,
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'px',
-        format: [canvas.width / 2, canvas.height / 2]
+        format: [canvas.width / 2, canvas.height / 2],
       });
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
       pdf.save(`chart-${chartType}-${Date.now()}.pdf`);
-      
+
       toast.success('Graphique exporté en PDF');
     } catch {
-      toast.error('Erreur lors de l\'export');
+      toast.error("Erreur lors de l'export");
     }
   };
 
