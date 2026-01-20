@@ -28,6 +28,7 @@ interface ChatChartsProps {
   showExportButtons?: boolean;
 }
 
+// Chart color palette
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', '#00C49F'];
 
 export function ChatCharts({ chartType, products, sales, clients, showExportButtons = true }: ChatChartsProps) {
