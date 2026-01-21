@@ -18,12 +18,22 @@ import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { supabase } from '@/integrations/supabase/client';
 
+type AppRole = 'admin' | 'manager' | 'user';
+
 interface BottomNavigationProps {
   activePage: string;
   onPageChange: (page: string) => void;
+  userRole?: AppRole;
 }
 
-export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationProps) => {
+// Define which modules are accessible by each role
+const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
+  admin: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
+  manager: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
+  user: ['dashboard', 'sales', 'stock', 'clients', 'settings'],
+};
+
+export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user' }: BottomNavigationProps) => {
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
@@ -65,6 +75,11 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
     { id: 'settings', label: 'Config', icon: Settings, badge: null, isAlert: false }
   ];
 
+  // Filter menu items based on user role
+  const visibleMenuItems = menuItems.filter(item => 
+    ROLE_PERMISSIONS[userRole].includes(item.id)
+  );
+
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
       {/* Glass background */}
@@ -72,7 +87,7 @@ export const BottomNavigation = ({ activePage, onPageChange }: BottomNavigationP
       
       {/* Navigation content */}
       <div className="relative flex overflow-x-auto scrollbar-hide px-1 py-2 gap-0.5">
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const isActive = activePage === item.id;
           return (
             <button
