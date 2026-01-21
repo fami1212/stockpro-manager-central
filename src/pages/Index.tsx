@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Dashboard } from '@/components/Dashboard';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -18,18 +19,57 @@ import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { ThemeFloatingButton } from '@/components/ThemeFloatingButton';
 import { AIChatbot } from '@/components/AIChatbot';
 import { SmartAlerts } from '@/components/SmartAlerts';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { LogOut, User, Shield } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const { role, canAccess, loading: roleLoading } = useUserRole();
   const [activeModule, setActiveModule] = useState('dashboard');
+
+  // Redirect to allowed module if current is not accessible
+  useEffect(() => {
+    if (!roleLoading && !canAccess(activeModule)) {
+      setActiveModule('dashboard');
+    }
+  }, [activeModule, canAccess, roleLoading]);
 
   const handleNewSale = () => setActiveModule('sales');
   const handleNewProduct = () => setActiveModule('stock');
   const handleNewClient = () => setActiveModule('clients');
 
+  const handleModuleChange = (module: string) => {
+    if (canAccess(module)) {
+      setActiveModule(module);
+    }
+  };
+
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   const renderActiveModule = () => {
+    // Check permission before rendering
+    if (!canAccess(activeModule) && activeModule !== 'dashboard') {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Shield className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
+          <p className="text-muted-foreground max-w-md">
+            Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+            Contactez votre administrateur pour plus d'informations.
+          </p>
+        </div>
+      );
+    }
+
     switch (activeModule) {
       case 'dashboard':
         return <Dashboard />;
@@ -64,7 +104,7 @@ const Index = () => {
     <div className="flex h-screen bg-background w-full overflow-hidden">
       {/* Desktop Sidebar - Fixed */}
       <div className="hidden lg:block h-screen sticky top-0 flex-shrink-0">
-        <Sidebar activePage={activeModule} onPageChange={setActiveModule} />
+        <Sidebar activePage={activeModule} onPageChange={handleModuleChange} userRole={role} />
       </div>
       
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
@@ -76,9 +116,14 @@ const Index = () => {
           </div>
           
           <div className="flex items-center space-x-4">
+            <NotificationCenter />
+            
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
               <span>{user?.email}</span>
+              <Badge variant="outline" className="capitalize">
+                {role}
+              </Badge>
             </div>
             <Button
               variant="outline"
@@ -101,7 +146,7 @@ const Index = () => {
       </div>
       
       {/* Mobile Bottom Navigation */}
-      <BottomNavigation activePage={activeModule} onPageChange={setActiveModule} />
+      <BottomNavigation activePage={activeModule} onPageChange={handleModuleChange} userRole={role} />
       
       {/* Floating Action Button - Mobile only */}
       <FloatingActionButton

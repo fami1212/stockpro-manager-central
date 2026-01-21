@@ -24,12 +24,22 @@ import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 
+type AppRole = 'admin' | 'manager' | 'user';
+
 interface SidebarProps {
   activePage: string;
   onPageChange: (page: string) => void;
+  userRole?: AppRole;
 }
 
-export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
+// Define which modules are accessible by each role
+const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
+  admin: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
+  manager: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
+  user: ['dashboard', 'sales', 'stock', 'clients', 'settings'],
+};
+
+export const Sidebar = ({ activePage, onPageChange, userRole = 'user' }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
   const { products, sales, clients } = useApp();
@@ -138,6 +148,11 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
     }
   ];
 
+  // Filter menu items based on user role
+  const visibleMenuItems = menuItems.filter(item => 
+    ROLE_PERMISSIONS[userRole].includes(item.id)
+  );
+
   const handleLogout = async () => {
     try {
       // TODO: Implement logout when available
@@ -205,7 +220,7 @@ export const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
       {/* Navigation */}
       <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-1">
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <li key={item.id}>
               <button
                 onClick={() => onPageChange(item.id)}
