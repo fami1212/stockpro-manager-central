@@ -20,20 +20,30 @@ import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'admin' | 'manager' | 'user';
 
+interface ModulePermissions {
+  dashboard: boolean;
+  stock: boolean;
+  sales: boolean;
+  clients: boolean;
+  purchases: boolean;
+  suppliers: boolean;
+  promotions: boolean;
+  returns: boolean;
+  export: boolean;
+  invoices: boolean;
+  reports: boolean;
+  settings: boolean;
+  admin: boolean;
+}
+
 interface BottomNavigationProps {
   activePage: string;
   onPageChange: (page: string) => void;
   userRole?: AppRole;
+  permissions?: ModulePermissions;
 }
 
-// Define which modules are accessible by each role
-const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
-  admin: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
-  manager: ['dashboard', 'sales', 'stock', 'purchases', 'promotions', 'suppliers', 'clients', 'returns', 'invoices', 'export', 'reports', 'settings'],
-  user: ['dashboard', 'sales', 'stock', 'clients', 'settings'],
-};
-
-export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user' }: BottomNavigationProps) => {
+export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions }: BottomNavigationProps) => {
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
@@ -75,10 +85,15 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user' }
     { id: 'settings', label: 'Config', icon: Settings, badge: null, isAlert: false }
   ];
 
-  // Filter menu items based on user role
-  const visibleMenuItems = menuItems.filter(item => 
-    ROLE_PERMISSIONS[userRole].includes(item.id)
-  );
+  // Filter menu items based on permissions (from database) or fallback to role-based
+  const visibleMenuItems = menuItems.filter(item => {
+    if (permissions) {
+      return permissions[item.id as keyof ModulePermissions] ?? false;
+    }
+    // Fallback: admin sees all, others see basics
+    if (userRole === 'admin') return true;
+    return ['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id);
+  });
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">

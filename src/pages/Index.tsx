@@ -27,7 +27,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { role, canAccess, loading: roleLoading } = useUserRole();
+  const { role, canAccess, permissions, loading: roleLoading } = useUserRole();
   const [activeModule, setActiveModule] = useState('dashboard');
 
   // Redirect to allowed module if current is not accessible
@@ -104,7 +104,7 @@ const Index = () => {
     <div className="flex h-screen bg-background w-full overflow-hidden">
       {/* Desktop Sidebar - Fixed */}
       <div className="hidden lg:block h-screen sticky top-0 flex-shrink-0">
-        <Sidebar activePage={activeModule} onPageChange={handleModuleChange} userRole={role} />
+        <Sidebar activePage={activeModule} onPageChange={handleModuleChange} userRole={role} permissions={permissions} />
       </div>
       
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
@@ -146,7 +146,7 @@ const Index = () => {
       </div>
       
       {/* Mobile Bottom Navigation */}
-      <BottomNavigation activePage={activeModule} onPageChange={handleModuleChange} userRole={role} />
+      <BottomNavigation activePage={activeModule} onPageChange={handleModuleChange} userRole={role} permissions={permissions} />
       
       {/* Floating Action Button - Mobile only */}
       <FloatingActionButton

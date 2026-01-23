@@ -7,11 +7,12 @@ import { RealSubscriptionsManagement } from '@/components/admin/RealSubscription
 import { AdminStats } from '@/components/admin/AdminStats';
 import { SystemSettings } from '@/components/admin/SystemSettings';
 import { PermissionsManagement } from '@/components/admin/PermissionsManagement';
+import { ModulePermissionsManagement } from '@/components/admin/ModulePermissionsManagement';
 import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch, Lock } from 'lucide-react';
 import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
 import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
           </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-12 gap-1">
+          <TabsList className="grid w-full grid-cols-13 gap-1">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Stats
@@ -64,6 +65,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="permissions" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Permissions
+            </TabsTrigger>
+            <TabsTrigger value="modules" className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Modules
             </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
@@ -113,6 +118,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="permissions">
             <PermissionsManagement />
+          </TabsContent>
+
+          <TabsContent value="modules">
+            <ModulePermissionsManagement />
           </TabsContent>
 
           <TabsContent value="audit">
