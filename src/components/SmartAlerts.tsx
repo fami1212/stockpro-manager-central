@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Bell, 
   TrendingUp, 
@@ -35,6 +37,9 @@ export function SmartAlerts() {
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { products, sales, clients } = useApp();
+  const { createNotification } = useNotifications();
+  const { user } = useAuth();
+  const lastPersistRef = useRef<string>('');
 
   // Generate smart alerts based on data analysis
   const generateAlerts = useMemo(() => {
@@ -42,7 +47,6 @@ export function SmartAlerts() {
     const now = new Date();
 
     // === STOCK ALERTS ===
-    // Critical: Products with zero stock
     const outOfStock = products.filter(p => (p.stock || 0) === 0);
     if (outOfStock.length > 0) {
       newAlerts.push({
@@ -53,12 +57,11 @@ export function SmartAlerts() {
         description: `Les produits suivants sont en rupture: ${outOfStock.slice(0, 3).map(p => p.name).join(', ')}${outOfStock.length > 3 ? '...' : ''}`,
         impact: 'Perte de ventes potentielle',
         action: 'Commander immédiatement',
-        data: outOfStock,
+        data: { products: outOfStock.slice(0, 5).map(p => ({ name: p.name, id: p.id })) },
         createdAt: now
       });
     }
 
-    // Warning: Products below alert threshold
     const lowStock = products.filter(p => 
       (p.stock || 0) > 0 && 
       (p.stock || 0) <= (p.alert_threshold || 5)
@@ -71,12 +74,11 @@ export function SmartAlerts() {
         title: `${lowStock.length} produit(s) à réapprovisionner`,
         description: `Stock faible détecté pour: ${lowStock.slice(0, 3).map(p => `${p.name} (${p.stock})`).join(', ')}`,
         action: 'Planifier une commande',
-        data: lowStock,
+        data: { products: lowStock.slice(0, 5).map(p => ({ name: p.name, stock: p.stock })) },
         createdAt: now
       });
     }
 
-    // Opportunity: Overstocked products (stock > 3x threshold)
     const overStock = products.filter(p => 
       (p.stock || 0) > (p.alert_threshold || 5) * 3
     );
@@ -92,7 +94,7 @@ export function SmartAlerts() {
         description: `${overStock.length} produits en surstock représentant ${totalValue.toLocaleString()} CFA`,
         impact: 'Capital immobilisé',
         action: 'Envisager une promotion',
-        data: overStock,
+        data: { count: overStock.length, value: totalValue },
         createdAt: now
       });
     }
@@ -122,6 +124,7 @@ export function SmartAlerts() {
           description: `Cette semaine: ${recentTotal.toLocaleString()} CFA vs ${previousTotal.toLocaleString()} CFA la semaine dernière`,
           impact: 'Tendance positive',
           action: 'Maintenir le momentum',
+          data: { change: change.toFixed(1), current: recentTotal, previous: previousTotal },
           createdAt: now
         });
       } else if (change < -20) {
@@ -133,13 +136,13 @@ export function SmartAlerts() {
           description: `Cette semaine: ${recentTotal.toLocaleString()} CFA vs ${previousTotal.toLocaleString()} CFA la semaine dernière`,
           impact: 'Tendance négative',
           action: 'Analyser les causes',
+          data: { change: change.toFixed(1), current: recentTotal, previous: previousTotal },
           createdAt: now
         });
       }
     }
 
     // === CLIENT ALERTS ===
-    // Inactive clients opportunity
     const inactiveClients = clients.filter(c => c.status !== 'Actif');
     if (inactiveClients.length > 0) {
       const potentialRevenue = inactiveClients.reduce((acc, c) => 
@@ -152,12 +155,12 @@ export function SmartAlerts() {
         title: `${inactiveClients.length} client(s) inactif(s)`,
         description: `Potentiel de réactivation estimé à ${potentialRevenue.toLocaleString()} CFA`,
         action: 'Lancer une campagne de réactivation',
-        data: inactiveClients,
+        data: { count: inactiveClients.length, potential: potentialRevenue },
         createdAt: now
       });
     }
 
-    // VIP clients (top 10% by revenue)
+    // VIP clients
     const sortedClients = [...clients].sort((a, b) => 
       (b.total_amount || 0) - (a.total_amount || 0)
     );
@@ -177,7 +180,7 @@ export function SmartAlerts() {
           title: `${vipClients.length} client(s) VIP génèrent ${vipPercentage.toFixed(0)}% du CA`,
           description: `Ces clients méritent une attention particulière`,
           action: 'Programme de fidélité',
-          data: vipClients,
+          data: { vipCount: vipClients.length, percentage: vipPercentage.toFixed(0) },
           createdAt: now
         });
       }
@@ -201,13 +204,45 @@ export function SmartAlerts() {
         description: `Ces produits ont une marge inférieure à 15%`,
         impact: 'Rentabilité réduite',
         action: 'Revoir la tarification',
-        data: lowMarginProducts,
+        data: { count: lowMarginProducts.length },
         createdAt: now
       });
     }
 
     return newAlerts;
   }, [products, sales, clients]);
+
+  // Persist alerts to database (only critical and warning)
+  useEffect(() => {
+    if (!user) return;
+
+    const criticalAlerts = generateAlerts.filter(a => a.type === 'critical' || a.type === 'warning');
+    const alertsSignature = criticalAlerts.map(a => a.id).sort().join(',');
+    
+    // Only persist if alerts changed
+    if (alertsSignature === lastPersistRef.current) return;
+    lastPersistRef.current = alertsSignature;
+
+    // Persist each new alert to notifications table
+    criticalAlerts.forEach(async (alert) => {
+      try {
+        await createNotification({
+          title: alert.title,
+          description: alert.description,
+          type: alert.type,
+          category: alert.category as 'stock' | 'sales' | 'clients' | 'system',
+          details: {
+            impact: alert.impact,
+            action: alert.action,
+            ...alert.data,
+          },
+        });
+      } catch (error) {
+        // Silent fail - don't spam user with errors
+        console.error('Failed to persist alert:', error);
+      }
+    });
+  }, [generateAlerts, user, createNotification]);
 
   useEffect(() => {
     setAlerts(generateAlerts);
@@ -225,10 +260,10 @@ export function SmartAlerts() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'critical': return 'bg-red-500';
-      case 'warning': return 'bg-yellow-500';
-      case 'opportunity': return 'bg-green-500';
-      case 'info': return 'bg-blue-500';
+      case 'critical': return 'bg-destructive';
+      case 'warning': return 'bg-warning';
+      case 'opportunity': return 'bg-success';
+      case 'info': return 'bg-primary';
       default: return 'bg-muted';
     }
   };
@@ -249,7 +284,6 @@ export function SmartAlerts() {
   const runAIAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      // Simulate AI analysis delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       toast.success('Analyse IA terminée', {
         description: `${alerts.length} alertes générées`
@@ -293,7 +327,7 @@ export function SmartAlerts() {
                   <p className="text-xs text-muted-foreground">
                     {criticalCount > 0 && <span className="text-destructive">{criticalCount} attention</span>}
                     {criticalCount > 0 && opportunityCount > 0 && ' • '}
-                    {opportunityCount > 0 && <span className="text-green-600">{opportunityCount} opportunités</span>}
+                    {opportunityCount > 0 && <span className="text-success">{opportunityCount} opportunités</span>}
                   </p>
                 </div>
               </div>
@@ -336,10 +370,10 @@ export function SmartAlerts() {
                         <div className="flex gap-3">
                           <div className={`p-2 rounded-lg ${getTypeColor(alert.type)}/10 flex-shrink-0`}>
                             <Icon className={`h-4 w-4 ${
-                              alert.type === 'critical' ? 'text-red-500' :
-                              alert.type === 'warning' ? 'text-yellow-600' :
-                              alert.type === 'opportunity' ? 'text-green-600' :
-                              'text-blue-500'
+                              alert.type === 'critical' ? 'text-destructive' :
+                              alert.type === 'warning' ? 'text-warning' :
+                              alert.type === 'opportunity' ? 'text-success' :
+                              'text-primary'
                             }`} />
                           </div>
                           <div className="flex-1 min-w-0">

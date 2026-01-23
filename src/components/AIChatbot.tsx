@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
+import { useAIConversations } from '@/hooks/useAIConversations';
 import { ChatCharts, detectChartType } from '@/components/ChatCharts';
+import { AIConversationHistory } from '@/components/AIConversationHistory';
 import { 
   MessageCircle, 
   Send, 
@@ -13,11 +15,11 @@ import {
   User, 
   Sparkles,
   Loader2,
-  Lightbulb,
   TrendingUp,
   Package,
   Users,
-  BarChart3
+  BarChart3,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,12 +29,12 @@ interface Message {
   chartType?: string | null;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+const CHAT_URL = `https://frkfrvbwhnvtvywgmvzz.supabase.co/functions/v1/ai-chat`;
 
 const quickQuestions = [
-  { icon: TrendingUp, text: "Comment vont mes ventes ?", color: "text-green-500", chart: 'sales-trend' },
-  { icon: Package, text: "Quels produits commander ?", color: "text-orange-500", chart: 'stock-levels' },
-  { icon: Users, text: "Mes meilleurs clients ?", color: "text-blue-500", chart: 'client-distribution' },
+  { icon: TrendingUp, text: "Comment vont mes ventes ?", color: "text-success", chart: 'sales-trend' },
+  { icon: Package, text: "Quels produits commander ?", color: "text-warning", chart: 'stock-levels' },
+  { icon: Users, text: "Mes meilleurs clients ?", color: "text-primary", chart: 'client-distribution' },
   { icon: BarChart3, text: "Analyse de mes marges", color: "text-purple-500", chart: 'margin-analysis' },
 ];
 
@@ -43,6 +45,14 @@ export function AIChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { products, sales, clients } = useApp();
+  
+  const { 
+    currentConversationId, 
+    setCurrentConversationId,
+    createConversation, 
+    addMessage,
+    updateConversationTitle
+  } = useAIConversations();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -76,19 +86,29 @@ export function AIChatbot() {
   };
 
   const streamChat = async (userMessage: string, presetChartType?: string) => {
-    // Detect chart type from user message
     const chartType = presetChartType || detectChartType(userMessage);
     
     const userMsg: Message = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
+    // Create conversation if not exists
+    let convId = currentConversationId;
+    if (!convId) {
+      convId = await createConversation(userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : ''));
+    }
+
+    // Save user message
+    if (convId) {
+      await addMessage(convId, { role: 'user', content: userMessage });
+    }
+
     try {
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZya2ZydmJ3aG52dHZ5d2dtdnp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0OTE5NTAsImV4cCI6MjA2ODA2Nzk1MH0.vR2M3Iqws4-g8zPYkZtFCaUX7umYtaxemacc1IwADS8`,
         },
         body: JSON.stringify({
           messages: [...messages.map(m => ({ role: m.role, content: m.content })), { role: 'user', content: userMessage }],
@@ -118,7 +138,6 @@ export function AIChatbot() {
       let assistantContent = '';
       let streamDone = false;
 
-      // Create assistant message with chart type
       setMessages(prev => [...prev, { role: 'assistant', content: '', chartType }]);
 
       while (!streamDone) {
@@ -165,33 +184,13 @@ export function AIChatbot() {
         }
       }
 
-      // Final flush
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                if (newMessages.length > 0) {
-                  newMessages[newMessages.length - 1] = { 
-                    role: 'assistant', 
-                    content: assistantContent,
-                    chartType
-                  };
-                }
-                return newMessages;
-              });
-            }
-          } catch { /* ignore */ }
+      // Save assistant message
+      if (convId && assistantContent) {
+        await addMessage(convId, { role: 'assistant', content: assistantContent, chartType });
+        
+        // Update conversation title if it's the first exchange
+        if (messages.length === 0) {
+          await updateConversationTitle(convId, userMessage.slice(0, 50));
         }
       }
 
@@ -222,6 +221,16 @@ export function AIChatbot() {
     }
   };
 
+  const handleSelectConversation = (conversationId: string, loadedMessages: Message[]) => {
+    setMessages(loadedMessages);
+    setCurrentConversationId(conversationId);
+  };
+
+  const handleNewConversation = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+  };
+
   return (
     <>
       {/* Floating button */}
@@ -241,20 +250,35 @@ export function AIChatbot() {
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                <AIConversationHistory
+                  onSelectConversation={handleSelectConversation}
+                  onNewConversation={handleNewConversation}
+                  currentConversationId={currentConversationId}
+                />
                 <div className="p-2 rounded-full bg-primary/20">
                   <Bot className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <CardTitle className="text-base flex items-center gap-1">
                     Assistant IA
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    <Sparkles className="h-4 w-4 text-warning" />
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">Analyse avec graphiques interactifs</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleNewConversation}
+                  title="Nouvelle conversation"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
@@ -319,7 +343,6 @@ export function AIChatbot() {
                         )}
                       </div>
                       
-                      {/* Render chart if applicable */}
                       {msg.role === 'assistant' && msg.chartType && msg.content && (
                         <div className="ml-9 mr-2">
                           <ChatCharts 
