@@ -263,13 +263,13 @@ export function SmartAlerts() {
 
   return (
     <>
-      {/* Floating alert button */}
+      {/* Floating alert button - hidden on mobile to avoid overlap */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-40 right-4 z-50 h-14 w-14 rounded-full shadow-lg transition-all hover:scale-110 ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-20 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${isOpen ? 'scale-0' : 'scale-100'}`}
         variant={criticalCount > 0 ? 'destructive' : 'default'}
       >
-        <Bell className="h-6 w-6" />
+        <Bell className="h-5 w-5" />
         {alerts.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {alerts.length}
@@ -279,7 +279,7 @@ export function SmartAlerts() {
 
       {/* Alerts panel */}
       {isOpen && (
-        <Card className="fixed bottom-40 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
+        <Card className="fixed bottom-20 right-20 z-40 w-[380px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 hidden lg:block">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

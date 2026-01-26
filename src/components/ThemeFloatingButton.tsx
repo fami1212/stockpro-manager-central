@@ -253,7 +253,7 @@ export const ThemeFloatingButton = () => {
   const CurrentIcon = currentTheme?.icon || Palette;
 
   return (
-    <div className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 max-w-[calc(100vw-1rem)]">
+    <div className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 max-w-[calc(100vw-1rem)] hidden lg:block">
       {/* Color palette panel - positioned to the left */}
       <div className={cn(
         "absolute right-full top-1/2 -translate-y-1/2 mr-4 transition-all duration-500 ease-out",

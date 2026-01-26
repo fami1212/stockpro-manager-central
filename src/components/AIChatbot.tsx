@@ -233,20 +233,20 @@ export function AIChatbot() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button - positioned to avoid conflicts */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full shadow-lg transition-all hover:scale-110 ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-4 z-40 h-12 w-12 lg:h-14 lg:w-14 rounded-full shadow-lg transition-all hover:scale-110 ${isOpen ? 'scale-0' : 'scale-100'}`}
         style={{ 
           background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)'
         }}
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5 lg:h-6 lg:w-6" />
       </Button>
 
       {/* Chat window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-4 z-50 w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
+        <Card className="fixed bottom-20 right-4 z-40 w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
