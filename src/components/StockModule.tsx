@@ -15,7 +15,11 @@ import { usePagination } from '@/hooks/usePagination';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
-export const StockModule = () => {
+interface StockModuleProps {
+  onNavigateToPurchases?: () => void;
+}
+
+export const StockModule = ({ onNavigateToPurchases }: StockModuleProps) => {
   const { products, categories, units, deleteProduct, loading, initialized } = useApp();
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -146,7 +150,7 @@ export const StockModule = () => {
         </div>
       </div>
 
-      <StockAlerts />
+      <StockAlerts onNavigateToPurchases={onNavigateToPurchases} />
 
       {/* Products List */}
       <div className="dashboard-card p-4 lg:p-6">

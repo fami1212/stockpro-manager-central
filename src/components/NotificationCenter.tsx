@@ -235,9 +235,9 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onMarkAsRead, onDelete, onViewDetails }: NotificationItemProps) {
-  const config = TYPE_CONFIG[notification.type];
-  const TypeIcon = config.icon;
-  const CategoryIcon = CATEGORY_ICONS[notification.category];
+  const config = TYPE_CONFIG[notification.type] || TYPE_CONFIG.info;
+  const TypeIcon = config.icon || Info;
+  const CategoryIcon = CATEGORY_ICONS[notification.category] || Settings;
 
   return (
     <Card className={cn(
