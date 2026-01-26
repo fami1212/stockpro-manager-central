@@ -74,7 +74,7 @@ const Index = () => {
       case 'dashboard':
         return <Dashboard />;
       case 'stock':
-        return <StockModule />;
+        return <StockModule onNavigateToPurchases={() => setActiveModule('purchases')} />;
       case 'sales':
         return <SalesModule />;
       case 'clients':

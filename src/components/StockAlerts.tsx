@@ -1,9 +1,14 @@
-
 import { useApp } from '@/contexts/AppContext';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-export const StockAlerts = () => {
+interface StockAlertsProps {
+  onNavigateToPurchases?: () => void;
+}
+
+export const StockAlerts = ({ onNavigateToPurchases }: StockAlertsProps) => {
   const { products } = useApp();
   
   // Calculer les produits avec stock bas dynamiquement
@@ -13,47 +18,60 @@ export const StockAlerts = () => {
 
   if (lowStockProducts.length === 0) {
     return (
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-5 h-5 text-green-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Alertes Stock</h3>
-        </div>
-        <div className="text-center py-8">
-          <p className="text-gray-500">Aucune alerte de stock bas</p>
-          <p className="text-sm text-gray-400 mt-1">Tous vos produits ont un stock suffisant</p>
-        </div>
-      </div>
+      <Card className="border-success/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CheckCircle className="w-5 h-5 text-success" />
+            Alertes Stock
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6">
+            <p className="text-muted-foreground">Aucune alerte de stock bas</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Tous vos produits ont un stock suffisant</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle className="w-5 h-5 text-red-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Alertes Stock Bas</h3>
-        <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-          {lowStockProducts.length}
-        </span>
-      </div>
-      <div className="space-y-3">
+    <Card className="border-destructive/20">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-destructive" />
+          <CardTitle className="text-base">Alertes Stock Bas</CardTitle>
+          <Badge variant="destructive" className="ml-auto">
+            {lowStockProducts.length}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {lowStockProducts.map((product) => (
-          <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-400 space-y-2 sm:space-y-0">
+          <div 
+            key={product.id} 
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-destructive/5 rounded-lg border-l-4 border-destructive space-y-2 sm:space-y-0"
+          >
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">{product.name}</p>
-              <p className="text-xs text-gray-600">
+              <p className="text-sm font-medium text-foreground">{product.name}</p>
+              <p className="text-xs text-muted-foreground">
                 Seuil: {product.alert_threshold} • Ref: {product.reference}
               </p>
             </div>
             <div className="text-left sm:text-right">
-              <span className="text-sm font-bold text-red-600">{product.stock} restant</span>
-              <p className="text-xs text-red-500">Stock critique!</p>
+              <span className="text-sm font-bold text-destructive">{product.stock} restant</span>
+              <p className="text-xs text-destructive/80">Stock critique!</p>
             </div>
           </div>
         ))}
-      </div>
-      <Button className="w-full mt-4">
-        Gérer les réapprovisionnements
-      </Button>
-    </div>
+        
+        <Button 
+          className="w-full mt-4" 
+          onClick={onNavigateToPurchases}
+        >
+          Gérer les réapprovisionnements
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
