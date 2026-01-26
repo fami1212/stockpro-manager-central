@@ -1,11 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApp } from '@/contexts/AppContext';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useAuth } from '@/hooks/useAuth';
 import { 
   Bell, 
   TrendingUp, 
@@ -37,9 +35,6 @@ export function SmartAlerts() {
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { products, sales, clients } = useApp();
-  const { createNotification } = useNotifications();
-  const { user } = useAuth();
-  const lastPersistRef = useRef<string>('');
 
   // Generate smart alerts based on data analysis
   const generateAlerts = useMemo(() => {
@@ -212,37 +207,8 @@ export function SmartAlerts() {
     return newAlerts;
   }, [products, sales, clients]);
 
-  // Persist alerts to database (only critical and warning)
-  useEffect(() => {
-    if (!user) return;
-
-    const criticalAlerts = generateAlerts.filter(a => a.type === 'critical' || a.type === 'warning');
-    const alertsSignature = criticalAlerts.map(a => a.id).sort().join(',');
-    
-    // Only persist if alerts changed
-    if (alertsSignature === lastPersistRef.current) return;
-    lastPersistRef.current = alertsSignature;
-
-    // Persist each new alert to notifications table
-    criticalAlerts.forEach(async (alert) => {
-      try {
-        await createNotification({
-          title: alert.title,
-          description: alert.description,
-          type: alert.type,
-          category: alert.category as 'stock' | 'sales' | 'clients' | 'system',
-          details: {
-            impact: alert.impact,
-            action: alert.action,
-            ...alert.data,
-          },
-        });
-      } catch (error) {
-        // Silent fail - don't spam user with errors
-        console.error('Failed to persist alert:', error);
-      }
-    });
-  }, [generateAlerts, user, createNotification]);
+  // Persist alerts to database - removed to prevent infinite notification loop
+  // Smart alerts are now display-only; use NotificationCenter for persistent notifications
 
   useEffect(() => {
     setAlerts(generateAlerts);
