@@ -317,7 +317,7 @@ export function SmartAlerts({ externalOpen, onExternalClose }: SmartAlertsProps 
                 >
                   <RefreshCw className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={handleClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
