@@ -16,10 +16,10 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface StockModuleProps {
-  onNavigateToPurchases?: () => void;
+  onNavigateToPurchases?: () => void; // kept for backward compat but no longer needed
 }
 
-export const StockModule = ({ onNavigateToPurchases }: StockModuleProps) => {
+export const StockModule = (_props: StockModuleProps) => {
   const { products, categories, units, deleteProduct, loading, initialized } = useApp();
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
