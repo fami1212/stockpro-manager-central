@@ -277,7 +277,7 @@ export function SmartAlerts({ externalOpen, onExternalClose }: SmartAlertsProps 
       {/* Floating alert button - hidden on mobile to avoid overlap */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 right-20 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-20 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${effectiveOpen ? 'scale-0' : 'scale-100'}`}
         variant={criticalCount > 0 ? 'destructive' : 'default'}
       >
         <Bell className="h-5 w-5" />
