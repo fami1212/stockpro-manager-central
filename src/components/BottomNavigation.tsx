@@ -46,6 +46,8 @@ interface BottomNavigationProps {
   onPageChange: (page: string) => void;
   userRole?: AppRole;
   permissions?: ModulePermissions;
+  onOpenChatbot?: () => void;
+  onOpenAlerts?: () => void;
 }
 
 export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions }: BottomNavigationProps) => {
