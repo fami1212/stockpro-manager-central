@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import logoImg from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
@@ -184,11 +185,16 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
     )}>
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
-        {!collapsed && (
-          <div>
-            <h1 className="text-xl font-bold text-foreground">StockPro</h1>
-            <p className="text-xs text-muted-foreground">Gestion intelligente</p>
+        {!collapsed ? (
+          <div className="flex items-center gap-2">
+            <img src={logoImg} alt="StockPro" className="w-8 h-8 object-contain" />
+            <div>
+              <h1 className="text-xl font-bold text-foreground">StockPro</h1>
+              <p className="text-xs text-muted-foreground">Gestion intelligente</p>
+            </div>
           </div>
+        ) : (
+          <img src={logoImg} alt="StockPro" className="w-8 h-8 object-contain mx-auto" />
         )}
         <Button
           variant="ghost"
