@@ -38,8 +38,20 @@ const quickQuestions = [
   { icon: BarChart3, text: "Analyse de mes marges", color: "text-purple-500", chart: 'margin-analysis' },
 ];
 
-export function AIChatbot() {
+interface AIChatbotProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+export function AIChatbot({ externalOpen, onExternalClose }: AIChatbotProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Handle external open trigger
+  const effectiveOpen = isOpen || !!externalOpen;
+  const handleClose = () => {
+    setIsOpen(false);
+    onExternalClose?.();
+  };
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -236,7 +248,7 @@ export function AIChatbot() {
       {/* Floating button - positioned to avoid conflicts */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 right-4 z-40 h-12 w-12 lg:h-14 lg:w-14 rounded-full shadow-lg transition-all hover:scale-110 ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-4 z-40 h-12 w-12 lg:h-14 lg:w-14 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${effectiveOpen ? 'scale-0' : 'scale-100'}`}
         style={{ 
           background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)'
         }}
@@ -245,8 +257,8 @@ export function AIChatbot() {
       </Button>
 
       {/* Chat window */}
-      {isOpen && (
-        <Card className="fixed bottom-20 right-4 z-40 w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
+      {effectiveOpen && (
+        <Card className="fixed bottom-4 right-4 left-4 lg:left-auto lg:bottom-20 z-50 lg:z-40 w-auto lg:w-[400px] lg:max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 max-h-[80vh]">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -275,7 +287,7 @@ export function AIChatbot() {
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={handleClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

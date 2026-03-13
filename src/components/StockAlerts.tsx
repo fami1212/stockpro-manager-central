@@ -1,14 +1,13 @@
+import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RestockModal } from '@/components/RestockModal';
 
-interface StockAlertsProps {
-  onNavigateToPurchases?: () => void;
-}
-
-export const StockAlerts = ({ onNavigateToPurchases }: StockAlertsProps) => {
+export const StockAlerts = () => {
+  const [showRestockModal, setShowRestockModal] = useState(false);
   const { products } = useApp();
   
   // Calculer les produits avec stock bas dynamiquement
@@ -67,11 +66,13 @@ export const StockAlerts = ({ onNavigateToPurchases }: StockAlertsProps) => {
         
         <Button 
           className="w-full mt-4" 
-          onClick={onNavigateToPurchases}
+          onClick={() => setShowRestockModal(true)}
         >
           Gérer les réapprovisionnements
         </Button>
       </CardContent>
+
+      <RestockModal open={showRestockModal} onClose={() => setShowRestockModal(false)} />
     </Card>
   );
 };

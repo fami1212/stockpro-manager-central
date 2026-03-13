@@ -139,8 +139,8 @@ export function useNotifications() {
 
       if (error) throw error;
 
-      setNotifications(prev => [data as Notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      // Don't update state here — let the realtime subscription handle it
+      // to avoid duplicate entries
       return data;
     } catch (error) {
       console.error('Error creating notification:', error);
@@ -168,7 +168,11 @@ export function useNotifications() {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
+          // Deduplicate: only add if not already present
+          setNotifications(prev => {
+            if (prev.some(n => n.id === newNotification.id)) return prev;
+            return [newNotification, ...prev];
+          });
           setUnreadCount(prev => prev + 1);
           toast.info(newNotification.title, {
             description: newNotification.description,

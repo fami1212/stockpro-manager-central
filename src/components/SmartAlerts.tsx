@@ -30,8 +30,19 @@ interface SmartAlert {
   createdAt: Date;
 }
 
-export function SmartAlerts() {
+interface SmartAlertsProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+export function SmartAlerts({ externalOpen, onExternalClose }: SmartAlertsProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const effectiveOpen = isOpen || !!externalOpen;
+  const handleClose = () => {
+    setIsOpen(false);
+    onExternalClose?.();
+  };
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { products, sales, clients } = useApp();
@@ -266,7 +277,7 @@ export function SmartAlerts() {
       {/* Floating alert button - hidden on mobile to avoid overlap */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 right-20 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-20 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${effectiveOpen ? 'scale-0' : 'scale-100'}`}
         variant={criticalCount > 0 ? 'destructive' : 'default'}
       >
         <Bell className="h-5 w-5" />
@@ -278,8 +289,8 @@ export function SmartAlerts() {
       </Button>
 
       {/* Alerts panel */}
-      {isOpen && (
-        <Card className="fixed bottom-20 right-20 z-40 w-[380px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 hidden lg:block">
+      {effectiveOpen && (
+        <Card className="fixed bottom-4 left-4 right-4 lg:left-auto lg:right-20 lg:bottom-20 z-50 lg:z-40 w-auto lg:w-[380px] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 max-h-[80vh]">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -306,7 +317,7 @@ export function SmartAlerts() {
                 >
                   <RefreshCw className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={handleClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

@@ -12,7 +12,11 @@ import {
   Tag,
   PackageX,
   Download,
-  Receipt
+  Receipt,
+  MoreHorizontal,
+  MessageCircle,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -41,9 +45,12 @@ interface BottomNavigationProps {
   onPageChange: (page: string) => void;
   userRole?: AppRole;
   permissions?: ModulePermissions;
+  onOpenChatbot?: () => void;
+  onOpenAlerts?: () => void;
 }
 
-export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions }: BottomNavigationProps) => {
+export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions, onOpenChatbot, onOpenAlerts }: BottomNavigationProps) => {
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
@@ -100,6 +107,31 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
       {/* Glass background */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/50" />
       
+      {/* Quick menu overlay */}
+      {showQuickMenu && (
+        <div className="absolute bottom-full right-2 mb-2 bg-card border border-border rounded-xl shadow-2xl p-2 space-y-1 animate-in slide-in-from-bottom-2 z-10">
+          <button
+            onClick={() => { onOpenChatbot?.(); setShowQuickMenu(false); }}
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <span>Assistant IA</span>
+          </button>
+          <button
+            onClick={() => { onOpenAlerts?.(); setShowQuickMenu(false); }}
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-accent transition-colors text-sm"
+          >
+            <Sparkles className="h-4 w-4 text-warning" />
+            <span>Alertes intelligentes</span>
+          </button>
+        </div>
+      )}
+
+      {/* Backdrop for quick menu */}
+      {showQuickMenu && (
+        <div className="fixed inset-0 -z-10" onClick={() => setShowQuickMenu(false)} />
+      )}
+      
       {/* Navigation content */}
       <div className="relative flex overflow-x-auto scrollbar-hide px-1 py-2 gap-0.5">
         {visibleMenuItems.map((item) => {
@@ -140,6 +172,20 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
             </button>
           );
         })}
+
+        {/* Quick access button for AI/Alerts */}
+        <button
+          onClick={() => setShowQuickMenu(!showQuickMenu)}
+          className={cn(
+            "flex flex-col items-center justify-center min-w-[64px] px-2 py-1.5 rounded-xl transition-all duration-200 shrink-0",
+            showQuickMenu
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          {showQuickMenu ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+          <span className="text-[10px] font-medium mt-0.5">Plus</span>
+        </button>
       </div>
     </nav>
   );
