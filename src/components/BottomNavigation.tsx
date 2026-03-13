@@ -50,7 +50,8 @@ interface BottomNavigationProps {
   onOpenAlerts?: () => void;
 }
 
-export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions }: BottomNavigationProps) => {
+export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions, onOpenChatbot, onOpenAlerts }: BottomNavigationProps) => {
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
