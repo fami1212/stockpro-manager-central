@@ -66,11 +66,13 @@ export const StockAlerts = () => {
         
         <Button 
           className="w-full mt-4" 
-          onClick={onNavigateToPurchases}
+          onClick={() => setShowRestockModal(true)}
         >
           Gérer les réapprovisionnements
         </Button>
       </CardContent>
+
+      <RestockModal open={showRestockModal} onClose={() => setShowRestockModal(false)} />
     </Card>
   );
 };

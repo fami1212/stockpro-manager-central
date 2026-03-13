@@ -150,7 +150,7 @@ export const StockModule = (_props: StockModuleProps) => {
         </div>
       </div>
 
-      <StockAlerts onNavigateToPurchases={onNavigateToPurchases} />
+      <StockAlerts />
 
       {/* Products List */}
       <div className="dashboard-card p-4 lg:p-6">
