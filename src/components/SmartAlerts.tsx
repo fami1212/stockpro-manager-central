@@ -30,8 +30,19 @@ interface SmartAlert {
   createdAt: Date;
 }
 
-export function SmartAlerts() {
+interface SmartAlertsProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+export function SmartAlerts({ externalOpen, onExternalClose }: SmartAlertsProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const effectiveOpen = isOpen || !!externalOpen;
+  const handleClose = () => {
+    setIsOpen(false);
+    onExternalClose?.();
+  };
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { products, sales, clients } = useApp();

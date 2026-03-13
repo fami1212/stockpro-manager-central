@@ -38,8 +38,20 @@ const quickQuestions = [
   { icon: BarChart3, text: "Analyse de mes marges", color: "text-purple-500", chart: 'margin-analysis' },
 ];
 
-export function AIChatbot() {
+interface AIChatbotProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+export function AIChatbot({ externalOpen, onExternalClose }: AIChatbotProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Handle external open trigger
+  const effectiveOpen = isOpen || !!externalOpen;
+  const handleClose = () => {
+    setIsOpen(false);
+    onExternalClose?.();
+  };
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
