@@ -289,8 +289,8 @@ export function SmartAlerts({ externalOpen, onExternalClose }: SmartAlertsProps 
       </Button>
 
       {/* Alerts panel */}
-      {isOpen && (
-        <Card className="fixed bottom-20 right-20 z-40 w-[380px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 hidden lg:block">
+      {effectiveOpen && (
+        <Card className="fixed bottom-4 left-4 right-4 lg:left-auto lg:right-20 lg:bottom-20 z-50 lg:z-40 w-auto lg:w-[380px] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 max-h-[80vh]">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
