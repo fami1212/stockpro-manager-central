@@ -246,7 +246,7 @@ export function AIChatbot() {
 
       {/* Chat window */}
       {isOpen && (
-        <Card className="fixed bottom-20 right-4 z-40 w-[400px] max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4">
+        <Card className="fixed bottom-4 right-4 left-4 lg:left-auto lg:bottom-20 z-50 lg:z-40 w-auto lg:w-[400px] lg:max-w-[calc(100vw-2rem)] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 max-h-[80vh]">
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
