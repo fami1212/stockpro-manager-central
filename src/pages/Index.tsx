@@ -147,8 +147,15 @@ const Index = () => {
         </main>
       </div>
       
-      {/* Mobile Bottom Navigation */}
-      <BottomNavigation activePage={activeModule} onPageChange={handleModuleChange} userRole={role} permissions={permissions} />
+      {/* Mobile Bottom Navigation with quick access */}
+      <BottomNavigation 
+        activePage={activeModule} 
+        onPageChange={handleModuleChange} 
+        userRole={role} 
+        permissions={permissions}
+        onOpenChatbot={() => setChatbotOpen(true)}
+        onOpenAlerts={() => setAlertsOpen(true)}
+      />
       
       {/* Floating Action Button - Mobile only */}
       <FloatingActionButton
@@ -157,14 +164,14 @@ const Index = () => {
         onNewClient={handleNewClient}
       />
       
-      {/* Theme Floating Button - Always visible */}
+      {/* Theme Floating Button - Desktop only */}
       <ThemeFloatingButton />
       
       {/* Smart AI Alerts */}
-      <SmartAlerts />
+      <SmartAlerts externalOpen={alertsOpen} onExternalClose={() => setAlertsOpen(false)} />
       
       {/* AI Chatbot */}
-      <AIChatbot />
+      <AIChatbot externalOpen={chatbotOpen} onExternalClose={() => setChatbotOpen(false)} />
     </div>
   );
 };
