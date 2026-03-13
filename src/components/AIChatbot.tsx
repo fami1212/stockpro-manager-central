@@ -248,7 +248,7 @@ export function AIChatbot({ externalOpen, onExternalClose }: AIChatbotProps = {}
       {/* Floating button - positioned to avoid conflicts */}
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 right-4 z-40 h-12 w-12 lg:h-14 lg:w-14 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-20 right-4 z-40 h-12 w-12 lg:h-14 lg:w-14 rounded-full shadow-lg transition-all hover:scale-110 hidden lg:flex ${effectiveOpen ? 'scale-0' : 'scale-100'}`}
         style={{ 
           background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)'
         }}
