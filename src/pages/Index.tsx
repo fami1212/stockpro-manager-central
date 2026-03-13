@@ -29,6 +29,8 @@ const Index = () => {
   const { user, signOut } = useAuth();
   const { role, canAccess, permissions, loading: roleLoading } = useUserRole();
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
 
   // Redirect to allowed module if current is not accessible
   useEffect(() => {
