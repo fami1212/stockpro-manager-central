@@ -12,7 +12,12 @@ import {
   Tag,
   PackageX,
   Download,
-  Receipt
+  Receipt,
+  MoreHorizontal,
+  MessageCircle,
+  Bell,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
