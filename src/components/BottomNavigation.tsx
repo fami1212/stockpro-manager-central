@@ -15,7 +15,6 @@ import {
   Receipt,
   MoreHorizontal,
   MessageCircle,
-  Bell,
   Sparkles,
   X
 } from 'lucide-react';
