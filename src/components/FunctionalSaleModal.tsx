@@ -277,6 +277,32 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
             </div>
           </div>
 
+          {/* Print options for ticket */}
+          {formData.documentType === 'ticket' && (
+            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+              <Printer className="h-4 w-4 text-muted-foreground" />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={autoPrint}
+                  onChange={(e) => setAutoPrint(e.target.checked)}
+                  className="rounded"
+                />
+                Impression automatique
+              </label>
+              {autoPrint && (
+                <Select value={printerWidth} onValueChange={(v) => setPrinterWidth(v as '58mm' | '80mm')}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="58mm">58mm</SelectItem>
+                    <SelectItem value="80mm">80mm</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )
           {/* Articles */}
           <div>
             <div className="flex items-center justify-between mb-4">
