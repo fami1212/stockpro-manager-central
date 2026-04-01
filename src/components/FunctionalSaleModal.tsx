@@ -302,7 +302,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
                 </Select>
               )}
             </div>
-          )
+          )}
+
           {/* Articles */}
           <div>
             <div className="flex items-center justify-between mb-4">
