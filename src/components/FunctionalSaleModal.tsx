@@ -12,6 +12,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ClientFormModal } from '@/components/ClientFormModal';
 import { PromotionSelector } from '@/components/PromotionSelector';
 import { usePromotions } from '@/hooks/usePromotions';
+import { printReceipt, buildReceiptFromSale } from '@/utils/receiptPrinter';
+import { toast } from 'sonner';
 
 interface SaleModalProps {
   sale?: Sale;
