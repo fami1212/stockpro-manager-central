@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Eye, Edit, Trash2, FileText, ShoppingCart, TrendingUp, DollarSign, BarChart3 } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, FileText, ShoppingCart, TrendingUp, DollarSign, BarChart3, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,7 @@ import { useApp } from '@/contexts/AppContext';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { downloadInvoicePDF } from '@/utils/invoicePdfGenerator';
+import { printReceipt, buildReceiptFromSale } from '@/utils/receiptPrinter';
 import { toast } from 'sonner';
 
 export const SalesModule = () => {
@@ -292,6 +293,17 @@ export const SalesModule = () => {
                       <td className="py-3 px-4">{getStatusBadge(sale.status)}</td>
                       <td className="py-3 px-4">
                         <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              const receiptData = buildReceiptFromSale(sale, state.products, state.clients);
+                              printReceipt(receiptData, '80mm');
+                            }}
+                            title="Imprimer ticket"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="sm"

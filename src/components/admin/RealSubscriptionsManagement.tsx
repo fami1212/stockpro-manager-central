@@ -4,211 +4,217 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Search, Users, CreditCard, TrendingUp, AlertCircle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Search, Users, CreditCard, TrendingUp, AlertCircle, Crown, Zap, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { UserStatsModal } from './UserStatsModal';
 
-interface UserSubscription {
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  display_name: string;
+  price_monthly: number;
+  currency: string;
+}
+
+interface UserWithSubscription {
   id: string;
   user_id: string;
   email: string;
   name: string;
   company: string;
   subscription_plan: string;
+  plan_display_name: string;
+  plan_id: string | null;
+  sub_status: string;
+  trial_end: string | null;
   created_at: string;
   last_login: string | null;
-  status: 'active' | 'inactive' | 'suspended';
+  account_status: string;
 }
 
 export function RealSubscriptionsManagement() {
-  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
+  const [users, setUsers] = useState<UserWithSubscription[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [showStatsModal, setShowStatsModal] = useState(false);
 
   useEffect(() => {
-    fetchSubscriptions();
+    fetchData();
   }, []);
 
-  const fetchSubscriptions = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Get profiles data
-      const { data: profiles, error: profilesError } = await supabase
+
+      // Fetch plans
+      const { data: plansData } = await supabase
+        .from('subscription_plans' as any)
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      const fetchedPlans = (plansData || []) as any[];
+      setPlans(fetchedPlans);
+
+      // Fetch profiles
+      const { data: profiles } = await supabase
         .from('profiles')
         .select('*');
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
+      // Fetch subscriptions
+      const { data: subscriptions } = await supabase
+        .from('user_subscriptions' as any)
+        .select('*');
 
-      // Work with available profile data only
-      const subscriptionsData: UserSubscription[] = (profiles || []).map((profile: any) => {
-        const status = (profile.account_status as 'active' | 'inactive' | 'suspended') || (profile.last_login ? 'active' : 'inactive');
+      const subsMap = new Map((subscriptions || []).map((s: any) => [s.user_id, s]));
+
+      const usersData: UserWithSubscription[] = (profiles || []).map((profile: any) => {
+        const sub = subsMap.get(profile.id) as any;
+        const plan = sub ? fetchedPlans.find((p: any) => p.id === sub.plan_id) : null;
+
         return {
           id: profile.id,
           user_id: profile.id,
-          email: profile.email || 'Email non disponible',
+          email: profile.email || 'N/A',
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'N/A',
           company: profile.company || 'N/A',
-          subscription_plan: profile.subscription_plan || 'basic',
+          subscription_plan: plan?.name || sub?.status || profile.subscription_plan || 'trial',
+          plan_display_name: plan?.display_name || 'Essai',
+          plan_id: sub?.plan_id || null,
+          sub_status: sub?.status || 'trial',
+          trial_end: sub?.trial_end || null,
           created_at: profile.created_at,
           last_login: profile.last_login,
-          status
-        } as UserSubscription;
+          account_status: profile.account_status || 'active',
+        };
       });
 
-      setSubscriptions(subscriptionsData);
+      setUsers(usersData);
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les abonnements',
-        variant: 'destructive'
-      });
+      console.error('Error fetching data:', error);
+      toast({ title: 'Erreur', description: 'Impossible de charger les données', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const updateSubscriptionPlan = async (userId: string, newPlan: string) => {
+  const assignPlan = async (userId: string, planName: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_plan: newPlan })
-        .eq('id', userId);
+      const plan = plans.find((p: any) => p.name === planName);
+      if (!plan) return;
 
-      if (error) throw error;
+      // Check if subscription exists
+      const { data: existingSub } = await supabase
+        .from('user_subscriptions' as any)
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      // Update local state
-      setSubscriptions(prev => 
-        prev.map(sub => 
-          sub.user_id === userId 
-            ? { ...sub, subscription_plan: newPlan }
-            : sub
-        )
-      );
+      if (existingSub) {
+        await supabase
+          .from('user_subscriptions' as any)
+          .update({
+            plan_id: plan.id,
+            status: planName === 'trial' ? 'trial' : 'active',
+            subscription_start: planName !== 'trial' ? new Date().toISOString() : null,
+            activated_by: (await supabase.auth.getUser()).data.user?.id,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('user_id', userId);
+      } else {
+        await supabase
+          .from('user_subscriptions' as any)
+          .insert({
+            user_id: userId,
+            plan_id: plan.id,
+            status: planName === 'trial' ? 'trial' : 'active',
+            subscription_start: planName !== 'trial' ? new Date().toISOString() : null,
+            activated_by: (await supabase.auth.getUser()).data.user?.id,
+          } as any);
+      }
 
-      toast({
-        title: 'Abonnement mis à jour',
-        description: `Plan changé vers ${newPlan}`,
-      });
+      // Also update profiles for backward compatibility
+      await supabase.from('profiles').update({ subscription_plan: planName }).eq('id', userId);
+
+      toast({ title: 'Plan mis à jour', description: `Utilisateur passé en ${plan.display_name}` });
+      fetchData();
     } catch (error) {
-      console.error('Error updating subscription:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour l\'abonnement',
-        variant: 'destructive'
-      });
+      console.error('Error assigning plan:', error);
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour le plan', variant: 'destructive' });
     }
   };
 
   const suspendUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ account_status: 'suspended' })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      // Update local state
-      setSubscriptions(prev => prev.map(s => s.user_id === userId ? { ...s, status: 'suspended' } : s));
-
-      toast({
-        title: 'Utilisateur suspendu',
-        description: "L'accès de l'utilisateur a été suspendu",
-      });
+      await supabase.from('profiles').update({ account_status: 'suspended' }).eq('id', userId);
+      await supabase.from('user_subscriptions' as any).update({ status: 'cancelled' } as any).eq('user_id', userId);
+      toast({ title: 'Utilisateur suspendu' });
+      fetchData();
     } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: "Impossible de suspendre l'utilisateur",
-        variant: 'destructive'
-      });
+      toast({ title: 'Erreur', description: 'Impossible de suspendre', variant: 'destructive' });
     }
   };
 
   const restoreUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ account_status: 'active' })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      // Update local state
-      setSubscriptions(prev => prev.map(s => s.user_id === userId ? { ...s, status: 'active' } : s));
-
-      toast({
-        title: 'Utilisateur restauré',
-        description: "L'accès de l'utilisateur a été restauré",
-      });
+      await supabase.from('profiles').update({ account_status: 'active' }).eq('id', userId);
+      toast({ title: 'Utilisateur restauré' });
+      fetchData();
     } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: "Impossible de restaurer l'utilisateur",
-        variant: 'destructive'
-      });
+      toast({ title: 'Erreur', description: 'Impossible de restaurer', variant: 'destructive' });
     }
   };
 
-  const filteredSubscriptions = subscriptions.filter(sub =>
-    sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.subscription_plan.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(u =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.company.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPlanBadge = (plan: string) => {
-    const planColors = {
-      basic: 'bg-gray-100 text-gray-800',
-      premium: 'bg-blue-100 text-blue-800',
-      enterprise: 'bg-purple-100 text-purple-800'
+  const getPlanBadge = (planName: string) => {
+    const config: Record<string, { icon: any; className: string; label: string }> = {
+      trial: { icon: Clock, className: 'bg-yellow-100 text-yellow-800', label: 'Essai' },
+      pro: { icon: Zap, className: 'bg-blue-100 text-blue-800', label: 'Pro' },
+      premium: { icon: Crown, className: 'bg-amber-100 text-amber-800', label: 'Premium' },
     };
-    
+    const c = config[planName] || config.trial;
+    const Icon = c.icon;
     return (
-      <Badge className={planColors[plan as keyof typeof planColors] || planColors.basic}>
-        {plan.toUpperCase()}
+      <Badge className={c.className}>
+        <Icon className="h-3 w-3 mr-1" />
+        {c.label}
       </Badge>
     );
   };
 
   const getStatusBadge = (status: string) => {
-    const statusColors = {
+    const colors: Record<string, string> = {
       active: 'bg-green-100 text-green-800',
-      inactive: 'bg-yellow-100 text-yellow-800',
-      suspended: 'bg-red-100 text-red-800'
+      trial: 'bg-yellow-100 text-yellow-800',
+      expired: 'bg-red-100 text-red-800',
+      cancelled: 'bg-red-100 text-red-800',
+      suspended: 'bg-red-100 text-red-800',
     };
-    
-    return (
-      <Badge className={statusColors[status as keyof typeof statusColors] || statusColors.inactive}>
-        {status === 'active' ? 'Actif' : status === 'inactive' ? 'Inactif' : 'Suspendu'}
-      </Badge>
-    );
+    const labels: Record<string, string> = {
+      active: 'Actif',
+      trial: 'Essai',
+      expired: 'Expiré',
+      cancelled: 'Annulé',
+      suspended: 'Suspendu',
+    };
+    return <Badge className={colors[status] || colors.trial}>{labels[status] || status}</Badge>;
   };
 
-  // Calculate stats with real CFA prices
-  const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length;
-  const planPrices = {
-    basic: 15000, // 15,000 CFA
-    premium: 25000, // 25,000 CFA  
-    enterprise: 50000 // 50,000 CFA
-  };
-  const totalRevenue = subscriptions.reduce((sum, sub) => {
-    if (sub.status === 'active') {
-      return sum + (planPrices[sub.subscription_plan as keyof typeof planPrices] || planPrices.basic);
-    }
-    return sum;
-  }, 0);
-  const premiumUsers = subscriptions.filter(sub => sub.subscription_plan === 'premium').length;
+  // Stats
+  const activeCount = users.filter(u => u.sub_status === 'active').length;
+  const trialCount = users.filter(u => u.sub_status === 'trial').length;
+  const premiumCount = users.filter(u => u.subscription_plan === 'premium').length;
 
   if (loading) {
     return <div className="flex items-center justify-center p-8">Chargement des abonnements...</div>;
@@ -216,75 +222,57 @@ export function RealSubscriptionsManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Abonnements Actifs</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Utilisateurs</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">
-              +{Math.floor(activeSubscriptions * 0.1)} ce mois
-            </p>
+            <div className="text-2xl font-bold">{users.length}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenus Mensuels</CardTitle>
+            <CardTitle className="text-sm font-medium">Abonnés Actifs</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toLocaleString()} CFA</div>
-            <p className="text-xs text-muted-foreground">
-              +12.5% par rapport au mois dernier
-            </p>
+            <div className="text-2xl font-bold">{activeCount}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilisateurs Premium</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">En Essai</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{premiumUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              {Math.round((premiumUsers / subscriptions.length) * 100)}% du total
-            </p>
+            <div className="text-2xl font-bold">{trialCount}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux de Conversion</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Premium</CardTitle>
+            <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8.5%</div>
-            <p className="text-xs text-muted-foreground">
-              Essai vers abonnement payant
-            </p>
+            <div className="text-2xl font-bold">{premiumCount}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Subscriptions Table */}
+      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle>Gestion des Abonnements</CardTitle>
-          <CardDescription>
-            Vue d'ensemble des abonnements utilisateurs
-          </CardDescription>
+          <CardDescription>Gérez les plans et accès des utilisateurs</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search */}
           <div className="flex items-center space-x-2 mb-4">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par nom, email, entreprise..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
@@ -298,31 +286,30 @@ export function RealSubscriptionsManagement() {
                 <TableHead>Entreprise</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Fin essai</TableHead>
                 <TableHead>Inscription</TableHead>
-                <TableHead>Dernière connexion</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSubscriptions.map((subscription) => (
-                <TableRow key={subscription.id}>
+              {filteredUsers.map((user) => (
+                <TableRow key={user.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{subscription.name}</div>
-                      <div className="text-sm text-muted-foreground">{subscription.email}</div>
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{subscription.company}</TableCell>
-                  <TableCell>{getPlanBadge(subscription.subscription_plan)}</TableCell>
-                  <TableCell>{getStatusBadge(subscription.status)}</TableCell>
+                  <TableCell>{user.company}</TableCell>
+                  <TableCell>{getPlanBadge(user.subscription_plan)}</TableCell>
+                  <TableCell>{getStatusBadge(user.account_status === 'suspended' ? 'suspended' : user.sub_status)}</TableCell>
                   <TableCell>
-                    {format(new Date(subscription.created_at), 'dd/MM/yyyy', { locale: fr })}
+                    {user.trial_end
+                      ? format(new Date(user.trial_end), 'dd/MM/yyyy HH:mm', { locale: fr })
+                      : '-'}
                   </TableCell>
                   <TableCell>
-                    {subscription.last_login 
-                      ? format(new Date(subscription.last_login), 'dd/MM/yyyy HH:mm', { locale: fr })
-                      : 'Jamais'
-                    }
+                    {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: fr })}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -332,36 +319,28 @@ export function RealSubscriptionsManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => updateSubscriptionPlan(subscription.user_id, 'basic')}>
-                          Passer en Basic
+                        <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'trial')}>
+                          <Clock className="h-4 w-4 mr-2" /> Essai Gratuit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateSubscriptionPlan(subscription.user_id, 'premium')}>
-                          Passer en Premium
+                        <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'pro')}>
+                          <Zap className="h-4 w-4 mr-2" /> Plan Pro
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateSubscriptionPlan(subscription.user_id, 'enterprise')}>
-                          Passer en Enterprise
+                        <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'premium')}>
+                          <Crown className="h-4 w-4 mr-2" /> Plan Premium
                         </DropdownMenuItem>
-                        {subscription.status === 'suspended' ? (
-                          <DropdownMenuItem 
-                            onClick={() => restoreUser(subscription.user_id)}
-                            className="text-green-600"
-                          >
+                        <DropdownMenuSeparator />
+                        {user.account_status === 'suspended' ? (
+                          <DropdownMenuItem onClick={() => restoreUser(user.user_id)} className="text-green-600">
                             Restaurer
                           </DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem 
-                            onClick={() => suspendUser(subscription.user_id)}
-                            className="text-red-600"
-                          >
+                          <DropdownMenuItem onClick={() => suspendUser(user.user_id)} className="text-destructive">
                             Suspendre
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => {
-                          setSelectedUser({
-                            id: subscription.user_id,
-                            name: subscription.name,
-                            email: subscription.email
-                          });
+                          setSelectedUser({ id: user.user_id, name: user.name, email: user.email });
                           setShowStatsModal(true);
                         }}>
                           Voir les statistiques
@@ -375,8 +354,7 @@ export function RealSubscriptionsManagement() {
           </Table>
         </CardContent>
       </Card>
-      
-      {/* User Stats Modal */}
+
       {selectedUser && (
         <UserStatsModal
           open={showStatsModal}

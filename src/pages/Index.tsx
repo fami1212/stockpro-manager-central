@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Dashboard } from '@/components/Dashboard';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -20,14 +21,16 @@ import { ThemeFloatingButton } from '@/components/ThemeFloatingButton';
 import { AIChatbot } from '@/components/AIChatbot';
 import { SmartAlerts } from '@/components/SmartAlerts';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { SubscriptionWall } from '@/components/SubscriptionWall';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User, Shield } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { role, canAccess, permissions, loading: roleLoading } = useUserRole();
+  const { isTrialExpired, isActive, loading: subLoading, trialDaysRemaining, currentPlanName } = useSubscription();
   const [activeModule, setActiveModule] = useState('dashboard');
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
@@ -49,12 +52,17 @@ const Index = () => {
     }
   };
 
-  if (roleLoading) {
+  if (roleLoading || subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
+  }
+
+  // Show subscription wall if trial expired and not admin
+  if (!isAdmin && isTrialExpired && !isActive) {
+    return <SubscriptionWall />;
   }
 
   const renderActiveModule = () => {
@@ -126,6 +134,11 @@ const Index = () => {
               <Badge variant="outline" className="capitalize">
                 {role}
               </Badge>
+              {!isAdmin && currentPlanName && (
+                <Badge variant={currentPlanName === 'premium' ? 'default' : 'secondary'} className="capitalize">
+                  {currentPlanName === 'trial' ? `Essai (${trialDaysRemaining}j)` : currentPlanName}
+                </Badge>
+              )}
             </div>
             <Button
               variant="outline"
