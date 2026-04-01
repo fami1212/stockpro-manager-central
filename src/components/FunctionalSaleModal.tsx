@@ -34,6 +34,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const [clientsList, setClientsList] = useState(clients);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [autoPrint, setAutoPrint] = useState(true);
+  const [printerWidth, setPrinterWidth] = useState<'58mm' | '80mm'>('80mm');
   const [formData, setFormData] = useState({
     client_id: sale?.client_id || '',
     documentType: 'facture',
