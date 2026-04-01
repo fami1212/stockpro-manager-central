@@ -1290,6 +1290,66 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          allowed_modules: Json | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          display_name: string
+          features: Json | null
+          has_ai_access: boolean | null
+          has_full_ai: boolean | null
+          id: string
+          is_active: boolean | null
+          max_products: number | null
+          max_sales: number | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_modules?: Json | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          display_name: string
+          features?: Json | null
+          has_ai_access?: boolean | null
+          has_full_ai?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          max_products?: number | null
+          max_sales?: number | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_modules?: Json | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          display_name?: string
+          features?: Json | null
+          has_ai_access?: boolean | null
+          has_full_ai?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          max_products?: number | null
+          max_sales?: number | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1391,6 +1451,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          activated_by: string | null
+          created_at: string | null
+          id: string
+          payment_method: string | null
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_end: string | null
+          subscription_start: string | null
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_by?: string | null
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_by?: string | null
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
