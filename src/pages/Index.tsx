@@ -134,6 +134,11 @@ const Index = () => {
               <Badge variant="outline" className="capitalize">
                 {role}
               </Badge>
+              {!isAdmin && currentPlanName && (
+                <Badge variant={currentPlanName === 'premium' ? 'default' : 'secondary'} className="capitalize">
+                  {currentPlanName === 'trial' ? `Essai (${trialDaysRemaining}j)` : currentPlanName}
+                </Badge>
+              )}
             </div>
             <Button
               variant="outline"
