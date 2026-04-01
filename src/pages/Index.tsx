@@ -52,12 +52,17 @@ const Index = () => {
     }
   };
 
-  if (roleLoading) {
+  if (roleLoading || subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
+  }
+
+  // Show subscription wall if trial expired and not admin
+  if (!isAdmin && isTrialExpired && !isActive) {
+    return <SubscriptionWall />;
   }
 
   const renderActiveModule = () => {
