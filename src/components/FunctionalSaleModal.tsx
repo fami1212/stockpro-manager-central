@@ -178,6 +178,17 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
         await updateSale(sale.id, saleData);
       } else {
         await addSale(saleData);
+        
+        // Auto-print receipt if enabled
+        if (autoPrint && formData.documentType === 'ticket') {
+          try {
+            const receiptData = buildReceiptFromSale(saleData, products, clientsList);
+            printReceipt(receiptData, printerWidth);
+          } catch (printError) {
+            console.error('Print error:', printError);
+            toast.error('Erreur d\'impression du ticket');
+          }
+        }
       }
 
       onClose();
