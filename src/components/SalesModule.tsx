@@ -12,6 +12,7 @@ import { useApp } from '@/contexts/AppContext';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { downloadInvoicePDF } from '@/utils/invoicePdfGenerator';
+import { printReceipt, buildReceiptFromSale } from '@/utils/receiptPrinter';
 import { toast } from 'sonner';
 
 export const SalesModule = () => {
