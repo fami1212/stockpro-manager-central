@@ -296,6 +296,17 @@ export const SalesModule = () => {
                           <Button 
                             variant="ghost" 
                             size="sm"
+                            onClick={() => {
+                              const receiptData = buildReceiptFromSale(sale, state.products, state.clients);
+                              printReceipt(receiptData, '80mm');
+                            }}
+                            title="Imprimer ticket"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
                             onClick={() => handleGenerateInvoice(sale)}
                             className="text-info hover:text-info"
                           >
