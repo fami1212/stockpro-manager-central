@@ -323,6 +323,9 @@ export function RealSubscriptionsManagement() {
                         <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'trial')}>
                           <Clock className="h-4 w-4 mr-2" /> Essai Gratuit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'basique')}>
+                          <Zap className="h-4 w-4 mr-2" /> Plan Basique
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'pro')}>
                           <Zap className="h-4 w-4 mr-2" /> Plan Pro
                         </DropdownMenuItem>

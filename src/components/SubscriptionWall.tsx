@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Zap, Star, Clock } from 'lucide-react';
+import { Check, Crown, Zap, Star, Clock, Package } from 'lucide-react';
 import { useSubscription, SubscriptionPlan } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,12 +15,13 @@ export function SubscriptionWall() {
 
   const planIcons: Record<string, any> = {
     trial: Clock,
+    basique: Package,
     pro: Zap,
     premium: Crown,
   };
 
   const planColors: Record<string, string> = {
-    trial: 'border-muted',
+    basique: 'border-green-500 shadow-green-100',
     pro: 'border-blue-500 shadow-blue-100',
     premium: 'border-amber-500 shadow-amber-100',
   };
@@ -30,7 +31,6 @@ export function SubscriptionWall() {
     setRequesting(plan.id);
 
     try {
-      // Insert a notification for admin
       await supabase.from('notifications').insert({
         user_id: user.id,
         title: 'Demande d\'abonnement',
@@ -58,7 +58,7 @@ export function SubscriptionWall() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full space-y-8">
+      <div className="max-w-5xl w-full space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
@@ -70,15 +70,15 @@ export function SubscriptionWall() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {trialDaysRemaining > 0
               ? `Il vous reste ${trialDaysRemaining} jour(s) d'essai. Choisissez un plan pour continuer.`
-              : 'Choisissez un plan pour continuer à utiliser StockPro Manager.'}
+              : 'Choisissez un plan pour continuer à utiliser StockPlant.'}
           </p>
         </div>
 
         {/* Plans */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {displayPlans.map((plan) => {
             const Icon = planIcons[plan.name] || Zap;
-            const isPopular = plan.name === 'premium';
+            const isPopular = plan.name === 'pro';
 
             return (
               <Card
@@ -86,8 +86,13 @@ export function SubscriptionWall() {
                 className={`relative overflow-hidden transition-all hover:shadow-lg border-2 ${planColors[plan.name] || 'border-border'}`}
               >
                 {isPopular && (
-                  <div className="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                  <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                     POPULAIRE
+                  </div>
+                )}
+                {plan.name === 'premium' && (
+                  <div className="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                    COMPLET
                   </div>
                 )}
                 <CardHeader className="text-center pb-4">
@@ -125,7 +130,13 @@ export function SubscriptionWall() {
                         <span className="text-sm text-foreground">{feature}</span>
                       </li>
                     ))}
-                    {!plan.has_full_ai && (
+                    {!plan.has_ai_access && (
+                      <li className="flex items-start gap-3 opacity-50">
+                        <span className="h-5 w-5 mt-0.5 flex-shrink-0 text-center">✕</span>
+                        <span className="text-sm">Accès IA</span>
+                      </li>
+                    )}
+                    {plan.has_ai_access && !plan.has_full_ai && (
                       <li className="flex items-start gap-3 opacity-50">
                         <span className="h-5 w-5 mt-0.5 flex-shrink-0 text-center">✕</span>
                         <span className="text-sm">IA complète (analyses avancées)</span>
