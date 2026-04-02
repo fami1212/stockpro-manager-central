@@ -149,6 +149,8 @@ export function useSubscription() {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }, [subscription]);
 
+  const allowedModules = subscription?.plan?.allowed_modules || [];
+
   return {
     subscription,
     plans,
@@ -160,5 +162,6 @@ export function useSubscription() {
     trialDaysRemaining: trialDaysRemaining(),
     refetch: fetchSubscription,
     currentPlanName: subscription?.plan?.name || 'trial',
+    allowedModules,
   };
 }
