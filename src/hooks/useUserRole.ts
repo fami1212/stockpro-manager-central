@@ -39,6 +39,7 @@ const ALL_PERMISSIONS: ModulePermissions = {
 
 export function useUserRole() {
   const { user } = useAuth();
+  const { allowedModules, isActive, loading: subLoading, currentPlanName } = useSubscription();
   const [role, setRole] = useState<AppRole>('user');
   const [permissions, setPermissions] = useState<ModulePermissions>({ ...ALL_PERMISSIONS, admin: false });
   const [loading, setLoading] = useState(true);
@@ -72,9 +73,9 @@ export function useUserRole() {
 
         if (permsError) throw permsError;
 
-        // Build permissions object from database
-        const permsObj: ModulePermissions = {
-          dashboard: true, // Always enabled
+        // Build permissions object from database (role-based)
+        const rolePerms: ModulePermissions = {
+          dashboard: true,
           stock: false,
           sales: false,
           clients: false,
@@ -85,17 +86,32 @@ export function useUserRole() {
           export: false,
           invoices: false,
           reports: false,
-          settings: true, // Always enabled
-          admin: false, // Non-admin roles never have admin access
+          settings: true,
+          admin: false,
         };
 
         modulePerms?.forEach((perm) => {
-          if (perm.module in permsObj) {
-            permsObj[perm.module as keyof ModulePermissions] = perm.is_enabled;
+          if (perm.module in rolePerms) {
+            rolePerms[perm.module as keyof ModulePermissions] = perm.is_enabled;
           }
         });
 
-        setPermissions(permsObj);
+        // Intersect with subscription allowed_modules
+        // If subscription has allowed_modules defined, restrict to those
+        if (allowedModules && allowedModules.length > 0) {
+          const subModules = new Set(allowedModules);
+          // dashboard and settings always allowed
+          const alwaysAllowed = new Set(['dashboard', 'settings']);
+          
+          Object.keys(rolePerms).forEach((mod) => {
+            if (alwaysAllowed.has(mod) || mod === 'admin') return;
+            if (!subModules.has(mod)) {
+              rolePerms[mod as keyof ModulePermissions] = false;
+            }
+          });
+        }
+
+        setPermissions(rolePerms);
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
@@ -104,7 +120,7 @@ export function useUserRole() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, allowedModules]);
 
   useEffect(() => {
     fetchRoleAndPermissions();
