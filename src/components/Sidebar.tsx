@@ -189,7 +189,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
           <div className="flex items-center gap-2">
             <img src={logoImg} alt="StockPro" className="w-8 h-8 object-contain" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">StockPro</h1>
+              <h1 className="text-xl font-bold text-foreground">StockPlant</h1>
               <p className="text-xs text-muted-foreground">Gestion intelligente</p>
             </div>
           </div>

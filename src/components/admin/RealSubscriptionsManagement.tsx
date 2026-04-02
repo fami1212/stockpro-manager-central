@@ -180,6 +180,7 @@ export function RealSubscriptionsManagement() {
   const getPlanBadge = (planName: string) => {
     const config: Record<string, { icon: any; className: string; label: string }> = {
       trial: { icon: Clock, className: 'bg-yellow-100 text-yellow-800', label: 'Essai' },
+      basique: { icon: Zap, className: 'bg-green-100 text-green-800', label: 'Basique' },
       pro: { icon: Zap, className: 'bg-blue-100 text-blue-800', label: 'Pro' },
       premium: { icon: Crown, className: 'bg-amber-100 text-amber-800', label: 'Premium' },
     };
@@ -321,6 +322,9 @@ export function RealSubscriptionsManagement() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'trial')}>
                           <Clock className="h-4 w-4 mr-2" /> Essai Gratuit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'basique')}>
+                          <Zap className="h-4 w-4 mr-2" /> Plan Basique
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => assignPlan(user.user_id, 'pro')}>
                           <Zap className="h-4 w-4 mr-2" /> Plan Pro

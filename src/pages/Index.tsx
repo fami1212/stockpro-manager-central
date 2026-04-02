@@ -121,8 +121,8 @@ const Index = () => {
         {/* Header - Hidden on mobile */}
         <header className="hidden lg:flex bg-card border-b border-border px-6 py-4 flex-shrink-0 items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">StockPro Manager</h1>
-            <p className="text-sm text-muted-foreground">Tableau de bord intelligent</p>
+            <h1 className="text-2xl font-bold text-foreground">StockPlant</h1>
+            <p className="text-sm text-muted-foreground">Gestion intelligente</p>
           </div>
           
           <div className="flex items-center space-x-4">
