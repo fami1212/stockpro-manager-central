@@ -15,6 +15,7 @@ import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
 import { CronJobsManagement } from '@/components/admin/CronJobsManagement';
 import { ApplicationLogs } from '@/components/admin/ApplicationLogs';
+import { PlanModulesManagement } from '@/components/admin/PlanModulesManagement';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
