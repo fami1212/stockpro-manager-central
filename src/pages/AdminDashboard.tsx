@@ -15,6 +15,7 @@ import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
 import { CronJobsManagement } from '@/components/admin/CronJobsManagement';
 import { ApplicationLogs } from '@/components/admin/ApplicationLogs';
+import { PlanModulesManagement } from '@/components/admin/PlanModulesManagement';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +32,7 @@ const menuItems = [
   { id: 'modules', label: 'Modules', icon: Lock },
   { id: 'audit', label: 'Audit Logs', icon: Activity },
   { id: 'subscriptions', label: 'Abonnements', icon: CreditCard },
+  { id: 'plan-modules', label: 'Modules/Plans', icon: Lock },
   { id: 'settings', label: 'Paramètres', icon: Settings },
   { id: 'cron', label: 'Cron Jobs', icon: Activity },
   { id: 'logs', label: 'App Logs', icon: Activity },
@@ -63,6 +65,8 @@ export default function AdminDashboard() {
         return <AuditLogs />;
       case 'subscriptions':
         return <RealSubscriptionsManagement />;
+      case 'plan-modules':
+        return <PlanModulesManagement />;
       case 'settings':
         return <SystemSettings />;
       case 'cron':
