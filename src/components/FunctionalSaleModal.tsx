@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus, Calculator, UserPlus, Percent } from 'lucide-react';
+import { X, Plus, Minus, Calculator, UserPlus, Percent, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ClientFormModal } from '@/components/ClientFormModal';
 import { PromotionSelector } from '@/components/PromotionSelector';
 import { usePromotions } from '@/hooks/usePromotions';
+import { printReceipt, buildReceiptFromSale } from '@/utils/receiptPrinter';
+import { toast } from 'sonner';
 
 interface SaleModalProps {
   sale?: Sale;
@@ -32,6 +34,8 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
   const [clientsList, setClientsList] = useState(clients);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [autoPrint, setAutoPrint] = useState(true);
+  const [printerWidth, setPrinterWidth] = useState<'58mm' | '80mm'>('80mm');
   const [formData, setFormData] = useState({
     client_id: sale?.client_id || '',
     documentType: 'facture',
@@ -174,6 +178,17 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
         await updateSale(sale.id, saleData);
       } else {
         await addSale(saleData);
+        
+        // Auto-print receipt if enabled
+        if (autoPrint && formData.documentType === 'ticket') {
+          try {
+            const receiptData = buildReceiptFromSale(saleData, products, clientsList);
+            printReceipt(receiptData, printerWidth);
+          } catch (printError) {
+            console.error('Print error:', printError);
+            toast.error('Erreur d\'impression du ticket');
+          }
+        }
       }
 
       onClose();
@@ -261,6 +276,33 @@ export function FunctionalSaleModal({ sale, onClose }: SaleModalProps) {
               </Select>
             </div>
           </div>
+
+          {/* Print options for ticket */}
+          {formData.documentType === 'ticket' && (
+            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+              <Printer className="h-4 w-4 text-muted-foreground" />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={autoPrint}
+                  onChange={(e) => setAutoPrint(e.target.checked)}
+                  className="rounded"
+                />
+                Impression automatique
+              </label>
+              {autoPrint && (
+                <Select value={printerWidth} onValueChange={(v) => setPrinterWidth(v as '58mm' | '80mm')}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="58mm">58mm</SelectItem>
+                    <SelectItem value="80mm">80mm</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
 
           {/* Articles */}
           <div>
