@@ -65,6 +65,8 @@ export default function AdminDashboard() {
         return <AuditLogs />;
       case 'subscriptions':
         return <RealSubscriptionsManagement />;
+      case 'plan-modules':
+        return <PlanModulesManagement />;
       case 'settings':
         return <SystemSettings />;
       case 'cron':
