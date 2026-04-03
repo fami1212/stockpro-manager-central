@@ -32,6 +32,7 @@ const menuItems = [
   { id: 'modules', label: 'Modules', icon: Lock },
   { id: 'audit', label: 'Audit Logs', icon: Activity },
   { id: 'subscriptions', label: 'Abonnements', icon: CreditCard },
+  { id: 'plan-modules', label: 'Modules/Plans', icon: Lock },
   { id: 'settings', label: 'Paramètres', icon: Settings },
   { id: 'cron', label: 'Cron Jobs', icon: Activity },
   { id: 'logs', label: 'App Logs', icon: Activity },
