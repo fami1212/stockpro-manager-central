@@ -21,6 +21,8 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
 
 type AppRole = 'admin' | 'manager' | 'user';
 
@@ -54,6 +56,8 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
+  const { allowedModules } = useSubscription();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const fetchUnpaidCount = async () => {
@@ -95,11 +99,14 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
   // Filter menu items based on permissions (from database) or fallback to role-based
   const visibleMenuItems = menuItems.filter(item => {
     if (permissions) {
-      return permissions[item.id as keyof ModulePermissions] ?? false;
+      if (!(permissions[item.id as keyof ModulePermissions] ?? false)) return false;
+    } else {
+      if (userRole !== 'admin' && !['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id)) return false;
     }
-    // Fallback: admin sees all, others see basics
-    if (userRole === 'admin') return true;
-    return ['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id);
+    if (!isAdmin && allowedModules.length > 0) {
+      return allowedModules.includes(item.id);
+    }
+    return true;
   });
 
   return (

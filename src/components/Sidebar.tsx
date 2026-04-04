@@ -24,6 +24,9 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
 type AppRole = 'admin' | 'manager' | 'user';
 
@@ -55,6 +58,8 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
   const { products, sales, clients } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
+  const { currentPlanName, allowedModules } = useSubscription();
+  const { isAdmin } = useAuth();
 
   // Fetch unpaid invoices count
   useEffect(() => {
@@ -159,15 +164,23 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
     }
   ];
 
-  // Filter menu items based on permissions (from database) or fallback to role-based
+  // Filter menu items based on role permissions AND subscription plan
   const visibleMenuItems = menuItems.filter(item => {
+    // Check role permissions first
     if (permissions) {
-      return permissions[item.id as keyof ModulePermissions] ?? false;
+      if (!(permissions[item.id as keyof ModulePermissions] ?? false)) return false;
+    } else {
+      if (userRole !== 'admin' && !['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id)) return false;
     }
-    // Fallback: admin sees all, others see basics
-    if (userRole === 'admin') return true;
-    return ['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id);
+    // Then check subscription modules (admins bypass)
+    if (!isAdmin && allowedModules.length > 0) {
+      return allowedModules.includes(item.id);
+    }
+    return true;
   });
+
+  const planBadgeVariant = currentPlanName === 'premium' ? 'default' : currentPlanName === 'pro' ? 'default' : 'secondary';
+  const planLabels: Record<string, string> = { trial: 'Essai', basique: 'Basique', pro: 'Pro', premium: 'Premium' };
 
   const handleLogout = async () => {
     try {
@@ -280,6 +293,13 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
 
       {/* Footer */}
       <div className="p-4 border-t border-border flex-shrink-0">
+        {!collapsed && !isAdmin && currentPlanName && (
+          <div className="mb-3 flex items-center justify-center">
+            <Badge variant={planBadgeVariant} className="text-xs capitalize">
+              Plan {planLabels[currentPlanName] || currentPlanName}
+            </Badge>
+          </div>
+        )}
         {!collapsed && (
           <div className="mb-3 text-xs text-muted-foreground space-y-1">
             <div className="flex items-center justify-between">

@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import Pricing from "./pages/Pricing";
 import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <ErrorBoundary FallbackComponent={ErrorFallback}>
