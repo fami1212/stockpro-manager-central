@@ -293,6 +293,13 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
 
       {/* Footer */}
       <div className="p-4 border-t border-border flex-shrink-0">
+        {!collapsed && !isAdmin && currentPlanName && (
+          <div className="mb-3 flex items-center justify-center">
+            <Badge variant={planBadgeVariant} className="text-xs capitalize">
+              Plan {planLabels[currentPlanName] || currentPlanName}
+            </Badge>
+          </div>
+        )}
         {!collapsed && (
           <div className="mb-3 text-xs text-muted-foreground space-y-1">
             <div className="flex items-center justify-between">

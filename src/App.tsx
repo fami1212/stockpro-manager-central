@@ -45,6 +45,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <ErrorBoundary FallbackComponent={ErrorFallback}>
