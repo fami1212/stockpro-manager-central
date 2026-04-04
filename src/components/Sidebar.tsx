@@ -24,6 +24,9 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
 type AppRole = 'admin' | 'manager' | 'user';
 
