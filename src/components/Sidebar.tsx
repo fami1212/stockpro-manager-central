@@ -164,15 +164,23 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
     }
   ];
 
-  // Filter menu items based on permissions (from database) or fallback to role-based
+  // Filter menu items based on role permissions AND subscription plan
   const visibleMenuItems = menuItems.filter(item => {
+    // Check role permissions first
     if (permissions) {
-      return permissions[item.id as keyof ModulePermissions] ?? false;
+      if (!(permissions[item.id as keyof ModulePermissions] ?? false)) return false;
+    } else {
+      if (userRole !== 'admin' && !['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id)) return false;
     }
-    // Fallback: admin sees all, others see basics
-    if (userRole === 'admin') return true;
-    return ['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id);
+    // Then check subscription modules (admins bypass)
+    if (!isAdmin && allowedModules.length > 0) {
+      return allowedModules.includes(item.id);
+    }
+    return true;
   });
+
+  const planBadgeVariant = currentPlanName === 'premium' ? 'default' : currentPlanName === 'pro' ? 'default' : 'secondary';
+  const planLabels: Record<string, string> = { trial: 'Essai', basique: 'Basique', pro: 'Pro', premium: 'Premium' };
 
   const handleLogout = async () => {
     try {
