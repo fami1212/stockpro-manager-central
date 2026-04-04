@@ -99,11 +99,14 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
   // Filter menu items based on permissions (from database) or fallback to role-based
   const visibleMenuItems = menuItems.filter(item => {
     if (permissions) {
-      return permissions[item.id as keyof ModulePermissions] ?? false;
+      if (!(permissions[item.id as keyof ModulePermissions] ?? false)) return false;
+    } else {
+      if (userRole !== 'admin' && !['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id)) return false;
     }
-    // Fallback: admin sees all, others see basics
-    if (userRole === 'admin') return true;
-    return ['dashboard', 'sales', 'stock', 'clients', 'settings'].includes(item.id);
+    if (!isAdmin && allowedModules.length > 0) {
+      return allowedModules.includes(item.id);
+    }
+    return true;
   });
 
   return (
