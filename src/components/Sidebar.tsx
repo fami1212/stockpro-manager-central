@@ -58,6 +58,8 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
   const { products, sales, clients } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
+  const { currentPlanName, allowedModules } = useSubscription();
+  const { isAdmin } = useAuth();
 
   // Fetch unpaid invoices count
   useEffect(() => {
