@@ -56,6 +56,8 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
+  const { allowedModules } = useSubscription();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const fetchUnpaidCount = async () => {
