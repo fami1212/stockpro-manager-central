@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import Pricing from "./pages/Pricing";
 import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient();
