@@ -1,5 +1,6 @@
+
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -52,27 +53,25 @@ interface BottomNavigationProps {
 }
 
 export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', permissions, onOpenChatbot, onOpenAlerts }: BottomNavigationProps) => {
-  const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
   const { allowedModules } = useSubscription();
   const { isAdmin } = useAuth();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchUnpaidCount = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       const { count } = await supabase
         .from('invoices')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .neq('status', 'Payée');
-
       setUnpaidInvoicesCount(count || 0);
     };
-
     fetchUnpaidCount();
   }, []);
 
@@ -84,8 +83,8 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
   const menuItems = [
     { id: 'dashboard', label: 'Accueil', icon: LayoutDashboard, badge: null, isAlert: false },
     { id: 'sales', label: 'Ventes', icon: ShoppingCart, badge: draftSalesCount > 0 ? draftSalesCount : null, isAlert: false },
-    { id: 'invoices', label: 'Factures', icon: Receipt, badge: unpaidInvoicesCount > 0 ? unpaidInvoicesCount : null, isAlert: unpaidInvoicesCount > 0 },
     { id: 'stock', label: 'Stock', icon: Package, badge: (lowStockCount + outOfStockCount) > 0 ? lowStockCount + outOfStockCount : null, isAlert: outOfStockCount > 0 },
+    { id: 'invoices', label: 'Factures', icon: Receipt, badge: unpaidInvoicesCount > 0 ? unpaidInvoicesCount : null, isAlert: unpaidInvoicesCount > 0 },
     { id: 'purchases', label: 'Achats', icon: Truck, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, isAlert: false },
     { id: 'promotions', label: 'Promos', icon: Tag, badge: null, isAlert: false },
     { id: 'suppliers', label: 'Fourn.', icon: Users, badge: null, isAlert: false },
@@ -96,7 +95,6 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
     { id: 'settings', label: 'Config', icon: Settings, badge: null, isAlert: false }
   ];
 
-  // Filter menu items based on permissions (from database) or fallback to role-based
   const visibleMenuItems = menuItems.filter(item => {
     if (permissions) {
       if (!(permissions[item.id as keyof ModulePermissions] ?? false)) return false;
@@ -109,90 +107,124 @@ export const BottomNavigation = ({ activePage, onPageChange, userRole = 'user', 
     return true;
   });
 
+  // Show first 4 items in main bar, rest in "more" menu
+  const mainItems = visibleMenuItems.slice(0, 4);
+  const moreItems = visibleMenuItems.slice(4);
+  const hasMore = moreItems.length > 0 || onOpenChatbot || onOpenAlerts;
+
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-      {/* Glass background */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/50" />
-      
-      {/* Quick menu overlay */}
-      {showQuickMenu && (
-        <div className="absolute bottom-full right-2 mb-2 bg-card border border-border rounded-xl shadow-2xl p-2 space-y-1 animate-in slide-in-from-bottom-2 z-10">
-          <button
-            onClick={() => { onOpenChatbot?.(); setShowQuickMenu(false); }}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-accent transition-colors text-sm"
-          >
-            <MessageCircle className="h-4 w-4 text-primary" />
-            <span>Assistant IA</span>
-          </button>
-          <button
-            onClick={() => { onOpenAlerts?.(); setShowQuickMenu(false); }}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-accent transition-colors text-sm"
-          >
-            <Sparkles className="h-4 w-4 text-warning" />
-            <span>Alertes intelligentes</span>
-          </button>
-        </div>
-      )}
-
-      {/* Backdrop for quick menu */}
-      {showQuickMenu && (
-        <div className="fixed inset-0 -z-10" onClick={() => setShowQuickMenu(false)} />
-      )}
-      
-      {/* Navigation content */}
-      <div className="relative flex overflow-x-auto scrollbar-hide px-1 py-2 gap-0.5">
-        {visibleMenuItems.map((item) => {
-          const isActive = activePage === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onPageChange(item.id)}
-              className={cn(
-                "flex flex-col items-center justify-center min-w-[64px] px-2 py-1.5 rounded-xl transition-all duration-200 relative shrink-0",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              <div className="relative">
-                <item.icon className={cn(
-                  "w-5 h-5 transition-all duration-200",
-                  isActive && "scale-110"
-                )} />
-                {item.badge && (
-                  <span 
-                    className={cn(
-                      "absolute -top-1.5 -right-1.5 text-[10px] text-white px-1 min-w-[16px] h-4 flex items-center justify-center rounded-full font-semibold",
-                      item.isAlert ? "bg-destructive" : "bg-orange-500"
-                    )}
+      {/* More menu overlay */}
+      {showMore && (
+        <>
+          <div className="fixed inset-0 bg-background/60 backdrop-blur-sm -z-10 animate-in fade-in-0 duration-200" onClick={() => setShowMore(false)} />
+          <div className="absolute bottom-full left-0 right-0 px-4 pb-3 animate-in slide-in-from-bottom-4 duration-200">
+            <div className="bg-card border border-border rounded-2xl shadow-lg p-3">
+              <div className="grid grid-cols-4 gap-1">
+                {moreItems.map((item) => {
+                  const isActive = activePage === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { onPageChange(item.id); setShowMore(false); }}
+                      className={cn(
+                        "flex flex-col items-center justify-center py-3 px-1 rounded-xl transition-all relative",
+                        isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      <div className="relative">
+                        <item.icon className="w-5 h-5" />
+                        {item.badge && (
+                          <span className={cn(
+                            "absolute -top-1.5 -right-2 text-[9px] text-white px-1 min-w-[14px] h-3.5 flex items-center justify-center rounded-full font-bold",
+                            item.isAlert ? "bg-destructive" : "bg-warning"
+                          )}>
+                            {item.badge > 99 ? '99+' : item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-medium mt-1 truncate max-w-full">{item.label}</span>
+                    </button>
+                  );
+                })}
+                {/* AI & Alerts shortcuts */}
+                {onOpenChatbot && (
+                  <button
+                    onClick={() => { onOpenChatbot(); setShowMore(false); }}
+                    className="flex flex-col items-center justify-center py-3 px-1 rounded-xl text-muted-foreground hover:bg-muted transition-all"
                   >
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    <span className="text-[10px] font-medium mt-1">Assistant</span>
+                  </button>
+                )}
+                {onOpenAlerts && (
+                  <button
+                    onClick={() => { onOpenAlerts(); setShowMore(false); }}
+                    className="flex flex-col items-center justify-center py-3 px-1 rounded-xl text-muted-foreground hover:bg-muted transition-all"
+                  >
+                    <Sparkles className="w-5 h-5 text-warning" />
+                    <span className="text-[10px] font-medium mt-1">Alertes IA</span>
+                  </button>
                 )}
               </div>
-              <span className={cn(
-                "text-[10px] font-medium mt-0.5 truncate max-w-full",
-                isActive && "font-semibold"
-              )}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+            </div>
+          </div>
+        </>
+      )}
 
-        {/* Quick access button for AI/Alerts */}
-        <button
-          onClick={() => setShowQuickMenu(!showQuickMenu)}
-          className={cn(
-            "flex flex-col items-center justify-center min-w-[64px] px-2 py-1.5 rounded-xl transition-all duration-200 shrink-0",
-            showQuickMenu
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+      {/* Main navigation bar */}
+      <div className="bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-lg">
+        <div className="flex items-stretch justify-around px-2 py-1.5 max-w-md mx-auto">
+          {mainItems.map((item) => {
+            const isActive = activePage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => onPageChange(item.id)}
+                className={cn(
+                  "flex flex-col items-center justify-center flex-1 py-2 rounded-2xl transition-all duration-200 relative mx-0.5",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground active:scale-95"
+                )}
+              >
+                <div className="relative">
+                  <item.icon className={cn("w-5 h-5 transition-transform", isActive && "scale-110")} />
+                  {item.badge && (
+                    <span className={cn(
+                      "absolute -top-1.5 -right-2 text-[9px] text-white px-1 min-w-[14px] h-3.5 flex items-center justify-center rounded-full font-bold ring-2 ring-card",
+                      item.isAlert ? "bg-destructive" : "bg-warning"
+                    )}>
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] mt-0.5 truncate",
+                  isActive ? "font-bold" : "font-medium"
+                )}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* More button */}
+          {hasMore && (
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 py-2 rounded-2xl transition-all duration-200 mx-0.5",
+                showMore
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground active:scale-95"
+              )}
+            >
+              {showMore ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+              <span className="text-[10px] font-medium mt-0.5">Plus</span>
+            </button>
           )}
-        >
-          {showQuickMenu ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
-          <span className="text-[10px] font-medium mt-0.5">Plus</span>
-        </button>
+        </div>
       </div>
     </nav>
   );
