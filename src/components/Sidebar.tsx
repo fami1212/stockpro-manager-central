@@ -341,17 +341,18 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
             </Tooltip>
           )}
 
-          {/* Stats */}
-          {!collapsed && (
-            <div className="px-3 text-[11px] text-muted-foreground space-y-1">
-              <div className="flex justify-between">
-                <span>Produits</span>
-                <span className="font-medium text-foreground">{products.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Clients actifs</span>
-                <span className="font-medium text-foreground">{clients.filter(c => c.status === 'Actif').length}</span>
-              </div>
+          {/* Usage Progress */}
+          {!collapsed && !isAdmin && (
+            <div className="px-2 text-[11px] space-y-2">
+              {maxProducts !== null && (
+                <UsageBar label="Produits" current={products.length} max={maxProducts} />
+              )}
+              {maxSales !== null && (
+                <UsageBar label="Ventes" current={sales.length} max={maxSales} />
+              )}
+              {maxProducts === null && maxSales === null && (
+                <div className="text-muted-foreground text-center py-1">Illimité ✨</div>
+              )}
             </div>
           )}
 
