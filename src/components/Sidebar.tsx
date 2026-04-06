@@ -80,7 +80,7 @@ const menuSections = [
 export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissions }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
-  const { products, sales, clients } = useApp();
+  const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
   const { currentPlanName, allowedModules, subscription } = useSubscription();
   const { isAdmin, signOut } = useAuth();
