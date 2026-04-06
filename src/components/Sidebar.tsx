@@ -76,14 +76,41 @@ const menuSections = [
     items: ['export', 'reports', 'settings']
   }
 ];
+const UsageBar = ({ label, current, max }: { label: string; current: number; max: number }) => {
+  const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0;
+  const isHigh = pct >= 80;
+  const isFull = pct >= 100;
+  return (
+    <div>
+      <div className="flex justify-between mb-0.5">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn("font-semibold", isFull ? "text-destructive" : isHigh ? "text-warning" : "text-foreground")}>
+          {current}/{max}
+        </span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            isFull ? "bg-destructive" : isHigh ? "bg-warning" : "bg-primary"
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissions }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
-  const { products, sales, clients } = useApp();
+  const { products, sales } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
-  const { currentPlanName, allowedModules } = useSubscription();
+  const { currentPlanName, allowedModules, subscription } = useSubscription();
   const { isAdmin, signOut } = useAuth();
+
+  const maxProducts = subscription?.plan?.max_products ?? null;
+  const maxSales = subscription?.plan?.max_sales ?? null;
 
   useEffect(() => {
     const fetchUnpaidCount = async () => {
@@ -338,17 +365,18 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
             </Tooltip>
           )}
 
-          {/* Stats */}
-          {!collapsed && (
-            <div className="px-3 text-[11px] text-muted-foreground space-y-1">
-              <div className="flex justify-between">
-                <span>Produits</span>
-                <span className="font-medium text-foreground">{products.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Clients actifs</span>
-                <span className="font-medium text-foreground">{clients.filter(c => c.status === 'Actif').length}</span>
-              </div>
+          {/* Usage Progress */}
+          {!collapsed && !isAdmin && (
+            <div className="px-2 text-[11px] space-y-2">
+              {maxProducts !== null && (
+                <UsageBar label="Produits" current={products.length} max={maxProducts} />
+              )}
+              {maxSales !== null && (
+                <UsageBar label="Ventes" current={sales.length} max={maxSales} />
+              )}
+              {maxProducts === null && maxSales === null && (
+                <div className="text-muted-foreground text-center py-1">Illimité ✨</div>
+              )}
             </div>
           )}
 
