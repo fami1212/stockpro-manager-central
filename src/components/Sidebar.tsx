@@ -255,7 +255,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   return (
     <TooltipProvider>
       <div className={cn(
-        "bg-sidebar-background border-r border-sidebar-border transition-all duration-300 flex flex-col h-full",
+        "bg-card border-r border-border transition-all duration-300 flex flex-col h-full",
         collapsed ? "w-[68px]" : "w-[260px]"
       )}>
         {/* Header */}
@@ -346,7 +346,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
         )}
 
         {/* Footer */}
-        <div className="p-3 border-t border-sidebar-border flex-shrink-0 space-y-2">
+        <div className="p-3 border-t border-border flex-shrink-0 space-y-2">
           {/* Plan Badge */}
           {!collapsed && !isAdmin && currentPlanName && (
             <div className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium", currentPlan.className)}>
