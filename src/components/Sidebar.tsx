@@ -255,7 +255,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   return (
     <TooltipProvider>
       <div className={cn(
-        "bg-sidebar-background border-r border-sidebar-border transition-all duration-300 flex flex-col h-full",
+        "bg-card border-r border-border transition-all duration-300 flex flex-col h-full",
         collapsed ? "w-[68px]" : "w-[260px]"
       )}>
         {/* Header */}

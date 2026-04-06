@@ -131,7 +131,7 @@ export const ThemeFloatingButton = () => {
   const CurrentIcon = themeIcons[theme];
 
   return (
-    <div className="fixed bottom-6 right-6 z-30 hidden lg:block">
+    <div className="fixed bottom-20 right-4 z-30 lg:bottom-6 lg:right-6">
       <Popover>
         <PopoverTrigger asChild>
           <Button
