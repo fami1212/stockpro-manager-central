@@ -82,8 +82,11 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState(0);
   const { products, sales, clients } = useApp();
   const { purchaseOrders } = usePurchaseOrders();
-  const { currentPlanName, allowedModules } = useSubscription();
+  const { currentPlanName, allowedModules, subscription } = useSubscription();
   const { isAdmin, signOut } = useAuth();
+
+  const maxProducts = subscription?.plan?.max_products ?? null;
+  const maxSales = subscription?.plan?.max_sales ?? null;
 
   useEffect(() => {
     const fetchUnpaidCount = async () => {
