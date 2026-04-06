@@ -346,7 +346,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
         )}
 
         {/* Footer */}
-        <div className="p-3 border-t border-sidebar-border flex-shrink-0 space-y-2">
+        <div className="p-3 border-t border-border flex-shrink-0 space-y-2">
           {/* Plan Badge */}
           {!collapsed && !isAdmin && currentPlanName && (
             <div className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium", currentPlan.className)}>
