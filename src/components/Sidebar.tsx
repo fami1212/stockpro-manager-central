@@ -76,6 +76,30 @@ const menuSections = [
     items: ['export', 'reports', 'settings']
   }
 ];
+const UsageBar = ({ label, current, max }: { label: string; current: number; max: number }) => {
+  const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0;
+  const isHigh = pct >= 80;
+  const isFull = pct >= 100;
+  return (
+    <div>
+      <div className="flex justify-between mb-0.5">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn("font-semibold", isFull ? "text-destructive" : isHigh ? "text-warning" : "text-foreground")}>
+          {current}/{max}
+        </span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            isFull ? "bg-destructive" : isHigh ? "bg-warning" : "bg-primary"
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissions }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
