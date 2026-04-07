@@ -379,6 +379,16 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
               {maxProducts === null && maxSales === null && (
                 <div className="text-muted-foreground text-center py-1">Illimité ✨</div>
               )}
+              {((maxProducts !== null && products.length >= maxProducts * 0.8) || (maxSales !== null && sales.length >= maxSales * 0.8)) && (
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[11px] h-7 rounded-lg"
+                  onClick={() => navigate('/pricing')}
+                >
+                  <ArrowUpCircle className="w-3.5 h-3.5 mr-1.5" />
+                  Passer au supérieur
+                </Button>
+              )}
             </div>
           )}
 
