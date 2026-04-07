@@ -110,6 +110,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   const { purchaseOrders } = usePurchaseOrders();
   const { currentPlanName, allowedModules, subscription } = useSubscription();
   const { isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const maxProducts = subscription?.plan?.max_products ?? null;
   const maxSales = subscription?.plan?.max_sales ?? null;
