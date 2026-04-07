@@ -164,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const salesHook = useSales();
   const suppliersHook = useSuppliers();
   const unitsHook = useUnits();
+  const { subscription } = useSubscription();
 
   const {
     products: rawProducts,
