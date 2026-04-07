@@ -367,8 +367,21 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
               <TooltipContent side="right">Plan {currentPlan.label}</TooltipContent>
             </Tooltip>
           )}
+          {collapsed && !isAdmin && ((maxProducts !== null && products.length >= maxProducts * 0.8) || (maxSales !== null && sales.length >= maxSales * 0.8)) && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  className="w-full h-9 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  onClick={() => navigate('/pricing')}
+                >
+                  <ArrowUpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Passer au plan supérieur</TooltipContent>
+            </Tooltip>
+          )}
 
-          {/* Usage Progress */}
           {!collapsed && !isAdmin && (
             <div className="px-2 text-[11px] space-y-2">
               {maxProducts !== null && (
