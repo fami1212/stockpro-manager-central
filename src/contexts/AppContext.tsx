@@ -1,6 +1,8 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
+import { useSubscription } from '@/hooks/useSubscription';
+import { toast } from 'sonner';
 
 export interface Product {
   id: string;
