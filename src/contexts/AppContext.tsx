@@ -1,6 +1,8 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useProducts, useCategories, useClients, useSales, useUnits } from '@/hooks/useSupabaseData';
 import { useSuppliers } from '@/hooks/useSuppliers';
+import { useSubscription } from '@/hooks/useSubscription';
+import { toast } from 'sonner';
 
 export interface Product {
   id: string;
@@ -162,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const salesHook = useSales();
   const suppliersHook = useSuppliers();
   const unitsHook = useUnits();
+  const { subscription } = useSubscription();
 
   const {
     products: rawProducts,
@@ -266,10 +269,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }));
 
   const addProduct = async (productData: any): Promise<any> => {
+    // Check product limit
+    const maxProducts = subscription?.plan?.max_products;
+    if (maxProducts !== null && maxProducts !== undefined && products.length >= maxProducts) {
+      const planName = subscription?.plan?.display_name || 'actuel';
+      toast.error(`Limite atteinte ! Votre plan ${planName} est limité à ${maxProducts} produits. Passez à un plan supérieur pour en ajouter davantage.`);
+      throw new Error(`Limite de ${maxProducts} produits atteinte`);
+    }
     try {
       console.log('AppContext: Adding product with data:', productData);
       const result = await addProductRaw(productData);
       console.log('AppContext: Product added successfully:', result);
+      // Warn if approaching limit
+      if (maxProducts && products.length + 1 >= maxProducts * 0.8) {
+        toast.warning(`Attention : vous utilisez ${products.length + 1}/${maxProducts} produits de votre plan.`);
+      }
       return result;
     } catch (err) {
       console.error('AppContext: Error adding product:', err);
@@ -288,8 +302,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addSale = async (saleData: any): Promise<void> => {
+    // Check sales limit
+    const maxSales = subscription?.plan?.max_sales;
+    if (maxSales !== null && maxSales !== undefined && sales.length >= maxSales) {
+      const planName = subscription?.plan?.display_name || 'actuel';
+      toast.error(`Limite atteinte ! Votre plan ${planName} est limité à ${maxSales} ventes. Passez à un plan supérieur pour continuer.`);
+      throw new Error(`Limite de ${maxSales} ventes atteinte`);
+    }
     try {
       await addSaleRaw(saleData);
+      if (maxSales && sales.length + 1 >= maxSales * 0.8) {
+        toast.warning(`Attention : vous utilisez ${sales.length + 1}/${maxSales} ventes de votre plan.`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add sale');
       throw err;
