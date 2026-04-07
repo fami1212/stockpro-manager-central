@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify the caller is authenticated and is an admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Verify caller's JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: { user: caller }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
@@ -37,7 +35,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if caller is admin
     const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
     if (!isAdmin) {
       return new Response(
@@ -46,9 +43,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { email, password, firstName, lastName, company } = await req.json();
+    const { email, password, firstName, lastName, company, role, planId } = await req.json();
 
-    // Input validation
     if (!email || !password || !firstName || !lastName) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields' }),
@@ -63,7 +59,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Admin user creation requested by:', caller.id);
+    // Validate role
+    const validRoles = ['admin', 'manager', 'user'];
+    const assignedRole = validRoles.includes(role) ? role : 'user';
+
+    console.log('User creation requested by:', caller.id, 'role:', assignedRole, 'planId:', planId);
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -76,18 +76,58 @@ Deno.serve(async (req) => {
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Assign the chosen role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .upsert({ user_id: authData.user!.id, role: 'admin', granted_by: caller.id });
+      .upsert({ user_id: authData.user!.id, role: assignedRole, granted_by: caller.id });
 
     if (roleError) throw roleError;
 
+    // Assign subscription plan if provided
+    if (planId) {
+      // Verify plan exists
+      const { data: plan } = await supabaseAdmin
+        .from('subscription_plans')
+        .select('id, name')
+        .eq('id', planId)
+        .single();
+
+      if (plan) {
+        // Delete any existing trial subscription created by trigger
+        await supabaseAdmin
+          .from('user_subscriptions')
+          .delete()
+          .eq('user_id', authData.user!.id);
+
+        const isTrialPlan = plan.name === 'trial';
+        const now = new Date().toISOString();
+
+        const { error: subError } = await supabaseAdmin
+          .from('user_subscriptions')
+          .insert({
+            user_id: authData.user!.id,
+            plan_id: planId,
+            status: isTrialPlan ? 'trial' : 'active',
+            trial_start: isTrialPlan ? now : null,
+            trial_end: isTrialPlan ? new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString() : null,
+            subscription_start: isTrialPlan ? null : now,
+            subscription_end: isTrialPlan ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            payment_method: 'admin',
+            activated_by: caller.id,
+          });
+
+        if (subError) {
+          console.error('Error assigning subscription:', subError);
+        }
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: 'Compte admin créé avec succès', userId: authData.user!.id }),
+      JSON.stringify({ success: true, message: 'Compte créé avec succès', userId: authData.user!.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
-    console.error('Error creating admin user:', error);
+    console.error('Error creating user:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'An error occurred while creating the account' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
