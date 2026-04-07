@@ -22,9 +22,11 @@ import {
   Receipt,
   Crown,
   Zap,
-  Star
+  Star,
+  ArrowUpCircle
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -108,6 +110,7 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
   const { purchaseOrders } = usePurchaseOrders();
   const { currentPlanName, allowedModules, subscription } = useSubscription();
   const { isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const maxProducts = subscription?.plan?.max_products ?? null;
   const maxSales = subscription?.plan?.max_sales ?? null;
@@ -364,8 +367,21 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
               <TooltipContent side="right">Plan {currentPlan.label}</TooltipContent>
             </Tooltip>
           )}
+          {collapsed && !isAdmin && ((maxProducts !== null && products.length >= maxProducts * 0.8) || (maxSales !== null && sales.length >= maxSales * 0.8)) && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  className="w-full h-9 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  onClick={() => navigate('/pricing')}
+                >
+                  <ArrowUpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Passer au plan supérieur</TooltipContent>
+            </Tooltip>
+          )}
 
-          {/* Usage Progress */}
           {!collapsed && !isAdmin && (
             <div className="px-2 text-[11px] space-y-2">
               {maxProducts !== null && (
@@ -376,6 +392,16 @@ export const Sidebar = ({ activePage, onPageChange, userRole = 'user', permissio
               )}
               {maxProducts === null && maxSales === null && (
                 <div className="text-muted-foreground text-center py-1">Illimité ✨</div>
+              )}
+              {((maxProducts !== null && products.length >= maxProducts * 0.8) || (maxSales !== null && sales.length >= maxSales * 0.8)) && (
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[11px] h-7 rounded-lg"
+                  onClick={() => navigate('/pricing')}
+                >
+                  <ArrowUpCircle className="w-3.5 h-3.5 mr-1.5" />
+                  Passer au supérieur
+                </Button>
               )}
             </div>
           )}
