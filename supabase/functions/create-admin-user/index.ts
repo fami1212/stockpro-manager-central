@@ -6,88 +6,91 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify the caller is authenticated and is an admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
-    const { email, password, firstName, lastName, company } = await req.json()
+    // Verify caller's JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: caller }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !caller) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authentication token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
 
-    console.log('Creating admin user:', { email, firstName, lastName, company })
+    // Check if caller is admin
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: caller.id, _role: 'admin' });
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin privileges required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
 
-    // 1. Create user in auth
+    const { email, password, firstName, lastName, company } = await req.json();
+
+    // Input validation
+    if (!email || !password || !firstName || !lastName) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Password must be at least 6 characters' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    console.log('Admin user creation requested by:', caller.id);
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: {
-        first_name: firstName,
-        last_name: lastName,
-        company: company
-      }
-    })
+      user_metadata: { first_name: firstName, last_name: lastName, company }
+    });
 
-    if (authError) {
-      console.error('Auth error:', authError)
-      throw authError
-    }
+    if (authError) throw authError;
 
-    console.log('User created in auth:', authData.user?.id)
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 2. Wait a bit for triggers to complete
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // 3. Set admin role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .upsert({
-        user_id: authData.user!.id,
-        role: 'admin',
-        granted_by: authData.user!.id
-      })
+      .upsert({ user_id: authData.user!.id, role: 'admin', granted_by: caller.id });
 
-    if (roleError) {
-      console.error('Role error:', roleError)
-      throw roleError
-    }
-
-    console.log('Admin role assigned successfully')
+    if (roleError) throw roleError;
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Compte admin créé avec succès',
-        userId: authData.user!.id
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
-    )
-
+      JSON.stringify({ success: true, message: 'Compte admin créé avec succès', userId: authData.user!.id }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
   } catch (error) {
-    console.error('Error creating admin user:', error)
+    console.error('Error creating admin user:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
-    )
+      JSON.stringify({ success: false, error: 'An error occurred while creating the account' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    );
   }
 })
