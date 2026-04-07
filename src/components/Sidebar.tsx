@@ -22,7 +22,8 @@ import {
   Receipt,
   Crown,
   Zap,
-  Star
+  Star,
+  ArrowUpCircle
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
