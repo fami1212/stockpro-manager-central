@@ -48,24 +48,37 @@ export function UsersManagement() {
     try {
       setLoading(true);
 
-      // 1) Fetch profiles (RLS: admins can view all, users can view own)
+      // 1) Fetch profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, first_name, last_name, company, phone, subscription_plan, created_at, last_login');
       if (profilesError) throw profilesError;
 
-      // 2) Fetch roles separately to avoid PostgREST FK join requirement
       const ids = (profiles || []).map((p: any) => p.id);
       let rolesByUser: Record<string, 'admin' | 'manager' | 'user'> = {};
+      let plansByUser: Record<string, string> = {};
+
       if (ids.length) {
-        const { data: roles, error: rolesError } = await supabase
+        // 2) Fetch roles
+        const { data: roles } = await supabase
           .from('user_roles')
           .select('user_id, role')
           .in('user_id', ids);
-        if (rolesError) throw rolesError;
         rolesByUser = Object.fromEntries(
           (roles || []).map((r: any) => [r.user_id, r.role])
         ) as Record<string, 'admin' | 'manager' | 'user'>;
+
+        // 3) Fetch real subscription plans
+        const { data: subs } = await supabase
+          .from('user_subscriptions' as any)
+          .select('user_id, status, plan_id, subscription_plans(display_name, name)')
+          .in('user_id', ids);
+        plansByUser = Object.fromEntries(
+          (subs || []).map((s: any) => [
+            s.user_id,
+            s.subscription_plans?.display_name || s.subscription_plans?.name || 'Aucun',
+          ])
+        );
       }
 
       const combinedUsers = (profiles || []).map((profile: any) => ({
@@ -76,7 +89,7 @@ export function UsersManagement() {
         company: profile.company || 'N/A',
         phone: profile.phone,
         role: rolesByUser[profile.id] || 'user',
-        subscription_plan: profile.subscription_plan || 'basic',
+        subscription_plan: plansByUser[profile.id] || profile.subscription_plan || 'Aucun',
         last_login: profile.last_login,
         created_at: profile.created_at,
       }));

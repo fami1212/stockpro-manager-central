@@ -63,6 +63,23 @@ Deno.serve(async (req) => {
     const validRoles = ['admin', 'manager', 'user'];
     const assignedRole = validRoles.includes(role) ? role : 'user';
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid email format' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate string lengths to prevent abuse
+    if (firstName.length > 100 || lastName.length > 100 || (company && company.length > 200) || email.length > 255) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Field length exceeds maximum allowed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     console.log('User creation requested by:', caller.id, 'role:', assignedRole, 'planId:', planId);
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -72,16 +89,29 @@ Deno.serve(async (req) => {
       user_metadata: { first_name: firstName, last_name: lastName, company }
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('Auth createUser error:', authError);
+      return new Response(
+        JSON.stringify({ success: false, error: authError.message || 'Failed to create user' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Assign the chosen role
+    // Remove default 'user' role created by trigger and assign the chosen role
+    await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', authData.user!.id);
+
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .upsert({ user_id: authData.user!.id, role: assignedRole, granted_by: caller.id });
+      .insert({ user_id: authData.user!.id, role: assignedRole, granted_by: caller.id });
 
-    if (roleError) throw roleError;
+    if (roleError) {
+      console.error('Role assignment error:', roleError);
+    }
 
     // Assign subscription plan if provided
     if (planId) {
