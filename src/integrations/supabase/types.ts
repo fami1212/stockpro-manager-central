@@ -157,6 +157,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_message_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          failed: number
+          id: string
+          message: string
+          sent: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          failed?: number
+          id?: string
+          message: string
+          sent?: number
+          total?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          failed?: number
+          id?: string
+          message?: string
+          sent?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       cash_register_sessions: {
         Row: {
           cash_register_id: string | null
@@ -447,6 +480,45 @@ export type Database = {
           name?: string
           subject?: string
           template_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feature_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          feature: string
+          id: string
+          message: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          feature?: string
+          id?: string
+          message?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          feature?: string
+          id?: string
+          message?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }
