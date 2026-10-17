@@ -1583,6 +1583,42 @@ export type Database = {
           },
         ]
       }
+      whatsapp_settings: {
+        Row: {
+          access_token: string
+          created_at: string
+          default_country_code: string
+          display_phone: string | null
+          phone_number_id: string
+          template_language: string
+          template_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          default_country_code?: string
+          display_phone?: string | null
+          phone_number_id: string
+          template_language?: string
+          template_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          default_country_code?: string
+          display_phone?: string | null
+          phone_number_id?: string
+          template_language?: string
+          template_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
