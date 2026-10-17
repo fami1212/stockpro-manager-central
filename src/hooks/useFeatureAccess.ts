@@ -1,0 +1,39 @@
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+export type FeatureStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
+export function useFeatureAccess(feature = 'whatsapp_bulk') {
+  const { user, isAdmin } = useAuth() as any;
+  const [status, setStatus] = useState<FeatureStatus>('none');
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await (supabase as any)
+      .from('feature_requests')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('feature', feature)
+      .maybeSingle();
+    setStatus((data?.status as FeatureStatus) || 'none');
+    setLoading(false);
+  }, [user, feature]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const request = async (message: string) => {
+    if (!user) return;
+    const payload = { user_id: user.id, feature, status: 'pending', message: message.slice(0, 500) || null };
+    const q = status === 'rejected'
+      ? (supabase as any).from('feature_requests').update(payload).eq('user_id', user.id).eq('feature', feature)
+      : (supabase as any).from('feature_requests').insert(payload);
+    const { error } = await q;
+    if (error) throw error;
+    await refresh();
+  };
+
+  return { status, loading, hasAccess: status === 'approved' || !!isAdmin, request, refresh };
+}

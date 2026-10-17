@@ -16,6 +16,7 @@ import { VersionManagement } from '@/components/admin/VersionManagement';
 import { CronJobsManagement } from '@/components/admin/CronJobsManagement';
 import { ApplicationLogs } from '@/components/admin/ApplicationLogs';
 import { PlanModulesManagement } from '@/components/admin/PlanModulesManagement';
+import { FeatureRequestsManagement } from '@/components/admin/FeatureRequestsManagement';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,6 +29,7 @@ const menuItems = [
   { id: 'health', label: 'Santé Système', icon: Server },
   { id: 'versions', label: 'Versions', icon: GitBranch },
   { id: 'users', label: 'Utilisateurs', icon: Users },
+  { id: 'feature-requests', label: 'Demandes Premium +', icon: Shield },
   { id: 'permissions', label: 'Permissions', icon: Shield },
   { id: 'modules', label: 'Modules', icon: Lock },
   { id: 'audit', label: 'Audit Logs', icon: Activity },
@@ -57,6 +59,8 @@ export default function AdminDashboard() {
         return <VersionManagement />;
       case 'users':
         return <UsersManagement />;
+      case 'feature-requests':
+        return <FeatureRequestsManagement />;
       case 'permissions':
         return <PermissionsManagement />;
       case 'modules':
