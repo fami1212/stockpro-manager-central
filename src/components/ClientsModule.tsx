@@ -13,6 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/EmptyState';
 import { PaginationControls } from '@/components/PaginationControls';
 import { usePagination } from '@/hooks/usePagination';
+import { Crown, Download } from 'lucide-react';
+import { WhatsAppBulkModal } from '@/components/WhatsAppBulkModal';
+import { ImportContactsModal } from '@/components/ImportContactsModal';
 
 export const ClientsModule = () => {
   const { loading } = useApp();
@@ -22,6 +25,8 @@ export const ClientsModule = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [showBulk, setShowBulk] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,6 +73,14 @@ export const ClientsModule = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2 rounded-xl">
+            <Download className="w-4 h-4" />
+            Importer contacts
+          </Button>
+          <Button variant="outline" onClick={() => setShowBulk(true)} className="gap-2 rounded-xl">
+            <Crown className="w-4 h-4 text-primary" />
+            Message en masse
+          </Button>
           <Button 
             onClick={() => setShowPaymentModal(true)} 
             variant="outline" 
@@ -314,6 +327,9 @@ export const ClientsModule = () => {
           </>
         )}
       </div>
+
+      <WhatsAppBulkModal open={showBulk} onClose={() => setShowBulk(false)} clients={clients} />
+      <ImportContactsModal open={showImport} onClose={() => setShowImport(false)} existingPhones={clients.map((c: any) => c.phone).filter(Boolean)} />
 
       {showClientModal && (
         <ClientModal onClose={() => setShowClientModal(false)} />
