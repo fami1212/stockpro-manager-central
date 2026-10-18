@@ -1,3 +1,4 @@
+import { inventoryValue } from '@/lib/inventoryValue';
 
 import { useState, useMemo } from 'react';
 import { Plus, Package, Search, AlertTriangle, TrendingUp, Edit2, Trash2, BarChart3, Boxes, PackageX } from 'lucide-react';
@@ -53,7 +54,7 @@ export const StockModule = (_props: StockModuleProps) => {
     itemsPerPage: 10
   });
 
-  const totalValue = products.reduce((sum, product) => sum + (product.stock * product.sell_price), 0);
+  const totalValue = products.reduce((sum, product) => sum + inventoryValue(product), 0);
   const lowStockCount = products.filter(p => p.status === 'Stock bas').length;
   const outOfStockCount = products.filter(p => p.status === 'Rupture').length;
 

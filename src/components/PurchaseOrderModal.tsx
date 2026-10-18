@@ -10,6 +10,7 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 
 interface PurchaseOrderModalProps {
   onClose: () => void;
+  onCreated?: () => Promise<void>;
 }
 
 interface OrderItem {
@@ -21,7 +22,7 @@ interface OrderItem {
   total: number;
 }
 
-export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
+export const PurchaseOrderModal = ({ onClose, onCreated }: PurchaseOrderModalProps) => {
   const { suppliers, products } = useApp();
   const { addPurchaseOrder } = usePurchaseOrders();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +47,12 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
-        if (field === 'product') {
-          const product = products.find(p => p.name === value);
+        if (field === 'product_id') {
+          const product = products.find(p => p.id === value);
           if (product) {
             updated.unit_price = product.buy_price || 0;
             updated.product_id = product.id;
+            updated.product = product.name;
           }
         }
         updated.total = updated.quantity * updated.unit_price;
@@ -97,6 +99,7 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
 
       console.log('Order data to submit:', orderData);
       await addPurchaseOrder(orderData);
+      await onCreated?.();
       onClose();
     } catch (error) {
       console.error('Erreur lors de la création de la commande:', error);
@@ -167,8 +170,8 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-lg">
                   <div className="col-span-5">
                     <Select 
-                      value={item.product} 
-                      onValueChange={(value) => updateItem(item.id, 'product', value)}
+                      value={item.product_id} 
+                      onValueChange={(value) => updateItem(item.id, 'product_id', value)}
                       disabled={isSubmitting}
                     >
                       <SelectTrigger>
@@ -176,7 +179,7 @@ export const PurchaseOrderModal = ({ onClose }: PurchaseOrderModalProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {products.map((product) => (
-                          <SelectItem key={product.id} value={product.name}>{product.name}</SelectItem>
+                          <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

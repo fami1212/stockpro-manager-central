@@ -1,3 +1,4 @@
+import { inventoryValue } from '@/lib/inventoryValue';
 
 import { useState, useMemo } from 'react';
 import { Download, FileText, BarChart3, TrendingUp, Calendar, DollarSign, Package, Users, ShoppingCart } from 'lucide-react';
@@ -77,7 +78,7 @@ export const ReportsModule = () => {
   }, [sales, products, selectedPeriod]);
 
   const stockData = useMemo(() => {
-    const totalValue = products.reduce((sum, product) => sum + (product.stock * product.sell_price), 0);
+    const totalValue = products.reduce((sum, product) => sum + inventoryValue(product), 0);
     const lowStock = products.filter(p => p.status === 'Stock bas').length;
     const outOfStock = products.filter(p => p.status === 'Rupture').length;
     const inStock = products.filter(p => p.status === 'En stock').length;

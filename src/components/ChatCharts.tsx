@@ -1,3 +1,4 @@
+import { inventoryValue } from '@/lib/inventoryValue';
 import { useMemo, useRef } from 'react';
 import { 
   BarChart, 
@@ -70,11 +71,11 @@ export function ChatCharts({ chartType, products, sales, clients, showExportButt
       }
       
       case 'top-products': {
-        // Top products by estimated revenue (price * sold quantity estimate)
+        // Products by inventory cost
         return products
           .map(p => ({
             name: p.name.length > 15 ? p.name.slice(0, 15) + '...' : p.name,
-            valeur: (p.sell_price || p.sellPrice || 0) * (p.stock || 0),
+            valeur: inventoryValue(p),
           }))
           .sort((a, b) => b.valeur - a.valeur)
           .slice(0, 5);
@@ -97,7 +98,7 @@ export function ChatCharts({ chartType, products, sales, clients, showExportButt
         products.forEach(p => {
           const category = p.category || 'Sans catégorie';
           revenueByCategory[category] = (revenueByCategory[category] || 0) + 
-            ((p.sell_price || p.sellPrice || 0) * (p.stock || 0));
+            (inventoryValue(p));
         });
         
         return Object.entries(revenueByCategory)
@@ -318,7 +319,7 @@ export function ChatCharts({ chartType, products, sales, clients, showExportButt
       case 'stock-levels': return 'Niveaux de stock';
       case 'top-products': return 'Top produits';
       case 'client-distribution': return 'Répartition clients';
-      case 'revenue-by-category': return 'CA par catégorie';
+      case 'revenue-by-category': return 'Stock au coût par catégorie';
       case 'margin-analysis': return 'Analyse des marges';
       default: return 'Graphique';
     }

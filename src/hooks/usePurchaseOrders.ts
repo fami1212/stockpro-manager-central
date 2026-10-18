@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react'
+import { preparePurchase } from '@/lib/purchaseOrderInput'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -36,7 +37,7 @@ export function usePurchaseOrders() {
         .from('purchase_orders')
         .select(`
           *,
-          supplier:suppliers(name),
+          supplier:supplier:suppliers(name),
           purchase_order_items(*, products(name))
         `)
         .eq('user_id', user?.id)
@@ -61,14 +62,16 @@ export function usePurchaseOrders() {
 
   const addPurchaseOrder = async (orderData: any) => {
     try {
+      if (!user) throw new Error('Veuillez vous reconnecter.');
+      const prepared = preparePurchase(orderData);
       const reference = orderData.reference || `PO-${Date.now()}`
       const dbOrderData = {
         reference,
         supplier_id: orderData.supplier_id,
         date: orderData.date || new Date().toISOString().split('T')[0],
-        expected_date: orderData.expected_date,
+        expected_date: prepared.expected_date,
         status: orderData.status || 'En cours',
-        total: orderData.total,
+        total: prepared.total,
         notes: orderData.notes || '',
         user_id: user?.id
       }
@@ -78,7 +81,7 @@ export function usePurchaseOrders() {
         .insert([dbOrderData])
         .select(`
           *,
-          suppliers(name),
+          supplier:suppliers(name),
           purchase_order_items(*, products(name))
         `)
         .single()
@@ -86,8 +89,8 @@ export function usePurchaseOrders() {
       if (orderError) throw orderError
 
       // Add order items if they exist
-      if (orderData.items && orderData.items.length > 0) {
-        const orderItems = orderData.items.map((item: any) => ({
+      if (prepared.items.length > 0) {
+        const orderItems = prepared.items.map((item) => ({
           purchase_order_id: order.id,
           product_id: item.product_id,
           quantity: item.quantity,
@@ -99,7 +102,10 @@ export function usePurchaseOrders() {
           .from('purchase_order_items')
           .insert(orderItems)
 
-        if (itemsError) throw itemsError
+        if (itemsError) {
+          await supabase.from('purchase_orders').delete().eq('id', order.id).eq('user_id', user.id);
+          throw itemsError;
+        }
       }
 
       await fetchPurchaseOrders()
@@ -112,7 +118,7 @@ export function usePurchaseOrders() {
       console.error('Error adding purchase order:', error)
       toast({
         title: 'Erreur',
-        description: 'Impossible d\'ajouter la commande',
+        description: error instanceof Error ? error.message : (error as { message?: string })?.message || 'Impossible d’ajouter la commande',
         variant: 'destructive'
       })
       throw error
