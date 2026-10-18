@@ -31,7 +31,7 @@ export function useFeatureAccess(feature = 'whatsapp_bulk') {
 
   const request = async (message: string) => {
     if (!user) throw new Error("Veuillez vous reconnecter.");
-    const payload = { user_id: user.id, feature, status: 'pending', message: message.slice(0, 500) || null };
+    const payload = { user_id: user.id, feature, status: 'pending', message: message.slice(0, 500) || null, processed_by: null, processed_at: null, admin_notes: null };
     const q = status === 'rejected'
       ? (supabase as any).from('feature_requests').update(payload).eq('user_id', user.id).eq('feature', feature)
       : (supabase as any).from('feature_requests').insert(payload);

@@ -37,7 +37,7 @@ export function usePurchaseOrders() {
         .from('purchase_orders')
         .select(`
           *,
-          supplier:supplier:suppliers(name),
+          supplier:suppliers(name),
           purchase_order_items(*, products(name))
         `)
         .eq('user_id', user?.id)
