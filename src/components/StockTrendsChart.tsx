@@ -1,3 +1,4 @@
+import { inventoryValue } from '@/lib/inventoryValue';
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useApp } from '@/contexts/AppContext';
@@ -39,7 +40,7 @@ export const StockTrendsChart = () => {
     return products
       .map(p => ({
         name: p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name,
-        value: (p.stock || 0) * (p.sell_price || 0),
+        value: inventoryValue(p),
         stock: p.stock || 0
       }))
       .sort((a, b) => b.value - a.value)
@@ -73,7 +74,7 @@ export const StockTrendsChart = () => {
   }, [sales]);
 
   const totalStock = products.reduce((acc, p) => acc + (p.stock || 0), 0);
-  const totalValue = products.reduce((acc, p) => acc + ((p.stock || 0) * (p.sell_price || 0)), 0);
+  const totalValue = products.reduce((acc, p) => acc + (inventoryValue(p)), 0);
 
   return (
     <div className="space-y-6">

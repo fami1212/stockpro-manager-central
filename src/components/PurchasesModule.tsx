@@ -37,7 +37,7 @@ export const PurchasesModule = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<any>(null);
 
-  const { purchaseOrders, loading } = usePurchaseOrders();
+  const { purchaseOrders, loading, refetch } = usePurchaseOrders();
   const { suppliers } = useApp();
 
   const filteredOrders = useMemo(() => {
@@ -571,7 +571,7 @@ export const PurchasesModule = () => {
       </div>
 
       {showOrderModal && (
-        <PurchaseOrderModal onClose={() => setShowOrderModal(false)} />
+        <PurchaseOrderModal onClose={() => setShowOrderModal(false)} onCreated={refetch} />
       )}
 
       {showReceptionModal && (

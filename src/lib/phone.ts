@@ -1,3 +1,5 @@
+import { parsePhoneNumberFromString, getCountries, getCountryCallingCode } from "libphonenumber-js/max";
+
 /**
  * Normalize a phone number to WhatsApp digits (E.164 without "+").
  * - "+221 77 123 45 67" -> "221771234567"
@@ -7,23 +9,16 @@
  */
 export function normalizePhone(raw: string | null | undefined, defaultCode = '221'): string | null {
   if (!raw) return null;
-  let s = String(raw).trim().replace(/[\s\-().]/g, '');
-  if (!s) return null;
-  let hasCode = false;
-  if (s.startsWith('+')) { s = s.slice(1); hasCode = true; }
-  else if (s.startsWith('00')) { s = s.slice(2); hasCode = true; }
-  if (!/^\d+$/.test(s)) return null;
-  if (!hasCode) {
-    const code = defaultCode.replace(/\D/g, '');
-    if (s.startsWith(code) && s.length >= code.length + 8) {
-      // already contains the country code
-    } else {
-      s = s.replace(/^0+/, '');
-      s = code + s;
-    }
+  let value = raw.trim().replace(/[\s\-().]/g, '');
+  if (value.startsWith('00')) value = '+' + value.slice(2);
+  if (!/^\+?\d+$/.test(value)) return null;
+  const country = getCountries().find(c => getCountryCallingCode(c) === defaultCode);
+  if (!value.startsWith('+') && value.startsWith(defaultCode)) {
+    const international = parsePhoneNumberFromString('+' + value);
+    if (international?.isValid()) return international.number.slice(1);
   }
-  if (s.length < 10 || s.length > 15) return null;
-  return s;
+  const phone = parsePhoneNumberFromString(value, country);
+  return phone?.isValid() ? phone.number.slice(1) : null;
 }
 
 export const COUNTRY_CODES = [

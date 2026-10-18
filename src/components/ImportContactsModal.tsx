@@ -7,27 +7,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/contexts/AppContext';
 import { parseCSV, parseVCard, ImportedContact } from '@/lib/contactsImport';
+import { normalizePhone } from '@/lib/phone';
 import { toast } from 'sonner';
 
 interface Props { open: boolean; onClose: () => void; existingPhones: string[] }
 
 export function ImportContactsModal({ open, onClose, existingPhones }: Props) {
   const { user } = useAuth();
-  const { refetchClients } = useApp() as any;
+  const { refetchClients } = useApp();
   const [contacts, setContacts] = useState<(ImportedContact & { selected: boolean })[]>([]);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const pickerSupported = typeof navigator !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window;
-  const known = new Set(existingPhones.map((p) => p.replace(/\D/g, '').slice(-9)));
+  const known = new Set(existingPhones.map((p) => normalizePhone(p) || p.replace(/\D/g, '')));
 
   const load = (list: ImportedContact[]) => {
     const seen = new Set<string>();
     const cleaned = list.filter((c) => {
-      const k = (c.phone || '').replace(/\D/g, '').slice(-9);
+      const k = normalizePhone(c.phone) || (c.phone || '').replace(/\D/g, '');
       if (!k || seen.has(k)) return !k && !!c.name;
       seen.add(k);
       return true;
-    }).map((c) => ({ ...c, selected: !known.has((c.phone || '').replace(/\D/g, '').slice(-9)) }));
+    }).map((c) => ({ ...c, selected: !known.has(normalizePhone(c.phone) || (c.phone || '').replace(/\D/g, '')) }));
     setContacts(cleaned);
     if (!cleaned.length) toast.error('Aucun contact trouvé');
   };
@@ -41,12 +42,13 @@ export function ImportContactsModal({ open, onClose, existingPhones }: Props) {
 
   const onFile = async (f: File) => {
     const text = await f.text();
-    load(/BEGIN:VCARD/i.test(text) ? parseVCard(text) : parseCSV(text));
+    try { load(/BEGIN:VCARD/i.test(text) ? parseVCard(text) : parseCSV(text)); } catch { toast.error('Fichier contacts illisible.'); }
   };
 
   const save = async () => {
+    if (!user || saving) return;
     const rows = contacts.filter((c) => c.selected).map((c) => ({
-      user_id: user!.id, name: c.name.trim().slice(0, 100) || 'Sans nom', phone: c.phone?.slice(0, 30) || null, email: c.email?.slice(0, 255) || null, status: 'Actif',
+      user_id: user.id, name: c.name.trim().slice(0, 100) || 'Sans nom', phone: c.phone?.slice(0, 30) || null, email: c.email?.slice(0, 255) || null, status: 'Actif',
     }));
     if (!rows.length) return;
     setSaving(true);

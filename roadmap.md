@@ -1,6 +1,11 @@
 # Roadmap
-- [ ] Premium + on request: user asks, admin approves (feature_requests)
-- [ ] Each user connects their own WhatsApp Business (phone number ID + token)
-- [ ] Bulk WhatsApp message to all clients (form, precise country codes)
-- [ ] Import clients from phone: contact picker (select all) + .vcf / CSV file
-- [ ] Admin panel tab to approve/reject requests
+- [x] Premium + request and admin approval UI; resubmission clears previous processing metadata
+- [x] Replace invalid-token sending with a simple per-user WhatsApp sending queue, without API credentials
+- [x] Prepare personalized WhatsApp messages with validated international numbers and duplicate removal
+- [x] Import contacts through phone picker and .vcf / CSV files; quoted CSV fields supported
+- [x] Admin panel tab to approve/reject requests
+- [x] Correct purchase inputs, blank optional dates, product selection and refresh after creation
+- [x] Value inventory at cost price throughout stock views and charts
+- [x] Run business-rule regression tests and check public application pages
+- [ ] Verify purchase save/readback, contact import, admin approval and WhatsApp queue in a real signed-in session — blocked: external Supabase authentication cannot be restored in this sandbox
+- [ ] Confirm recipient delivery from the user's WhatsApp — blocked: requires user confirmation in their own WhatsApp application
