@@ -1,3 +1,5 @@
+import Papa from 'papaparse';
+
 export interface ImportedContact {
   name: string;
   phone: string | null;
@@ -28,20 +30,10 @@ export function parseVCard(text: string): ImportedContact[] {
 
 /** Parse a CSV with headers like name/nom, phone/téléphone, email. */
 export function parseCSV(text: string): ImportedContact[] {
-  const lines = text.replace(/\r/g, '').split('\n').filter((l) => l.trim());
-  if (!lines.length) return [];
-  const sep = lines[0].includes(';') ? ';' : ',';
-  const headers = lines[0].split(sep).map((h) => h.trim().toLowerCase().replace(/"/g, ''));
-  const find = (...keys: string[]) => headers.findIndex((h) => keys.some((k) => h.includes(k)));
-  const iName = find('nom', 'name');
-  const iPhone = find('tel', 'tél', 'phone', 'mobile');
-  const iEmail = find('mail');
-  return lines.slice(1).map((l) => {
-    const c = l.split(sep).map((v) => v.trim().replace(/^"|"$/g, ''));
-    return {
-      name: (c[iName] || c[iPhone] || '').slice(0, 100),
-      phone: iPhone >= 0 ? c[iPhone] || null : null,
-      email: iEmail >= 0 ? c[iEmail] || null : null,
-    };
-  }).filter((c) => c.name || c.phone);
+  const { data } = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true, transformHeader: h => h.trim().toLowerCase() });
+  return data.map(row => {
+    const get = (...keys: string[]) => Object.entries(row).find(([key]) => keys.some(k => key.includes(k)))?.[1]?.trim() || null;
+    const phone = get('tel', 'tél', 'phone', 'mobile');
+    return { name: (get('nom', 'name') || phone || '').slice(0, 100), phone, email: get('mail') };
+  }).filter(c => c.name || c.phone);
 }
