@@ -37,8 +37,9 @@ test('queue excludes invalid numbers and sends each distinct number only once', 
 });
 test('WhatsApp links personalize and encode text without credentials', () => {
   const link = new URL(whatsappLink('221771234567', 'Bonjour {nom} & merci', 'Anna'));
-  expect(link.protocol).toBe('whatsapp:');
-  expect(link.searchParams.get('phone')).toBe('221771234567');
+  expect(link.protocol).toBe('https:');
+  expect(link.host).toBe('wa.me');
+  expect(link.pathname).toBe('/221771234567');
   expect(link.searchParams.get('text')).toBe('Bonjour Anna & merci');
 });
 test('CSV import preserves quoted names containing delimiters', () => {

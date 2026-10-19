@@ -26,9 +26,9 @@ export function WhatsAppBulkModal({ open, onClose, clients }: Props) {
   const { valid, invalid } = useMemo(() => prepareWhatsAppQueue(clients, code), [clients, code]);
   useEffect(() => { if (open) void refresh(); }, [open, refresh]);
   const current = queue[index];
-  const openWhatsApp = (web = false) => {
+  const openWhatsApp = () => {
     if (!current) return;
-    window.open(whatsappLink(current.number, message, current.name, web), '_blank', 'noopener,noreferrer');
+    window.open(whatsappLink(current.number, message, current.name), '_blank', 'noopener,noreferrer');
     setOpened(true);
   };
   const next = (sent: boolean) => {
@@ -65,8 +65,8 @@ export function WhatsAppBulkModal({ open, onClose, clients }: Props) {
           <p className="text-sm text-muted-foreground">Client {index + 1} sur {queue.length} · {confirmed} envois confirmés par vous</p>
           <h3 className="font-semibold break-words">{current.name}</h3><p className="text-sm">+{current.number}</p>
           <p className="whitespace-pre-wrap break-words border-l-2 border-primary pl-3 text-sm">{message.replace(/\{nom\}/gi, current.name)}</p>
-          <Button className="w-full gap-2" onClick={() => openWhatsApp()}><MessageCircle className="h-4 w-4" />Ouvrir WhatsApp</Button>
-          <Button variant="outline" className="w-full" onClick={() => openWhatsApp(true)}>Ouvrir WhatsApp Web</Button>
+          <Button className="w-full gap-2" onClick={openWhatsApp}><MessageCircle className="h-4 w-4" />Ouvrir WhatsApp avec le message prêt</Button>
+          <p className="text-xs text-muted-foreground">Le message s'ouvre dans WhatsApp (application ou Web). Appuyez sur Envoyer là-bas, puis revenez ici.</p>
           <div className="flex gap-2"><Button className="flex-1 gap-2" disabled={!opened} onClick={() => next(true)}><Check className="h-4 w-4" />J’ai envoyé</Button><Button variant="outline" className="gap-2" onClick={() => next(false)}><SkipForward className="h-4 w-4" />Passer</Button></div>
         </> : <><p>{confirmed} envois confirmés par vous · {queue.length - confirmed} clients passés</p><Button variant="outline" onClick={() => setStarted(false)}>Nouveau message</Button></>}
       </div>}

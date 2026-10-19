@@ -7,5 +7,8 @@
 - [x] Correct purchase inputs, blank optional dates, product selection and refresh after creation
 - [x] Value inventory at cost price throughout stock views and charts
 - [x] Run business-rule regression tests and check public application pages
+- [x] Bulk delete clients with selection mode, select-all on search results and confirmation
+- [x] Phone contact picker as primary import path, file import as fallback
+- [x] WhatsApp bulk send via wa.me links that work on phone and computer
 - [ ] Verify purchase save/readback, contact import, admin approval and WhatsApp queue in a real signed-in session — blocked: external Supabase authentication cannot be restored in this sandbox
 - [ ] Confirm recipient delivery from the user's WhatsApp — blocked: requires user confirmation in their own WhatsApp application

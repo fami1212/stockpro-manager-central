@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Search, Mail, Phone, CreditCard, Users, UserCheck, ShoppingBag, Eye, MessageCircle, TrendingUp, UserPlus, DollarSign, Calendar, MapPin } from 'lucide-react';
+import { Plus, Search, Mail, Phone, CreditCard, Users, UserCheck, ShoppingBag, Eye, MessageCircle, TrendingUp, UserPlus, DollarSign, Calendar, MapPin, Trash2, CheckSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClientModal } from '@/components/ClientModal';
@@ -16,9 +16,13 @@ import { usePagination } from '@/hooks/usePagination';
 import { Crown, Download } from 'lucide-react';
 import { WhatsAppBulkModal } from '@/components/WhatsAppBulkModal';
 import { ImportContactsModal } from '@/components/ImportContactsModal';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const ClientsModule = () => {
-  const { loading } = useApp();
+  const { loading, refetchClients } = useApp();
   const { clients } = useClientStats();
   const [searchTerm, setSearchTerm] = useState('');
   const [showClientModal, setShowClientModal] = useState(false);
@@ -27,6 +31,34 @@ export const ClientsModule = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showBulk, setShowBulk] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => { setSelectMode(false); setSelectedIds(new Set()); };
+
+  const deleteSelected = async () => {
+    if (!selectedIds.size || deleting) return;
+    setDeleting(true);
+    const ids = Array.from(selectedIds);
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await supabase.from('clients').delete().in('id', ids.slice(i, i + 200));
+      if (error) { toast.error(error.message); setDeleting(false); return; }
+    }
+    toast.success(`${ids.length} client${ids.length > 1 ? 's' : ''} supprimé${ids.length > 1 ? 's' : ''}`);
+    setDeleting(false);
+    exitSelectMode();
+    await refetchClients?.();
+  };
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +105,14 @@ export const ClientsModule = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            variant={selectMode ? 'secondary' : 'outline'}
+            onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+            className="gap-2 rounded-xl"
+          >
+            {selectMode ? <X className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+            {selectMode ? 'Annuler' : 'Sélectionner'}
+          </Button>
           <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2 rounded-xl">
             <Download className="w-4 h-4" />
             Importer contacts
@@ -174,6 +214,29 @@ export const ClientsModule = () => {
           </div>
         </div>
 
+        {selectMode && (
+          <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={filteredClients.length > 0 && filteredClients.every(c => selectedIds.has(c.id))}
+                onCheckedChange={(v) => setSelectedIds(v ? new Set(filteredClients.map(c => c.id)) : new Set())}
+              />
+              Tout sélectionner ({filteredClients.length})
+            </label>
+            <span className="text-sm text-muted-foreground">{selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''}</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 rounded-xl ml-auto"
+              disabled={!selectedIds.size || deleting}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleting ? 'Suppression…' : `Supprimer (${selectedIds.size})`}
+            </Button>
+          </div>
+        )}
+
         {clients.length === 0 ? (
           <EmptyState
             icon={Users}
@@ -192,11 +255,17 @@ export const ClientsModule = () => {
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedClients.map((client, index) => (
-                <div 
-                  key={client.id} 
-                  className="group relative overflow-hidden bg-card border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 animate-fade-in"
+                <div
+                  key={client.id}
+                  className={`group relative overflow-hidden bg-card border rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 animate-fade-in ${selectMode ? 'cursor-pointer' : ''} ${selectedIds.has(client.id) ? 'border-primary ring-2 ring-primary/30' : 'border-border/50'}`}
                   style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={selectMode ? () => toggleSelect(client.id) : undefined}
                 >
+                  {selectMode && (
+                    <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={selectedIds.has(client.id)} onCheckedChange={() => toggleSelect(client.id)} />
+                    </div>
+                  )}
                   {/* Background gradient on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
@@ -328,6 +397,15 @@ export const ClientsModule = () => {
         )}
       </div>
 
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Supprimer ces clients ?"
+        description={`${selectedIds.size} client${selectedIds.size > 1 ? 's' : ''} sera${selectedIds.size > 1 ? 'ont' : ''} définitivement supprimé${selectedIds.size > 1 ? 's' : ''}. Cette action est irréversible.`}
+        onConfirm={deleteSelected}
+        confirmText="Supprimer"
+        variant="destructive"
+      />
       <WhatsAppBulkModal open={showBulk} onClose={() => setShowBulk(false)} clients={clients} />
       <ImportContactsModal open={showImport} onClose={() => setShowImport(false)} existingPhones={clients.map((c: any) => c.phone).filter(Boolean)} />
 
