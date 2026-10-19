@@ -1583,6 +1583,45 @@ export type Database = {
           },
         ]
       }
+      whatsapp_sends: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          created_at: string
+          error_message: string | null
+          id: string
+          phone: string
+          status: string
+          template_name: string
+          user_id: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          phone: string
+          status: string
+          template_name: string
+          user_id: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          phone?: string
+          status?: string
+          template_name?: string
+          user_id?: string
+          wa_message_id?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_settings: {
         Row: {
           access_token: string
