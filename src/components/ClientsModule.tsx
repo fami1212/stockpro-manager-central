@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Search, Mail, Phone, CreditCard, Users, UserCheck, ShoppingBag, Eye, MessageCircle, TrendingUp, UserPlus, DollarSign, Calendar, MapPin } from 'lucide-react';
+import { Plus, Search, Mail, Phone, CreditCard, Users, UserCheck, ShoppingBag, Eye, MessageCircle, TrendingUp, UserPlus, DollarSign, Calendar, MapPin, Trash2, CheckSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClientModal } from '@/components/ClientModal';
@@ -16,9 +16,13 @@ import { usePagination } from '@/hooks/usePagination';
 import { Crown, Download } from 'lucide-react';
 import { WhatsAppBulkModal } from '@/components/WhatsAppBulkModal';
 import { ImportContactsModal } from '@/components/ImportContactsModal';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const ClientsModule = () => {
-  const { loading } = useApp();
+  const { loading, refetchClients } = useApp();
   const { clients } = useClientStats();
   const [searchTerm, setSearchTerm] = useState('');
   const [showClientModal, setShowClientModal] = useState(false);
@@ -27,6 +31,34 @@ export const ClientsModule = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showBulk, setShowBulk] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => { setSelectMode(false); setSelectedIds(new Set()); };
+
+  const deleteSelected = async () => {
+    if (!selectedIds.size || deleting) return;
+    setDeleting(true);
+    const ids = Array.from(selectedIds);
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await supabase.from('clients').delete().in('id', ids.slice(i, i + 200));
+      if (error) { toast.error(error.message); setDeleting(false); return; }
+    }
+    toast.success(`${ids.length} client${ids.length > 1 ? 's' : ''} supprimé${ids.length > 1 ? 's' : ''}`);
+    setDeleting(false);
+    exitSelectMode();
+    await refetchClients?.();
+  };
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
