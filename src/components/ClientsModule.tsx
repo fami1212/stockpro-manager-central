@@ -214,6 +214,29 @@ export const ClientsModule = () => {
           </div>
         </div>
 
+        {selectMode && (
+          <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-xl bg-primary/5 border border-primary/20">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={filteredClients.length > 0 && filteredClients.every(c => selectedIds.has(c.id))}
+                onCheckedChange={(v) => setSelectedIds(v ? new Set(filteredClients.map(c => c.id)) : new Set())}
+              />
+              Tout sélectionner ({filteredClients.length})
+            </label>
+            <span className="text-sm text-muted-foreground">{selectedIds.size} sélectionné{selectedIds.size > 1 ? 's' : ''}</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 rounded-xl ml-auto"
+              disabled={!selectedIds.size || deleting}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleting ? 'Suppression…' : `Supprimer (${selectedIds.size})`}
+            </Button>
+          </div>
+        )}
+
         {clients.length === 0 ? (
           <EmptyState
             icon={Users}
