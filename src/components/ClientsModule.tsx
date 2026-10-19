@@ -255,11 +255,17 @@ export const ClientsModule = () => {
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedClients.map((client, index) => (
-                <div 
-                  key={client.id} 
-                  className="group relative overflow-hidden bg-card border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 animate-fade-in"
+                <div
+                  key={client.id}
+                  className={`group relative overflow-hidden bg-card border rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 animate-fade-in ${selectMode ? 'cursor-pointer' : ''} ${selectedIds.has(client.id) ? 'border-primary ring-2 ring-primary/30' : 'border-border/50'}`}
                   style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={selectMode ? () => toggleSelect(client.id) : undefined}
                 >
+                  {selectMode && (
+                    <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={selectedIds.has(client.id)} onCheckedChange={() => toggleSelect(client.id)} />
+                    </div>
+                  )}
                   {/* Background gradient on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
@@ -391,6 +397,15 @@ export const ClientsModule = () => {
         )}
       </div>
 
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Supprimer ces clients ?"
+        description={`${selectedIds.size} client${selectedIds.size > 1 ? 's' : ''} sera${selectedIds.size > 1 ? 'ont' : ''} définitivement supprimé${selectedIds.size > 1 ? 's' : ''}. Cette action est irréversible.`}
+        onConfirm={deleteSelected}
+        confirmText="Supprimer"
+        variant="destructive"
+      />
       <WhatsAppBulkModal open={showBulk} onClose={() => setShowBulk(false)} clients={clients} />
       <ImportContactsModal open={showImport} onClose={() => setShowImport(false)} existingPhones={clients.map((c: any) => c.phone).filter(Boolean)} />
 
