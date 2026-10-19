@@ -14,7 +14,8 @@ export function prepareWhatsAppQueue(clients: WhatsAppClient[], code: string) {
   }
   return { valid, invalid };
 }
-export function whatsappLink(number: string, message: string, name: string, web = false) {
+export function whatsappLink(number: string, message: string, name: string) {
   const text = encodeURIComponent(message.replace(/\{nom\}/gi, name));
-  return `${web ? 'https://web.whatsapp.com/send' : 'whatsapp://send'}?phone=${number}&text=${text}`;
+  // wa.me works on phones (opens the app) and computers (opens WhatsApp Web)
+  return `https://wa.me/${number}?text=${text}`;
 }
