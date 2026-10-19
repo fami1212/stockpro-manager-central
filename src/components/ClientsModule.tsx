@@ -105,6 +105,14 @@ export const ClientsModule = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            variant={selectMode ? 'secondary' : 'outline'}
+            onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+            className="gap-2 rounded-xl"
+          >
+            {selectMode ? <X className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+            {selectMode ? 'Annuler' : 'Sélectionner'}
+          </Button>
           <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2 rounded-xl">
             <Download className="w-4 h-4" />
             Importer contacts
