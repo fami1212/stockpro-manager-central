@@ -72,10 +72,14 @@ export function ImportContactsModal({ open, onClose, existingPhones }: Props) {
           <DialogDescription>Depuis les contacts du téléphone ou un fichier (.vcf, .csv).</DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
-          {pickerSupported && (
-            <Button variant="outline" onClick={pickFromPhone}><Smartphone className="h-4 w-4 mr-2" />Choisir dans mes contacts</Button>
+          {pickerSupported ? (
+            <Button onClick={pickFromPhone}><Smartphone className="h-4 w-4 mr-2" />Choisir dans les contacts de mon téléphone</Button>
+          ) : (
+            <p className="text-xs text-muted-foreground border rounded-lg p-2">
+              La sélection directe depuis le téléphone fonctionne sur Android avec Chrome. Sur iPhone ou ordinateur, utilisez le fichier ci-dessous.
+            </p>
           )}
-          <Button variant="outline" onClick={() => fileRef.current?.click()}><FileUp className="h-4 w-4 mr-2" />Importer un fichier contacts</Button>
+          <Button variant="outline" onClick={() => fileRef.current?.click()}><FileUp className="h-4 w-4 mr-2" />Importer un fichier contacts (.vcf, .csv)</Button>
           <input ref={fileRef} type="file" accept=".vcf,.csv,text/vcard,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
           <p className="text-xs text-muted-foreground">
             Pour récupérer <b>tous</b> vos contacts : {pickerSupported ? 'dans la liste, utilisez « Tout sélectionner », ou ' : ''}
