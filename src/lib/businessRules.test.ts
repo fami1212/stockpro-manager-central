@@ -3,6 +3,7 @@ import { inventoryValue } from './inventoryValue';
 import { preparePurchase } from './purchaseOrderInput';
 import { normalizePhone } from './phone';
 import { prepareWhatsAppQueue, whatsappLink } from './whatsappQueue';
+import { buildRecipients, summarizeResults } from './whatsappBulk';
 import { parseCSV, parseVCard } from './contactsImport';
 
 describe('Inventory at cost price', () => {
@@ -47,4 +48,17 @@ test('CSV import preserves quoted names containing delimiters', () => {
 });
 test('vCard imports the exported contact phone', () => {
   expect(parseVCard('BEGIN:VCARD\nVERSION:3.0\nFN:Anna Camara\nTEL:+221771234567\nEND:VCARD')[0]).toEqual({ name: 'Anna Camara', phone: '+221771234567', email: null });
+});
+test('bulk payload trims names, keeps client ids and caps the batch at 500', () => {
+  const valid = Array.from({ length: 520 }, (_, i) => ({ id: `c${i}`, name: `  Client ${i}  `, number: `2217712345${i % 10}${String(i).padStart(2, '0')}` }));
+  const payload = buildRecipients(valid as any);
+  expect(payload.length).toBe(500);
+  expect(payload[0]).toMatchObject({ client_id: 'c0', name: 'Client 0' });
+});
+test('failed sends are separated from successful ones in the summary', () => {
+  const s = summarizeResults([
+    { name: 'A', status: 'sent' },
+    { name: 'B', status: 'failed', error_message: 'Numéro invalide' },
+  ]);
+  expect(s).toEqual({ sent: 1, failed: 1, failedNames: ['B — Numéro invalide'] });
 });
