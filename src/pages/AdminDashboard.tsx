@@ -9,7 +9,7 @@ import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch, Lock, Menu, X, ArrowLeft } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch, Lock, Menu, X, ArrowLeft, MessageSquareText, Send } from 'lucide-react';
 import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
 import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
