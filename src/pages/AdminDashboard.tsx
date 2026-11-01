@@ -65,6 +65,10 @@ export default function AdminDashboard() {
         return <UsersManagement />;
       case 'feature-requests':
         return <FeatureRequestsManagement />;
+      case 'whatsapp-templates':
+        return <WhatsappTemplatesManagement />;
+      case 'whatsapp-sends':
+        return <WhatsappSendsManagement />;
       case 'permissions':
         return <PermissionsManagement />;
       case 'modules':
