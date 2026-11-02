@@ -1,14 +1,13 @@
 # Roadmap
 - [x] Premium + request and admin approval UI; resubmission clears previous processing metadata
-- [x] Replace invalid-token sending with a simple per-user WhatsApp sending queue, without API credentials
-- [x] Prepare personalized WhatsApp messages with validated international numbers and duplicate removal
-- [x] Import contacts through phone picker and .vcf / CSV files; quoted CSV fields supported
-- [x] Admin panel tab to approve/reject requests
 - [x] Correct purchase inputs, blank optional dates, product selection and refresh after creation
 - [x] Value inventory at cost price throughout stock views and charts
-- [x] Run business-rule regression tests and check public application pages
 - [x] Bulk delete clients with selection mode, select-all on search results and confirmation
 - [x] Phone contact picker as primary import path, file import as fallback
-- [x] WhatsApp bulk send via wa.me links that work on phone and computer
-- [ ] Verify purchase save/readback, contact import, admin approval and WhatsApp queue in a real signed-in session — blocked: external Supabase authentication cannot be restored in this sandbox
-- [ ] Confirm recipient delivery from the user's WhatsApp — blocked: requires user confirmation in their own WhatsApp application
+- [x] WhatsApp Business number of the app connected; real bulk send through approved Meta templates
+- [x] Admin panel to create and manage WhatsApp message templates (Meta review status shown)
+- [x] Admin panel listing every WhatsApp send per client with date, status and open link
+- [x] One-tap automatic bulk send in the client area (no per-client confirmation), manual wa.me queue kept as fallback
+- [x] First Meta template `annonce_boutique` created (status: pending Meta review)
+- [ ] Verify purchase save/readback, contact import, admin approval and bulk send in a real signed-in session — blocked: external Supabase authentication cannot be restored in this sandbox
+- [ ] Confirm the first template reaches APPROVED, then a real bulk send delivers — blocked: Meta review (up to 48 h) and the WhatsApp Business account is currently flagged "restricted" by Meta for template deletion; user should check Meta Business support home
