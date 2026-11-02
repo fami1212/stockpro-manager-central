@@ -65,8 +65,9 @@ export function WhatsAppBulkModal({ open, onClose, clients }: Props) {
   const sendAll = async () => {
     setSending(true);
     try {
+      const selected = templates.find((t) => t.name === template);
       const { data, error } = await supabase.functions.invoke('whatsapp-bulk-send', {
-        body: { template, language: 'fr', recipients: buildRecipients(valid) },
+        body: { template, language: selected?.language || 'fr', recipients: buildRecipients(valid) },
       });
       if (error) {
         const details = error instanceof FunctionsHttpError ? await error.context.text() : error.message;
