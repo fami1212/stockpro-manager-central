@@ -26,13 +26,17 @@ Deno.serve(async (req) => {
     const tpl = t.body?.data?.find((x: any) => x.name === template);
     if (!tpl || tpl.status !== 'APPROVED') return json({ error: 'Modèle non approuvé par Meta' }, 400);
     const bodyText: string = tpl.components?.find((x: any) => x.type === 'BODY')?.text || '';
-    const usesName = bodyText.includes('{{1}}');
+    const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
+    // First placeholder = client name, remaining ones = the sender's business name.
+    const { data: profile } = await c.sb.from('profiles').select('company').eq('id', c.user.id).maybeSingle();
+    const businessName = (profile?.company || 'StockPro').toString().slice(0, 60);
 
     const rows: any[] = [];
     for (const r of recipients) {
+      const components = varCount > 0 ? [{ type: 'body', parameters: Array.from({ length: varCount }, (_, i) => ({ type: 'text', text: i === 0 ? r.name : businessName })) }] : undefined;
       const res = await wa('/messages', { method: 'POST', body: JSON.stringify({
         messaging_product: 'whatsapp', to: r.number, type: 'template',
-        template: { name: template, language: { code: language }, ...(usesName ? { components: [{ type: 'body', parameters: [{ type: 'text', text: r.name }] }] } : {}) },
+        template: { name: template, language: { code: language }, ...(components ? { components } : {}) },
       }) });
       rows.push({
         user_id: c.user.id, client_id: r.client_id ?? null, client_name: r.name, phone: r.number, template_name: template,
