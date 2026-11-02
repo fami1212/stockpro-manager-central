@@ -98,7 +98,7 @@ export function WhatsAppBulkModal({ open, onClose, clients }: Props) {
             setRequesting(true);
             try { await request(reqMsg); toast.success('Demande envoyée'); } catch (e) { toast.error(e instanceof Error ? e.message : 'Demande impossible'); } finally { setRequesting(false); }
           }}>Demander l’accès Premium +</Button>
-        </>
+        </>}
       </div> : summary ? <div className="space-y-3">
         <p className="font-medium">Envoi terminé : {summary.sent} envoyé(s), {summary.failed} en échec.</p>
         {summary.failedNames.length > 0 && <div className="text-sm text-destructive space-y-1">
