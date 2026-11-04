@@ -13,8 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/EmptyState';
 import { PaginationControls } from '@/components/PaginationControls';
 import { usePagination } from '@/hooks/usePagination';
-import { Crown, Download } from 'lucide-react';
-import { WhatsAppBulkModal } from '@/components/WhatsAppBulkModal';
+import { Download } from 'lucide-react';
 import { ImportContactsModal } from '@/components/ImportContactsModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,7 +28,6 @@ export const ClientsModule = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [showBulk, setShowBulk] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -116,10 +114,6 @@ export const ClientsModule = () => {
           <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2 rounded-xl">
             <Download className="w-4 h-4" />
             Importer contacts
-          </Button>
-          <Button variant="outline" onClick={() => setShowBulk(true)} className="gap-2 rounded-xl">
-            <Crown className="w-4 h-4 text-primary" />
-            Message en masse
           </Button>
           <Button 
             onClick={() => setShowPaymentModal(true)} 
@@ -406,7 +400,6 @@ export const ClientsModule = () => {
         confirmText="Supprimer"
         variant="destructive"
       />
-      <WhatsAppBulkModal open={showBulk} onClose={() => setShowBulk(false)} clients={clients} />
       <ImportContactsModal open={showImport} onClose={() => setShowImport(false)} existingPhones={clients.map((c: any) => c.phone).filter(Boolean)} />
 
       {showClientModal && (
