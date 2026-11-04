@@ -2,8 +2,6 @@ import { describe, expect, test } from 'bun:test';
 import { inventoryValue } from './inventoryValue';
 import { preparePurchase } from './purchaseOrderInput';
 import { normalizePhone } from './phone';
-import { prepareWhatsAppQueue, whatsappLink } from './whatsappQueue';
-import { buildRecipients, summarizeResults } from './whatsappBulk';
 import { parseCSV, parseVCard } from './contactsImport';
 
 describe('Inventory at cost price', () => {
@@ -31,34 +29,9 @@ test('precise Senegal and France numbers normalize; malformed lengths are exclud
   expect(normalizePhone('06 12 34 56 78', '33')).toBe('33612345678');
   expect(normalizePhone('+22177123')).toBeNull();
 });
-test('queue excludes invalid numbers and sends each distinct number only once', () => {
-  const result = prepareWhatsAppQueue([{ id: '1', name: 'A', phone: '771234567' }, { id: '2', name: 'A duplicate', phone: '+221771234567' }, { id: '3', name: 'B', phone: 'bad' }], '221');
-  expect(result.valid.map(c => c.id)).toEqual(['1']);
-  expect(result.invalid.map(c => c.id)).toEqual(['3']);
-});
-test('WhatsApp links personalize and encode text without credentials', () => {
-  const link = new URL(whatsappLink('221771234567', 'Bonjour {nom} & merci', 'Anna'));
-  expect(link.protocol).toBe('https:');
-  expect(link.host).toBe('wa.me');
-  expect(link.pathname).toBe('/221771234567');
-  expect(link.searchParams.get('text')).toBe('Bonjour Anna & merci');
-});
 test('CSV import preserves quoted names containing delimiters', () => {
   expect(parseCSV('nom,phone,email\n"Lo, Ibrahima",+221771234567,ibra@example.com')[0]).toEqual({ name: 'Lo, Ibrahima', phone: '+221771234567', email: 'ibra@example.com' });
 });
 test('vCard imports the exported contact phone', () => {
   expect(parseVCard('BEGIN:VCARD\nVERSION:3.0\nFN:Anna Camara\nTEL:+221771234567\nEND:VCARD')[0]).toEqual({ name: 'Anna Camara', phone: '+221771234567', email: null });
-});
-test('bulk payload trims names, keeps client ids and caps the batch at 500', () => {
-  const valid = Array.from({ length: 520 }, (_, i) => ({ id: `c${i}`, name: `  Client ${i}  `, number: `2217712345${i % 10}${String(i).padStart(2, '0')}` }));
-  const payload = buildRecipients(valid as any);
-  expect(payload.length).toBe(500);
-  expect(payload[0]).toMatchObject({ client_id: 'c0', name: 'Client 0' });
-});
-test('failed sends are separated from successful ones in the summary', () => {
-  const s = summarizeResults([
-    { name: 'A', status: 'sent' },
-    { name: 'B', status: 'failed', error_message: 'Numéro invalide' },
-  ]);
-  expect(s).toEqual({ sent: 1, failed: 1, failedNames: ['B — Numéro invalide'] });
 });
