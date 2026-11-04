@@ -4,10 +4,4 @@
 - [x] Value inventory at cost price throughout stock views and charts
 - [x] Bulk delete clients with selection mode, select-all on search results and confirmation
 - [x] Phone contact picker as primary import path, file import as fallback
-- [x] WhatsApp Business number of the app connected; real bulk send through approved Meta templates
-- [x] Admin panel to create and manage WhatsApp message templates (Meta review status shown)
-- [x] Admin panel listing every WhatsApp send per client with date, status and open link
-- [x] One-tap automatic bulk send in the client area (no per-client confirmation), manual wa.me queue kept as fallback
-- [x] First Meta template `annonce_boutique` created (status: pending Meta review)
-- [ ] Verify purchase save/readback, contact import, admin approval and bulk send in a real signed-in session — blocked: external Supabase authentication cannot be restored in this sandbox
-- [ ] Confirm the first template reaches APPROVED, then a real bulk send delivers — blocked: Meta review (up to 48 h) and the WhatsApp Business account is currently flagged "restricted" by Meta for template deletion; user should check Meta Business support home
+- [x] Remove the entire WhatsApp bulk send feature: edge functions, admin pages, modals, libs, hook and tables; individual manual wa.me contact links kept
