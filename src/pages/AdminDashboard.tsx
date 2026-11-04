@@ -9,7 +9,7 @@ import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 import { AuditLogs } from '@/components/admin/AuditLogs';
 import { AdminRoute } from '@/components/AdminRoute';
 import { CreateAdminButton } from '@/components/CreateAdminButton';
-import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch, Lock, Menu, X, ArrowLeft, MessageSquareText, Send } from 'lucide-react';
+import { Settings, Users, CreditCard, BarChart3, Shield, Activity, TrendingUp, Server, LineChart, GitBranch, Lock, Menu, X, ArrowLeft } from 'lucide-react';
 import { SystemHealthMonitoring } from '@/components/admin/SystemHealthMonitoring';
 import { PerformanceAnalytics } from '@/components/admin/PerformanceAnalytics';
 import { VersionManagement } from '@/components/admin/VersionManagement';
@@ -17,8 +17,6 @@ import { CronJobsManagement } from '@/components/admin/CronJobsManagement';
 import { ApplicationLogs } from '@/components/admin/ApplicationLogs';
 import { PlanModulesManagement } from '@/components/admin/PlanModulesManagement';
 import { FeatureRequestsManagement } from '@/components/admin/FeatureRequestsManagement';
-import { WhatsappTemplatesManagement } from '@/components/admin/WhatsappTemplatesManagement';
-import { WhatsappSendsManagement } from '@/components/admin/WhatsappSendsManagement';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,8 +30,6 @@ const menuItems = [
   { id: 'versions', label: 'Versions', icon: GitBranch },
   { id: 'users', label: 'Utilisateurs', icon: Users },
   { id: 'feature-requests', label: 'Demandes Premium +', icon: Shield },
-  { id: 'whatsapp-templates', label: 'Modèles WhatsApp', icon: MessageSquareText },
-  { id: 'whatsapp-sends', label: 'Envois WhatsApp', icon: Send },
   { id: 'permissions', label: 'Permissions', icon: Shield },
   { id: 'modules', label: 'Modules', icon: Lock },
   { id: 'audit', label: 'Audit Logs', icon: Activity },
@@ -65,10 +61,6 @@ export default function AdminDashboard() {
         return <UsersManagement />;
       case 'feature-requests':
         return <FeatureRequestsManagement />;
-      case 'whatsapp-templates':
-        return <WhatsappTemplatesManagement />;
-      case 'whatsapp-sends':
-        return <WhatsappSendsManagement />;
       case 'permissions':
         return <PermissionsManagement />;
       case 'modules':
