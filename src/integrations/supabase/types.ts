@@ -157,39 +157,6 @@ export type Database = {
         }
         Relationships: []
       }
-      bulk_message_logs: {
-        Row: {
-          created_at: string
-          details: Json | null
-          failed: number
-          id: string
-          message: string
-          sent: number
-          total: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          details?: Json | null
-          failed?: number
-          id?: string
-          message: string
-          sent?: number
-          total?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          details?: Json | null
-          failed?: number
-          id?: string
-          message?: string
-          sent?: number
-          total?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
       cash_register_sessions: {
         Row: {
           cash_register_id: string | null
@@ -1582,81 +1549,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      whatsapp_sends: {
-        Row: {
-          client_id: string | null
-          client_name: string
-          created_at: string
-          error_message: string | null
-          id: string
-          phone: string
-          status: string
-          template_name: string
-          user_id: string
-          wa_message_id: string | null
-        }
-        Insert: {
-          client_id?: string | null
-          client_name: string
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          phone: string
-          status: string
-          template_name: string
-          user_id: string
-          wa_message_id?: string | null
-        }
-        Update: {
-          client_id?: string | null
-          client_name?: string
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          phone?: string
-          status?: string
-          template_name?: string
-          user_id?: string
-          wa_message_id?: string | null
-        }
-        Relationships: []
-      }
-      whatsapp_settings: {
-        Row: {
-          access_token: string
-          created_at: string
-          default_country_code: string
-          display_phone: string | null
-          phone_number_id: string
-          template_language: string
-          template_name: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          default_country_code?: string
-          display_phone?: string | null
-          phone_number_id: string
-          template_language?: string
-          template_name?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          default_country_code?: string
-          display_phone?: string | null
-          phone_number_id?: string
-          template_language?: string
-          template_name?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
     }
     Views: {
